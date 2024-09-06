@@ -1,14 +1,28 @@
 from enums import * 
 from scrape import *
 from transformers import BertTokenizer, BertModel
+from sklearn.metrics.pairwise import cosine_similarity
 import torch
 
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertModel.from_pretrained('bert-base-uncased')
  
-def get_issuer(card_dict_key): 
-    return 0
+def get_issuer(card_name): 
+    encoded_card_name = encode_text(card_name)
+    
+    best_issuer = None
+    best_encoded_issuer_score = 0
+    for issuer in Issuer:
+        encoded_issuer = encode_text(issuer.value)
+        if best_encoded_issuer is None or cosine_similarity(encoded_card_name, encoded_issuer) > best_encoded_issuer_score:
+            best_encoded_issuer = encoded_issuer
+            best_issuer = issuer
+    
+    if best_encoded_issuer_score < 0.5:
+        print(f"Warning: Best issuer score for {card_name} is {best_encoded_issuer_score}")
+    
+    return best_issuer
     
 def get_benefits(card_dict_elem):
     return 0
