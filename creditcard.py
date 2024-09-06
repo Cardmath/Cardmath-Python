@@ -24,8 +24,28 @@ def get_issuer(card_name):
     
     return best_issuer
     
-def get_benefits(card_dict_elem):
-    return 0
+def get_benefits(card_dict):
+    benefit_score = {} # dict of Benefit enum item and score (real number)
+    encoded_benefits = {} # dict of the Benefit to their encoded value 
+
+    for _, card_attr_list in card_dict:
+        for card_attr in card_attr_list:
+            for benefit in Benefits: 
+                # initialize dictionaries
+                if benefit not in encoded_benefits:
+                    encoded_benefits[benefit] = encode_text(benefit.value)
+                if benefit not in benefit_score :
+                    benefit_score[benefit] = 0
+                
+                encoded_attr = encode_text(card_attr)
+                attr_benefit_score = cosine_similarity(encoded_benefits[benefit], encoded_attr)
+                benefit_score[benefit] += attr_benefit_score
+    
+    out_benefits = []
+    for benefit in Benefits:
+        if benefit_score >= 0.75:
+            out_benefits.append(benefit)
+    return out_benefits
     
 def get_credit_needed(card_dict_elem): 
     return 0
