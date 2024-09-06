@@ -59,36 +59,29 @@ class RewardUnit(str, Enum):
 # Define an enum for benefits
 class Benefits(str, Enum):
     AIRPORT_LOUNGE_ACCESS = "airport lounge access"
-    TRAVEL_INSURANCE = "travel insurance"
-    PURCHASE_PROTECTION = "purchase protection"
-    EXTENDED_WARRANTY = "extended warranty"
-    CASHBACK = "cashback"
-    TRAVEL_CREDITS = "travel credits"
-    CONCIERGE_SERVICE = "concierge service"
-    RENTAL_CAR_INSURANCE = "rental car insurance"
-    PRICE_PROTECTION = "price protection"
-    RETURN_PROTECTION = "return protection"
     CELL_PHONE_PROTECTION = "cell phone protection"
-    EXTENDED_RETURN_PERIOD = "extended return period"
-    PURCHASE_REWARDS = "purchase rewards"
-    DINING_REWARDS = "dining rewards"
-    HOTEL_REWARDS = "hotel rewards"
-    AIRLINE_REWARDS = "airline rewards"
-    NO_FOREIGN_TRANSACTION_FEES = "no foreign transaction fees"
-    FREE_CHECKED_BAGS = "free checked bags"
-    PRIORITY_BOARDING = "priority boarding"
-    GLOBAL_ENTRY_TSA_PRECHECK_CREDIT = "global entry/tsa precheck credit"
-    EVENT_TICKET_ACCESS = "event ticket access"
-    SHOPPING_DISCOUNTS = "shopping discounts"
-    TRAVEL_ASSISTANCE_SERVICES = "travel assistance services"
+    CONCIERGE_SERVICE = "concierge service"
     EMERGENCY_MEDICAL_INSURANCE = "emergency medical insurance"
+    EVENT_TICKET_ACCESS = "event ticket access"
+    EXTENDED_RETURN_PERIOD = "extended return period"
+    EXTENDED_WARRANTY = "extended warranty"
+    FREE_CHECKED_BAGS = "free checked bags"
+    GLOBAL_ENTRY_TSA_PRECHECK_CREDIT = "global entry/tsa precheck credit"
+    NO_FOREIGN_TRANSACTION_FEES = "no foreign transaction fees"
+    PRICE_PROTECTION = "price protection"
+    PRIORITY_BOARDING = "priority boarding"
+    PURCHASE_PROTECTION = "purchase protection"
+    RENTAL_CAR_INSURANCE = "rental car insurance"
+    RETURN_PROTECTION = "return protection"
+    TRAVEL_ASSISTANCE_SERVICES = "travel assistance services"
+    TRAVEL_INSURANCE = "travel insurance"
     
 # Define an enum for credit needed
 class CreditNeeded(str, Enum):
-    EXCELLENT = "excellent"
-    GOOD = "good"
-    FAIR = "fair"
-    POOR = "poor"
+    EXCELLENT = "Excellent" # 720-850
+    GOOD = "Good" # 690-719
+    FAIR = "Fair" # 630-689
+    POOR = "Bad" # 0-629 
     
 # purchase categories
 class PurchaseCategories(str, Enum):

@@ -17,10 +17,10 @@ class CreditCard:
         
     def init_from_cc_dict(credit_card_dict): 
         for card_details, card_attributes in credit_card_dict.items():
-            cc_issuer, cc_name = card_details
+            cc_issuer, cc_name, score_needed = card_details
             issuer = get_issuer(cc_issuer)
             benefits = get_benefits(card_attributes)
-            credit_needed = get_credit_needed(card_attributes)
+            credit_needed = get_credit_needed(score_needed)
             reward_category_map = get_reward_category_map(card_attributes)
             return CreditCard(cc_name, issuer, reward_category_map, benefits, credit_needed)
         

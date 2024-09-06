@@ -20,7 +20,9 @@ def get_card_dict(input_file, output_file):
         print(f"Found {len(cards)} cards.")
         
         for card in cards:
-            card_issuer = card.find(class_='rightDetail').find(class_='credit_div').find(class_='apply_now_bank_name')
+            credit_div = card.find(class_='rightDetail').find(class_='credit_div')
+            issuer = credit_div.find(class_='apply_now_bank_name')
+            credit_needed = credit_div.find(class_='credit_needed')
             card_title = card.find('h2')
             mid_detail = card.find(class_="midDetail")
             if mid_detail.find(class_="longDescription"):
@@ -30,7 +32,7 @@ def get_card_dict(input_file, output_file):
                 card_attributes = card.find('ul').findAll('li')
                 mid_description_used += 1
             
-            card_dict[(card_issuer.get_text(strip=True), card_title.get_text(strip=True))] = [card_attribute.get_text(strip=True) for card_attribute in card_attributes]
+            card_dict[(issuer.get_text(strip=True), card_title.get_text(strip=True), credit_needed.get_text(strip=True))] = [card_attribute.get_text(strip=True) for card_attribute in card_attributes]
         
         if output_file : 
             with open('/home/johannes/CreditCards/cardratings/output.txt', 'w', encoding='utf-8') as output_file:

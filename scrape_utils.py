@@ -3,13 +3,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 from transformers import BertTokenizer, BertModel
 import torch
 
-
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertModel.from_pretrained('bert-base-uncased')
  
 def get_issuer(card_name): 
     best_issuer = None
-    
     for issuer in Issuer:
         if issuer in card_name:
             best_issuer = issuer   
@@ -33,15 +31,22 @@ def get_benefits(card_attr_list):
             
             encoded_attr = encode_text(card_attr)
             attr_benefit_score = cosine_similarity(encoded_benefits[benefit], encoded_attr)[0][0]
-            if (attr_benefit_score) > 0.88:
+            if (attr_benefit_score) > 0.85:
                 out_benefits.append(benefit)
     
     return out_benefits
                 
 
     
-def get_credit_needed(card_dict_elem): 
-    return 0
+def get_credit_needed(credit_needed): 
+    best_credit_out = []
+    for credit in CreditNeeded:
+        if credit in credit_needed:
+            best_credit_out.append(credit)   
+    if best_credit_out is None:   
+        print(f"No credit scores matched for: {credit_needed}")
+    
+    return best_credit_out
 
 def get_reward_category_map(card_dict_elem): 
     return 0
