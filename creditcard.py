@@ -15,12 +15,18 @@ class CreditCard:
                 f"benefits={[benefit.value for benefit in self.benefits]}, "
                 f"credit_needed={self.credit_needed})")
         
-    def init_from_cc_dict(credit_card_dict): 
-        for card_details, card_attributes in credit_card_dict.items():
+    def init_from_cc_dict(credit_card_dict, max_num): 
+        credit_cards = []
+        for idx, val in enumerate(credit_card_dict.items()):
+            card_details, card_attributes = val
+            if idx > max_num:
+                return credit_cards
             cc_issuer, cc_name, score_needed = card_details
             issuer = get_issuer(cc_issuer)
             benefits = get_benefits(card_attributes)
             credit_needed = get_credit_needed(score_needed)
             reward_category_map = get_reward_category_map(card_attributes)
-            return CreditCard(cc_name, issuer, reward_category_map, benefits, credit_needed)
+            credit_cards.append(CreditCard(cc_name, issuer, reward_category_map, benefits, credit_needed))
+        
+        return credit_cards
         
