@@ -4,6 +4,9 @@ from pprint import pformat
 cardratings_scraped_path = '/home/johannes/CreditCards/cardratings/cardratings.html'
 output_file_path = '/home/johannes/CreditCards/cardratings/output.txt'; 
 
+# Produces a dictionary of form:
+# (issuer, card name) --> [card attr_0, card_attr_1, ...] 
+# where card attr is a plain text string
 def get_card_dict(input_file, output_file):  
     card_dict = {}
     long_description_used = 0
@@ -17,6 +20,7 @@ def get_card_dict(input_file, output_file):
         print(f"Found {len(cards)} cards.")
         
         for card in cards:
+            card_issuer = card.find(class_='rightDetail').find(class_='credit_div').find(class_='apply_now_bank_name')
             card_title = card.find('h2')
             mid_detail = card.find(class_="midDetail")
             if mid_detail.find(class_="longDescription"):
@@ -26,7 +30,7 @@ def get_card_dict(input_file, output_file):
                 card_attributes = card.find('ul').findAll('li')
                 mid_description_used += 1
             
-            card_dict[card_title.get_text(strip=True)] = [card_attribute.get_text(strip=True) for card_attribute in card_attributes]
+            card_dict[(card_issuer.get_text(strip=True), card_title.get_text(strip=True))] = [card_attribute.get_text(strip=True) for card_attribute in card_attributes]
         
         if output_file : 
             with open('/home/johannes/CreditCards/cardratings/output.txt', 'w', encoding='utf-8') as output_file:
