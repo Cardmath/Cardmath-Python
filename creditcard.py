@@ -1,5 +1,6 @@
 from enums import * 
 from scrape_utils import *
+import random
 
 class CreditCard:
     def __init__(self, name, issuer, reward_category_map, benefits, credit_needed, apr):
@@ -17,10 +18,12 @@ class CreditCard:
                 f"credit_needed={self.credit_needed})")
     
     @staticmethod
-    def init_from_cc_dict(credit_card_dict, max_num): 
+    def init_from_cc_dict(credit_card_dict, max_num, random_samples=False): 
         credit_cards = []
-        for idx, val in enumerate(credit_card_dict.items()):
-            
+        if random_samples:
+            credit_card_dict = random.sample(list(credit_card_dict.items()), max_num)
+        
+        for idx, val in enumerate(credit_card_dict):
             if idx == max_num:
                 return credit_cards
             
