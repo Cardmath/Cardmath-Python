@@ -1,24 +1,5 @@
 from enum import Enum
 
-# Credit Card Attributes
-
-# card name : string
-# 
-# TYPES: 
-# reward units (real, reward_unit enum)
-# earnings rates : map<category, reward units> -- PER DOLLAR SPENT
-# benfits enum : (airport lounge access, travel insurance, etc)
-
-# sign-on bonus : reward_units
-# annual fee : real (dollars)
-# introductory apr : real (percentage)
-# introductory period : real (months) 
-# foreign transaction fees : (boolean)
-# credit needed : credit enum 
-# additional benefits : list<benefits_enum>
-
-# BEGIN CODE DEFINITIONS
-
 class Issuer(str, Enum):
     CAPITAL_ONE = "Capital One"
     CHASE = "Chase"
@@ -83,109 +64,15 @@ class CreditNeeded(str, Enum):
     FAIR = "Fair" # 630-689
     POOR = "Bad" # 0-629 
     
-# purchase categories
-class PurchaseCategories(str, Enum):
-    INCOME_DIVIDENDS = "income dividends"
-    INCOME_INTEREST_EARNED = "income interest earned"
-    INCOME_RETIREMENT_PENSION = "income retirement pension"
-    INCOME_TAX_REFUND = "income tax refund"
-    INCOME_UNEMPLOYMENT = "income unemployment"
-    INCOME_WAGES = "income wages"
-    INCOME_OTHER_INCOME = "income other income"
-    TRANSFER_IN_CASH_ADVANCES_AND_LOANS = "transfer in cash advances and loans"
-    TRANSFER_IN_DEPOSIT = "transfer in deposit"
-    TRANSFER_IN_INVESTMENT_AND_RETIREMENT_FUNDS = "transfer in investment and retirement funds"
-    TRANSFER_IN_SAVINGS = "transfer in savings"
-    TRANSFER_IN_ACCOUNT_TRANSFER = "transfer in account transfer"
-    TRANSFER_IN_OTHER_TRANSFER_IN = "transfer in other transfer in"
-    TRANSFER_OUT_INVESTMENT_AND_RETIREMENT_FUNDS = "transfer out investment and retirement funds"
-    TRANSFER_OUT_SAVINGS = "transfer out savings"
-    TRANSFER_OUT_WITHDRAWAL = "transfer out withdrawal"
-    TRANSFER_OUT_ACCOUNT_TRANSFER = "transfer out account transfer"
-    TRANSFER_OUT_OTHER_TRANSFER_OUT = "transfer out other transfer out"
-    LOAN_PAYMENTS_CAR_PAYMENT = "loan payments car payment"
-    LOAN_PAYMENTS_CREDIT_CARD_PAYMENT = "loan payments credit card payment"
-    LOAN_PAYMENTS_PERSONAL_LOAN_PAYMENT = "loan payments personal loan payment"
-    LOAN_PAYMENTS_MORTGAGE_PAYMENT = "loan payments mortgage payment"
-    LOAN_PAYMENTS_STUDENT_LOAN_PAYMENT = "loan payments student loan payment"
-    LOAN_PAYMENTS_OTHER_PAYMENT = "loan payments other payment"
-    BANK_FEES_ATM_FEES = "bank fees atm fees"
-    BANK_FEES_FOREIGN_TRANSACTION_FEES = "bank fees foreign transaction fees"
-    BANK_FEES_INSUFFICIENT_FUNDS = "bank fees insufficient funds"
-    BANK_FEES_INTEREST_CHARGE = "bank fees interest charge"
-    BANK_FEES_OVERDRAFT_FEES = "bank fees overdraft fees"
-    BANK_FEES_OTHER_BANK_FEES = "bank fees other bank fees"
-    ENTERTAINMENT_CASINOS_AND_GAMBLING = "entertainment casinos and gambling"
-    ENTERTAINMENT_MUSIC_AND_AUDIO = "entertainment music and audio"
-    ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS = "entertainment sporting events amusement parks and museums"
-    ENTERTAINMENT_TV_AND_MOVIES = "entertainment tv and movies"
-    ENTERTAINMENT_VIDEO_GAMES = "entertainment video games"
-    ENTERTAINMENT_OTHER_ENTERTAINMENT = "entertainment other entertainment"
-    FOOD_AND_DRINK_BEER_WINE_AND_LIQUOR = "food and drink beer wine and liquor"
-    FOOD_AND_DRINK_COFFEE = "food and drink coffee"
-    FOOD_AND_DRINK_FAST_FOOD = "food and drink fast food"
-    FOOD_AND_DRINK_GROCERIES = "food and drink groceries"
-    FOOD_AND_DRINK_RESTAURANT = "food and drink restaurant"
-    FOOD_AND_DRINK_VENDING_MACHINES = "food and drink vending machines"
-    FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK = "food and drink other food and drink"
-    GENERAL_MERCHANDISE_BOOKSTORES_AND_NEWSSTANDS = "general merchandise bookstores and newsstands"
-    GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES = "general merchandise clothing and accessories"
-    GENERAL_MERCHANDISE_CONVENIENCE_STORES = "general merchandise convenience stores"
-    GENERAL_MERCHANDISE_DEPARTMENT_STORES = "general merchandise department stores"
-    GENERAL_MERCHANDISE_DISCOUNT_STORES = "general merchandise discount stores"
-    GENERAL_MERCHANDISE_ELECTRONICS = "general merchandise electronics"
-    GENERAL_MERCHANDISE_GIFTS_AND_NOVELTIES = "general merchandise gifts and novelties"
-    GENERAL_MERCHANDISE_OFFICE_SUPPLIES = "general merchandise office supplies"
-    GENERAL_MERCHANDISE_ONLINE_MARKETPLACES = "general merchandise online marketplaces"
-    GENERAL_MERCHANDISE_PET_SUPPLIES = "general merchandise pet supplies"
-    GENERAL_MERCHANDISE_SPORTING_GOODS = "general merchandise sporting goods"
-    GENERAL_MERCHANDISE_SUPERSTORES = "general merchandise superstores"
-    GENERAL_MERCHANDISE_TOBACCO_AND_VAPE = "general merchandise tobacco and vape"
-    GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE = "general merchandise other general merchandise"
-    HOME_IMPROVEMENT_FURNITURE = "home improvement furniture"
-    HOME_IMPROVEMENT_HARDWARE = "home improvement hardware"
-    HOME_IMPROVEMENT_REPAIR_AND_MAINTENANCE = "home improvement repair and maintenance"
-    HOME_IMPROVEMENT_SECURITY = "home improvement security"
-    HOME_IMPROVEMENT_OTHER_HOME_IMPROVEMENT = "home improvement other home improvement"
-    MEDICAL_DENTAL_CARE = "medical dental care"
-    MEDICAL_EYE_CARE = "medical eye care"
-    MEDICAL_NURSING_CARE = "medical nursing care"
-    MEDICAL_PHARMACIES_AND_SUPPLEMENTS = "medical pharmacies and supplements"
-    MEDICAL_PRIMARY_CARE = "medical primary care"
-    MEDICAL_VETERINARY_SERVICES = "medical veterinary services"
-    MEDICAL_OTHER_MEDICAL = "medical other medical"
-    PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS = "personal care gyms and fitness centers"
-    PERSONAL_CARE_HAIR_AND_BEAUTY = "personal care hair and beauty"
-    PERSONAL_CARE_LAUNDRY_AND_DRY_CLEANING = "personal care laundry and dry cleaning"
-    PERSONAL_CARE_OTHER_PERSONAL_CARE = "personal care other personal care"
-    GENERAL_SERVICES_ACCOUNTING_AND_FINANCIAL_PLANNING = "general services accounting and financial planning"
-    GENERAL_SERVICES_AUTOMOTIVE = "general services automotive"
-    GENERAL_SERVICES_CHILDCARE = "general services childcare"
-    GENERAL_SERVICES_CONSULTING_AND_LEGAL = "general services consulting and legal"
-    GENERAL_SERVICES_EDUCATION = "general services education"
-    GENERAL_SERVICES_INSURANCE = "general services insurance"
-    GENERAL_SERVICES_POSTAGE_AND_SHIPPING = "general services postage and shipping"
-    GENERAL_SERVICES_STORAGE = "general services storage"
-    GENERAL_SERVICES_OTHER_GENERAL_SERVICES = "general services other general services"
-    GOVERNMENT_AND_NON_PROFIT_DONATIONS = "government and non-profit donations"
-    GOVERNMENT_AND_NON_PROFIT_GOVERNMENT_DEPARTMENTS_AND_AGENCIES = "government and non-profit government departments and agencies"
-    GOVERNMENT_AND_NON_PROFIT_TAX_PAYMENT = "government and non-profit tax payment"
-    GOVERNMENT_AND_NON_PROFIT_OTHER_GOVERNMENT_AND_NON_PROFIT = "government and non-profit other government and non-profit"
-    TRANSPORTATION_BIKES_AND_SCOOTERS = "transportation bikes and scooters"
-    TRANSPORTATION_GAS = "transportation gas"
-    TRANSPORTATION_PARKING = "transportation parking"
-    TRANSPORTATION_PUBLIC_TRANSIT = "transportation public transit"
-    TRANSPORTATION_TAXIS_AND_RIDE_SHARES = "transportation taxis and ride shares"
-    TRANSPORTATION_TOLLS = "transportation tolls"
-    TRANSPORTATION_OTHER_TRANSPORTATION = "transportation other transportation"
-    TRAVEL_FLIGHTS = "travel flights"
-    TRAVEL_LODGING = "travel lodging"
-    TRAVEL_RENTAL_CARS = "travel rental cars"
-    TRAVEL_OTHER_TRAVEL = "travel other travel"
-    RENT_AND_UTILITIES_GAS_AND_ELECTRICITY = "rent and utilities gas and electricity"
-    RENT_AND_UTILITIES_INTERNET_AND_CABLE = "rent and utilities internet and cable"
-    RENT_AND_UTILITIES_RENT = "rent and utilities rent"
-    RENT_AND_UTILITIES_SEWAGE_AND_WASTE_MANAGEMENT = "rent and utilities sewage and waste management"
-    RENT_AND_UTILITIES_TELEPHONE = "rent and utilities telephone"
-    RENT_AND_UTILITIES_WATER = "rent and utilities water"
-    RENT_AND_UTILITIES_OTHER_UTILITIES = "rent and utilities other utilities"
+class PurchaseCategory(Enum):
+    TRAVEL = "Travel"
+    DINING = "Dining"
+    GROCERIES = "Groceries"
+    GAS_AND_TRANSPORTATION = "Gas and Transportation"
+    ENTERTAINMENT = "Entertainment"
+    RETAIL_SHOPPING = "Retail Shopping"
+    UTILITIES_AND_SERVICES = "Utilities and Services"
+    HEALTH_AND_WELLNESS = "Health and Wellness"
+    ELECTRONICS_AND_TECHNOLOGY = "Electronics and Technology"
+    CHARITABLE_DONATIONS = "Charitable Donations"
+    ONLINE_SHOPPING = "Online Shopping"
