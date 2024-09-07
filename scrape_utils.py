@@ -9,8 +9,9 @@ def get_issuer(card_name):
     for issuer in Issuer:
         if issuer in card_name:
             best_issuer = issuer   
-    if issuer is None:   
-        print(f"No issuer mathced for: {card_name}")
+    if best_issuer is None:   
+        print(f"No issuer matched for: {card_name}")
+        return " Unknown Issuer "
     
     return best_issuer.replace(RIGHTS_RESERVED, "")
 
