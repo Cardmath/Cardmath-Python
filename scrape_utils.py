@@ -1,5 +1,8 @@
 from enums import *
-from openai_utils import prompt_gpt4_for_json, benefits_prompt
+from openai_utils import prompt_gpt4_for_json, benefits_prompt, purchase_category_map_prompt
+import json
+
+RIGHTS_RESERVED = '\u00AE'
 
 def get_issuer(card_name): 
     best_issuer = None
@@ -9,7 +12,7 @@ def get_issuer(card_name):
     if issuer is None:   
         print(f"No issuer mathced for: {card_name}")
     
-    return best_issuer
+    return best_issuer.replace(RIGHTS_RESERVED, "")
 
 def get_credit_needed(credit_needed_html_text): 
     credit_needed_out = []
@@ -30,13 +33,36 @@ def get_benefits(card_attr_list):
     for benefit in Benefits:
         if strip_up_to_period(benefit) in openai_response:
             out_benefits.append(benefit)   
+    
     if out_benefits is None:   
         print(f"No benefits matched for: {card_attr_list}")
     
     return out_benefits
 
-def get_reward_category_map(card_dict_elem): 
-    return 0
+def get_reward_category_map(card_attr_list):
+    out_benefits = []
+    card_attr_list_joined = " - ".join(card_attr_list)
+    
+    syntactic_openai_response = False
+    attempt = 0
+    while not syntactic_openai_response:
+        attempt += 1
+        openai_response = prompt_gpt4_for_json(purchase_category_map_prompt(card_attr_list_joined))
+        
+        try:
+            reward_category_map = json.loads(openai_response)
+        except ValueError:
+            continue
+        syntactic_openai_response = True
+        
+        out_benefits = []
+        for category, reward in reward_category_map.items():
+            out_benefits.append((category, reward))
+        
+    return out_benefits
+
+def get_apr(card_attr_list):
+    return 0; 
 
 def strip_up_to_period(text):
     parts = text.split('.', 1)  # Split the text at the first period
