@@ -2,10 +2,10 @@ from enum import Enum
 
 
 def strip_up_to_period(text):
-    parts = text.split('.', 1)  # Split the text at the first period
+    parts = text.split('.', 1) 
     if len(parts) > 1:
-        return parts[1].strip()  # Return the part after the period, stripped of leading/trailing whitespace
-    return text.strip()  # If no period is found, return the original text stripped of leading/trailing whitespace
+        return parts[1].strip()
+    return text.strip()
 
 def single_nearest(text: str, enum : Enum):
     if (text == None):
