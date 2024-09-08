@@ -20,7 +20,7 @@ class CreditCard:
                 f"credit_needed={self.credit_needed})")
     
     @staticmethod
-    def init_from_cc_dict(credit_card_dict, max_num, random_samples=False): 
+    def init_from_cc_dict(credit_card_dict : dict, max_num : int, random_samples : bool = False): 
         credit_cards = []
         if random_samples:
             credit_card_dict = random.sample(list(credit_card_dict.items()), max_num)

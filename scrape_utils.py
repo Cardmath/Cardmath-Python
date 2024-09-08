@@ -3,21 +3,21 @@ from openai_utils import prompt_gpt4_for_json, benefits_prompt, purchase_categor
 
 RIGHTS_RESERVED = '\u00AE'
 
-def get_issuer(card_name): 
+def get_issuer(card_name : str): 
     best_issuer = single_nearest(card_name, Issuer)
     if (isinstance(best_issuer, str)): 
         return best_issuer.replace(RIGHTS_RESERVED, "")
     return best_issuer
 
-def get_credit_needed(credit_needed_html_text): 
+def get_credit_needed(credit_needed_html_text : str): 
     return multiple_nearest(credit_needed_html_text, CreditNeeded)
     
-def get_benefits(card_description):
+def get_benefits(card_description : str):
     openai_response = prompt_gpt4_for_json(benefits_prompt(card_description))
     return multiple_nearest(openai_response, Benefit) 
     
 
-def get_reward_category_map(card_description):
+def get_reward_category_map(card_description : str):
     out_rewards = []
     reward_category_map = retry_openai_until_json_valid(purchase_category_map_prompt, card_description)
     
