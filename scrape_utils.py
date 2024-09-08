@@ -6,7 +6,9 @@ RIGHTS_RESERVED = '\u00AE'
 
 def get_issuer(card_name): 
     best_issuer = single_nearest(card_name, Issuer)
-    return best_issuer.replace(RIGHTS_RESERVED, "")
+    if (isinstance(best_issuer, str)): 
+        return best_issuer.replace(RIGHTS_RESERVED, "")
+    return best_issuer
 
 def get_credit_needed(credit_needed_html_text): 
     return multiple_nearest(credit_needed_html_text, CreditNeeded)
@@ -31,6 +33,7 @@ def get_reward_category_map(card_attr_list):
         except ValueError:
             continue
         syntactic_openai_response = True
+        print(f"OpenAI succeeded with attempt {attempt}")
         
     for category, reward in reward_category_map.items():
         if isinstance(reward, (tuple, list)) and len(reward) == 2:
@@ -46,9 +49,10 @@ def get_reward_category_map(card_attr_list):
         reward_type = single_nearest(reward_type, RewardUnit)
         try :
             reward_amt = float(reward_amt)
-        except ValueError:
+        except ValueError and TypeError:
             reward_amt = 0
             print(f"Unexpected reward amount: {category, reward_amt} ")
+        
         out_rewards.append((single_nearest(category, PurchaseCategory), (reward_type, reward_amt)))
     
     return out_rewards
