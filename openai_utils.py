@@ -1,6 +1,6 @@
 from openai import OpenAI
 from dotenv import load_dotenv
-from enums import PurchaseCategory, RewardUnit, Benefits
+from enums import PurchaseCategory, RewardUnit, Benefit
 import os
 load_dotenv()
 
@@ -67,7 +67,7 @@ def benefits_prompt(card_dict_attr_list) :
     This list should consist of benefits from the following list:
     
     CREDIT CARD BENEFITS ENUM LIST :
-    {separator.join([benefit.value for benefit in Benefits])}
+    {separator.join([benefit.value for benefit in Benefit])}
 
     EXAMPLE OUTPUT:
     airport lounge access, cell phone protection, concierge service

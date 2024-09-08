@@ -1,5 +1,24 @@
 from enum import Enum
 
+
+def strip_up_to_period(text):
+    parts = text.split('.', 1)  # Split the text at the first period
+    if len(parts) > 1:
+        return parts[1].strip()  # Return the part after the period, stripped of leading/trailing whitespace
+    return text.strip()  # If no period is found, return the original text stripped of leading/trailing whitespace
+
+def single_nearest(text: str, enum : Enum,):
+    for enum_element in enum:
+        if strip_up_to_period(enum_element) in text:
+            return enum_element
+        
+def multiple_nearest(text: str, enum : Enum):
+    out_enums = []
+    for enum_element in enum:
+        if strip_up_to_period(enum_element) in text:
+            out_enums.append(enum_element)
+    return out_enums
+
 class Issuer(str, Enum):
     CAPITAL_ONE = "Capital One"
     CHASE = "Chase"
@@ -36,9 +55,10 @@ class RewardUnit(str, Enum):
     JETBLUE_TRUEBLUE_POINTS = "JetBlue TrueBlue Points"
     ALASKA_MILEAGE_PLAN_MILES = "Alaska Mileage Plan Miles"
     RADISSON_REWARDS_POINTS = "Radisson Rewards Points"
+    
 
 # Define an enum for benefits
-class Benefits(str, Enum):
+class Benefit(str, Enum):
     AIRPORT_LOUNGE_ACCESS = "airport lounge access"
     CELL_PHONE_PROTECTION = "cell phone protection"
     CONCIERGE_SERVICE = "concierge service"
@@ -57,6 +77,7 @@ class Benefits(str, Enum):
     TRAVEL_ASSISTANCE_SERVICES = "travel assistance services"
     TRAVEL_INSURANCE = "travel insurance"
     
+    
 # Define an enum for credit needed
 class CreditNeeded(str, Enum):
     EXCELLENT = "Excellent" # 720-850
@@ -64,7 +85,7 @@ class CreditNeeded(str, Enum):
     FAIR = "Fair" # 630-689
     POOR = "Bad" # 0-629 
     
-class PurchaseCategory(Enum):
+class PurchaseCategory(str, Enum):
     TRAVEL = "Travel"
     DINING = "Dining"
     GROCERIES = "Groceries"
