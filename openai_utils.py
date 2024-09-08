@@ -46,30 +46,30 @@ def purchase_category_map_prompt(card_attributes) :
     Please analyze the provided text that describes credit card benefits and map it to the following transaction types and reward units.
     Return the mapped transaction types and reward units as JSON objects. 
 
-TRANSACTION TYPES / PURCHASE CATEGORIES:
+    TRANSACTION TYPES / PURCHASE CATEGORIES:
 
-{separator.join([purchase_category.value for purchase_category in PurchaseCategory])}
+    {separator.join([purchase_category.value for purchase_category in PurchaseCategory])}
 
-REWARD UNITS / POINTS SYSTEMS:
-{separator.join([reward_unit.value for reward_unit in RewardUnit])}
+    REWARD UNITS / POINTS SYSTEMS:
+    {separator.join([reward_unit.value for reward_unit in RewardUnit])}
 
-CREDIT CARD BENEFITS RAW TEXT:
-"{card_attributes}"
+    CREDIT CARD BENEFITS RAW TEXT:
+    "{card_attributes}"
 
-OUTPUT:
-I want you to respond in correct Javascript as if answering an API call. 
-You should not use ```javascript to indicate you are writing javascript. 
-The returned JSON dictionary should represent the amount of 'reward unit' when spending $1 on a purchase belonging to a specific category. 
-It is reasonable to assume that the lowest value is 1 for all reward units.
+    OUTPUT:
+    I want you to respond in correct Javascript as if answering an API call. 
+    You should not use ```javascript to indicate you are writing javascript. 
+    The returned JSON dictionary should represent the amount of 'reward unit' when spending $1 on a purchase belonging to a specific category. 
+    It is reasonable to assume that the lowest value is 1 for all reward units.
 
-EXAMPLE OUTPUT ELEMENT: 
-"Groceries" : ("Hilton Honors Points", 3)
-"Gas" : ("Hilton Honors Points", 1)
-"Gas" : ("Hilton Honors Points", 1)
+    EXAMPLE OUTPUT ELEMENT: 
+    "Groceries" : ("Hilton Honors Points", 3)
+    "Gas" : ("Hilton Honors Points", 1)
+    "Gas" : ("Hilton Honors Points", 1)
 
-EXAMPLE OUTPUT EXPLANATION:
-each dollar spent on food and drink groceries transactions earns you 3 Hilton Honors Points
-"""
+    EXAMPLE OUTPUT EXPLANATION:
+    each dollar spent on food and drink groceries transactions earns you 3 Hilton Honors Points
+    """
 
 
 def benefits_prompt(card_dict_attr_list) : 
