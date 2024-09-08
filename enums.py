@@ -7,7 +7,7 @@ def strip_up_to_period(text):
     return text.strip()
 
 def single_nearest(text: str, enum : Enum):
-    if (text == None):
+    if text is None:
         return None
     
     for enum_element in enum:
@@ -15,7 +15,7 @@ def single_nearest(text: str, enum : Enum):
             return enum_element
         
 def multiple_nearest(text: str, enum : Enum):
-    if (text == None):
+    if text is None:
         return None
     
     out_enums = []
