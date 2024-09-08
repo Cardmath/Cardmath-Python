@@ -25,23 +25,23 @@ class CreditCard:
         if random_samples:
             credit_card_dict = random.sample(list(credit_card_dict.items()), max_num)
         
-        for idx, val in enumerate(credit_card_dict):
+        for idx, unparsed_card in enumerate(credit_card_dict):
             if idx == max_num:
                 return credit_cards
             
             print(" --- " + str(idx + 1) + " ---")
             
-            card_details, card_attributes = val
-            cc_issuer, cc_name, score_needed = card_details
-            cc_name = cc_name.replace('\u00AE', '')
-            issuer = get_issuer(cc_issuer)
+            card_details, card_attributes = unparsed_card
+            issuer, name, score_needed = card_details
+            name = name.replace('\u00AE', '')
+            issuer = get_issuer(name)
             benefits = get_benefits(card_attributes)
             credit_needed = get_credit_needed(score_needed)
             reward_category_map = get_reward_category_map(card_attributes)
             apr = get_apr(card_attributes)
             
-            credit_card = CreditCard(cc_name, issuer, reward_category_map, benefits, credit_needed, apr)
-            credit_cards.append(credit_card)
+            parsed_card = CreditCard(name, issuer, reward_category_map, benefits, credit_needed, apr)
+            credit_cards.append(parsed_card)
         
         return credit_cards
         
