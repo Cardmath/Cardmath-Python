@@ -12,8 +12,6 @@ client = OpenAI(
 separator = "\n - "
 
 def prompt_gpt4_for_json(prompt):    
-    
-    
     chat_completion = client.chat.completions.create(
         messages=[
             {

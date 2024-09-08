@@ -20,11 +20,13 @@ def get_card_dict(input_file, output_file):
         print(f"Found {len(cards)} cards.")
         
         for card in cards:
+            
             credit_div = card.find(class_='rightDetail').find(class_='credit_div')
             issuer = credit_div.find(class_='apply_now_bank_name')
             credit_needed = credit_div.find(class_='credit_needed')
             card_title = card.find('h2')
             mid_detail = card.find(class_="midDetail")
+            
             if mid_detail.find(class_="longDescription"):
                 card_attributes = mid_detail.find(class_="longDescription").find('ul').findAll('li')
                 long_description_used += 1    
