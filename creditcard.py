@@ -10,7 +10,7 @@ class CreditCard:
     issuer: Issuer
     reward_category_map: List[Dict[PurchaseCategory, float]]
     benefits: List[Benefit]
-    credit_needed: list[CreditNeeded]
+    credit_needed: List[CreditNeeded]
     apr: float
     
     def __str__(self):
@@ -32,13 +32,15 @@ class CreditCard:
             print(" --- " + str(idx + 1) + " ---")
             
             card_details, card_attributes = unparsed_card
+            card_description = "\n - ".join(card_attributes).strip()
             issuer, name, score_needed = card_details
             name = name.replace('\u00AE', '')
+            
             issuer = get_issuer(name)
-            benefits = get_benefits(card_attributes)
+            benefits = get_benefits(card_description)
             credit_needed = get_credit_needed(score_needed)
-            reward_category_map = get_reward_category_map(card_attributes)
-            apr = get_apr(card_attributes)
+            reward_category_map = get_reward_category_map(card_description)
+            apr = get_apr(card_description)
             
             parsed_card = CreditCard(name, issuer, reward_category_map, benefits, credit_needed, apr)
             credit_cards.append(parsed_card)

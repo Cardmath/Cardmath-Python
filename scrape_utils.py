@@ -12,16 +12,14 @@ def get_issuer(card_name):
 def get_credit_needed(credit_needed_html_text): 
     return multiple_nearest(credit_needed_html_text, CreditNeeded)
     
-def get_benefits(card_attr_list):
-    card_attr_list_joined = " - ".join(card_attr_list)
-    openai_response = prompt_gpt4_for_json(benefits_prompt(card_attr_list_joined))
+def get_benefits(card_description):
+    openai_response = prompt_gpt4_for_json(benefits_prompt(card_description))
     return multiple_nearest(openai_response, Benefit) 
     
 
-def get_reward_category_map(card_attr_list):
+def get_reward_category_map(card_description):
     out_rewards = []
-    card_attr_list_joined = " - ".join(card_attr_list)
-    reward_category_map = retry_openai_until_json_valid(purchase_category_map_prompt, card_attr_list_joined)
+    reward_category_map = retry_openai_until_json_valid(purchase_category_map_prompt, card_description)
     
     for category, reward in reward_category_map.items():
         if isinstance(reward, (tuple, list)) and len(reward) == 2:
@@ -45,5 +43,5 @@ def get_reward_category_map(card_attr_list):
     
     return out_rewards
 
-def get_apr(card_attr_list):
+def get_apr(card_description):
     return 0; 
