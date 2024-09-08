@@ -33,7 +33,7 @@ def get_reward_category_map(card_attr_list):
         syntactic_openai_response = True
         
     for category, reward in reward_category_map.items():
-        if isinstance(reward, (tuple, list)):
+        if isinstance(reward, (tuple, list)) and len(reward) == 2:
             reward_type, reward_amt = reward
         elif isinstance(reward, dict):
             reward_type, reward_amt = list(reward.items())[0]
