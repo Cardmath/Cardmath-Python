@@ -1,16 +1,18 @@
 from enums import * 
 from scrape_utils import *
 import random
+from dataclasses import dataclass
+from typing import List, Dict
 
+@dataclass(frozen=True)
 class CreditCard:
-    def __init__(self, name, issuer, reward_category_map, benefits, credit_needed, apr):
-        self.name = name # Name of Credit Card
-        self.issuer = issuer # Name of Issuer
-        self.reward_category_map = reward_category_map # Map of Purchase Category -> Reward Units
-        self.benefits = benefits  # List of additional Benefits
-        self.credit_needed = credit_needed  # CreditNeeded Enum attribute
-        self.apr = apr # apr object
-
+    name: str
+    issuer: Issuer
+    reward_category_map: List[Dict[PurchaseCategory, float]]
+    benefits: List[Benefit]
+    credit_needed: list[CreditNeeded]
+    apr: float
+    
     def __str__(self):
         return (f"CreditCard(name={self.name}, issuer={self.issuer}, "
                 f"rewards={self.reward_category_map}, "
