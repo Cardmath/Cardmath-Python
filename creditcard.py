@@ -20,30 +20,36 @@ class CreditCard:
                 f"credit_needed={self.credit_needed})")
     
     @staticmethod
+    def init_from_str_tuple(credit_card_tuple : tuple):        
+        if len(credit_card_tuple) == 2:
+            (name, issuer, score_needed, description_used), card_attributes = credit_card_tuple
+        elif len(credit_card_tuple) == 1:
+            id, name, issuer, score_needed, description_used, card_attributes = credit_card_tuple[0]
+        else :
+            print("Invalid tuple length.")
+            return None
+        
+        name = name.replace('\u00AE', '')
+        issuer = get_issuer(issuer)
+        benefits = get_benefits(card_attributes)
+        credit_needed = get_credit_needed(score_needed)
+        reward_category_map = get_reward_category_map(card_attributes)
+        apr = get_apr(card_attributes)
+        return CreditCard(name, issuer, reward_category_map, benefits, credit_needed, apr)
+        
+    @staticmethod
     def init_from_cc_dict(credit_card_dict : dict, max_num : int, random_samples : bool = False): 
-        credit_cards = []
         if random_samples:
             credit_card_dict = random.sample(list(credit_card_dict.items()), max_num)
         
-        for idx, unparsed_card in enumerate(credit_card_dict):
+        credit_cards = []
+        for idx, credit_card_tuple in enumerate(credit_card_dict):
             if idx == max_num:
-                return credit_cards
-            
-            print(" --- " + str(idx + 1) + " ---")
-            
-            card_details, card_attributes = unparsed_card
-            card_description = "\n - ".join(card_attributes).strip()
-            issuer, name, score_needed = card_details
-            name = name.replace('\u00AE', '')
-            
-            issuer = get_issuer(name)
-            benefits = get_benefits(card_description)
-            credit_needed = get_credit_needed(score_needed)
-            reward_category_map = get_reward_category_map(card_description)
-            apr = get_apr(card_description)
-            
-            parsed_card = CreditCard(name, issuer, reward_category_map, benefits, credit_needed, apr)
+                return credit_cards    
+            parsed_card = CreditCard.init_from_str_tuple(credit_card_tuple)
             credit_cards.append(parsed_card)
         
         return credit_cards
+    
+
         
