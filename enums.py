@@ -1,6 +1,5 @@
 from enum import Enum
 
-
 def strip_up_to_period(text):
     parts = text.split('.', 1) 
     if len(parts) > 1:

@@ -1,6 +1,5 @@
 from creditcard import CreditCard
 from scrape import get_card_dict
-import random
 
 cc_dict = get_card_dict('cardratings/cardratings.html', 'cardratings/output.txt')
 
