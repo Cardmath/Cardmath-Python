@@ -1,6 +1,5 @@
 from enums import *
-from openai_utils import prompt_gpt4_for_json, benefits_prompt, purchase_category_map_prompt
-import json
+from openai_utils import prompt_gpt4_for_json, benefits_prompt, purchase_category_map_prompt, retry_openai_until_json_valid
 
 RIGHTS_RESERVED = '\u00AE'
 
@@ -22,19 +21,8 @@ def get_benefits(card_attr_list):
 def get_reward_category_map(card_attr_list):
     out_rewards = []
     card_attr_list_joined = " - ".join(card_attr_list)
+    reward_category_map = retry_openai_until_json_valid(purchase_category_map_prompt, card_attr_list_joined)
     
-    syntactic_openai_response = False
-    attempt = 0
-    while not syntactic_openai_response:
-        attempt += 1
-        openai_response = prompt_gpt4_for_json(purchase_category_map_prompt(card_attr_list_joined))    
-        try:
-            reward_category_map = json.loads(openai_response)
-        except ValueError:
-            continue
-        syntactic_openai_response = True
-        print(f"OpenAI succeeded with attempt {attempt}")
-        
     for category, reward in reward_category_map.items():
         if isinstance(reward, (tuple, list)) and len(reward) == 2:
             reward_type, reward_amt = reward

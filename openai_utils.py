@@ -2,6 +2,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from enums import PurchaseCategory, RewardUnit, Benefit
 import os
+import json
 load_dotenv()
 
 client = OpenAI(
@@ -25,6 +26,21 @@ def prompt_gpt4_for_json(prompt):
         model="gpt-4o",
     )
     return chat_completion.choices[0].message.content
+
+def retry_openai_until_json_valid(prompt, card_attr_list_joined):
+    attempt = 0
+    reward_category_map = {}
+    while True:
+        attempt += 1
+        openai_response = prompt_gpt4_for_json(prompt(card_attr_list_joined))    
+        try:
+            reward_category_map = json.loads(openai_response)
+        except ValueError:
+            continue
+        break
+    
+    print(f"OpenAI succeeded with attempt {attempt}")    
+    return reward_category_map
 
 def purchase_category_map_prompt(card_attributes) : 
     return f"""
