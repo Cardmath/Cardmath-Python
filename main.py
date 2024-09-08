@@ -3,14 +3,16 @@ from scrape import get_card_dict
 from database.sqlite_impl import SQLiteImpl
 import pandas as pd
 
-max_num_card = 2
+CARDRATNGS_PAGE_DOWNLAOD = '../cardratings/cardratings.html'
+
+max_num_card = 5
 db = SQLiteImpl()
 db.connect('creditcards.db')
 db.create_unparsed_data_table()
 credit_cards = []
 
 if (db.is_empty()):
-    cc_dict = get_card_dict('cardratings/cardratings.html')
+    cc_dict = get_card_dict(CARDRATNGS_PAGE_DOWNLAOD)
 
     for idx, ((name, issuer, score_needed, description_used), card_attributes) in enumerate(cc_dict.items()):
         db.update_unparsed_data_table_entry(idx, name, issuer, score_needed, card_attributes, description_used)
