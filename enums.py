@@ -7,12 +7,18 @@ def strip_up_to_period(text):
         return parts[1].strip()  # Return the part after the period, stripped of leading/trailing whitespace
     return text.strip()  # If no period is found, return the original text stripped of leading/trailing whitespace
 
-def single_nearest(text: str, enum : Enum,):
+def single_nearest(text: str, enum : Enum):
+    if (text == None):
+        return None
+    
     for enum_element in enum:
         if strip_up_to_period(enum_element) in text:
             return enum_element
         
 def multiple_nearest(text: str, enum : Enum):
+    if (text == None):
+        return None
+    
     out_enums = []
     for enum_element in enum:
         if strip_up_to_period(enum_element) in text:

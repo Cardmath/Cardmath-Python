@@ -44,7 +44,11 @@ def get_reward_category_map(card_attr_list):
 
         
         reward_type = single_nearest(reward_type, RewardUnit)
-        reward_amt = float(reward_amt)
+        try :
+            reward_amt = float(reward_amt)
+        except ValueError:
+            reward_amt = 0
+            print(f"Unexpected reward amount: {category, reward_amt} ")
         out_rewards.append((single_nearest(category, PurchaseCategory), (reward_type, reward_amt)))
     
     return out_rewards
