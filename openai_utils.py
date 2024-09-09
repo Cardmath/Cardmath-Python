@@ -47,7 +47,6 @@ def purchase_category_map_prompt(card_attributes) :
     Return the mapped transaction types and reward units as JSON objects. 
 
     TRANSACTION TYPES / PURCHASE CATEGORIES:
-
     {separator.join([purchase_category.value for purchase_category in PurchaseCategory])}
 
     REWARD UNITS / POINTS SYSTEMS:
