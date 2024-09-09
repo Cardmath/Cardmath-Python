@@ -35,7 +35,7 @@ def get_reward_category_map(card_description : str):
         reward_type = single_nearest(reward_type, RewardUnit)
         try :
             reward_amt = float(reward_amt)
-        except ValueError and TypeError:
+        except Exception:
             reward_amt = 0
             print(f"Unexpected reward amount: {category, reward_amt} ")
         
