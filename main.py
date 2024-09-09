@@ -1,5 +1,5 @@
 from creditcard import CreditCard
-from scrape import get_card_dict
+from cardmath.extract_utils import extract_cardratings
 from database.sqlite_impl import SQLiteImpl
 from database.dbinterface import DatabaseInterface
 
@@ -20,7 +20,7 @@ def main():
     credit_cards = []
 
     if (db.is_empty()):
-        cc_dict = get_card_dict(CARDRATNGS_PAGE_DOWNLAOD)
+        cc_dict = extract_cardratings(CARDRATNGS_PAGE_DOWNLAOD)
         populate_database(cc_dict, db)
         credit_cards = CreditCard.init_from_cc_dict(credit_card_dict=cc_dict, max_num=max_num_card, random_samples=True)
     else :
