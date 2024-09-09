@@ -1,5 +1,22 @@
 # Run this way
-python3 main.py
+
+Install Postman with
+
+On Mac:
+
+```
+curl -o- "https://dl-cli.pstmn.io/install/osx_arm64.sh" | sh
+```
+
+On Linux
+```
+curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+```
+
+Send JSON requests with the form as given by the ExampleRequest classes that inherit pydantic BaseModel
+
+export PYTHONPATH=$(pwd)
+fastapi dev app.py
 
 # Sample Output
 
