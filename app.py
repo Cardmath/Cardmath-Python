@@ -34,12 +34,11 @@ def download(request : DownloadRequest, db: Session = Depends(get_db)):
         return f"File downloaded at {request.file_path}."
 
 @app.post("/extract")
-def extract(request : ExtractRequest) -> ExtractResponse:    
+def extract(request : ExtractRequest, db: Session = Depends(get_db)) -> ExtractResponse:    
     cc_list = extract_cardratings(request.raw_html, request.max_items_to_extract)
     json_data = json.dumps(cc_list)
     
     if request.save_to_db:
-        db = get_db()
         for cc in cc_list:
             create_cardratings_scrape(db, cc)
     
@@ -47,21 +46,15 @@ def extract(request : ExtractRequest) -> ExtractResponse:
     
 
 @app.post("/parse") 
-def parse(request : ParseRequest) -> ParseResponse:
+def parse(request : ParseRequest, db: Session = Depends(get_db)) -> ParseResponse:
     unparsed_ccs : list = []        
-    if (len(request.raw_json_in) > 0):
+    if len(request.raw_json_in) > 0:
         unparsed_ccs = json.loads(request.raw_json_in)
     else :
-        db = get_db()
-        # TODO put a field in the parserequest for more granularity
         unparsed_ccs = get_all_cardratings_scrapes(db)
         
     out_parsed_cards : list = []
-    if request.save_to_db:
-        db = get_db()
-
     db_log = []  # Add db_log field
-
     for cc in unparsed_ccs:
         parsed_cc = CreditCardCreate(
             name=cc['name'],
@@ -72,7 +65,8 @@ def parse(request : ParseRequest) -> ParseResponse:
             ).create()
 
         if request.save_to_db:
-            db_log.append(create_credit_card(db, parsed_cc))
+            db_result = create_credit_card(db, parsed_cc)
+            db_log.append(db_result)
         
         if request.return_json:
             out_parsed_cards.append(parsed_cc.to_json())
