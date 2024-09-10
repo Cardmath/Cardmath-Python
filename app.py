@@ -1,23 +1,27 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy.orm import Session
 import os
 import json
 import requests
+from schemas import *
 from extract_utils import extract_cardratings
-from parse_utils import get_benefits, get_credit_needed, get_reward_category_map, get_issuer, get_apr
+from database.sql_alchemy_db import SessionLocal, engine
+from database import models
+from database.crud import *
 
-USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0'
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
+models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
-
-class DownloadRequest(BaseModel):
-    url: str
-    file_path: str
-    force_download: bool = False
-    user_agent : str = USER_AGENT
     
 @app.post("/download")
-def download(request : DownloadRequest):
+def download(request : DownloadRequest, db: Session = Depends(get_db)):
     if os.path.exists(request.file_path) or not request.force_download:
         return "File already exists or download not forced."
     else:
@@ -29,48 +33,49 @@ def download(request : DownloadRequest):
             file.write(response.content)
         return f"File downloaded at {request.file_path}."
 
-class ExtractRequest(BaseModel):
-    file_path: str
-    return_json: bool = True
-    max_items_to_extract: int = 10
-
 @app.post("/extract")
-def extract(request : ExtractRequest):    
-    cc_list = extract_cardratings(request.file_path, request.max_items_to_extract)
+def extract(request : ExtractRequest) -> ExtractResponse:    
+    cc_list = extract_cardratings(request.raw_html, request.max_items_to_extract)
     json_data = json.dumps(cc_list)
-
-    json_file_path = request.file_path.replace('.html', '.json')
-    with open(json_file_path, 'w') as file:
-        file.write(json_data)
     
-    if (request.return_json):
-        return (json_data, json_file_path)
-    else : 
-        return (None, json_file_path)
+    if request.save_to_db:
+        db = get_db()
+        for cc in cc_list:
+            create_cardratings_scrape(db, cc)
     
-
-class ParseRequest(BaseModel):
-    json_file_path: str
-    raw_json_in : str
-    return_json: bool = True
-    max_items_to_parse: int = 10  
+    return ExtractResponse(raw_json_out=json_data, db_log= [0, 1]) # PLACEHOLDER DB LOG
+    
 
 @app.post("/parse") 
-def parse(request : ParseRequest):
-    cc_list = []
-    cc_parsed_list = []
+def parse(request : ParseRequest) -> ParseResponse:
+    unparsed_ccs : list = []        
     if (len(request.raw_json_in) > 0):
-        cc_list = json.loads(request.raw_json_in)
+        unparsed_ccs = json.loads(request.raw_json_in)
     else :
-        with open(request.json_file_path, 'r') as file:
-            cc_list = json.load(file)
+        db = get_db()
+        # TODO put a field in the parserequest for more granularity
+        unparsed_ccs = get_all_cardratings_scrapes(db)
+        
+    out_parsed_cards : list = []
+    if request.save_to_db:
+        db = get_db()
+
+    db_log = []  # Add db_log field
+
+    for cc in unparsed_ccs:
+        parsed_cc = CreditCardCreate(
+            name=cc['name'],
+            issuer=cc['issuer'], 
+            score_needed=cc['score_needed'],
+            description_used=cc['description_used'],
+            card_attributes=cc['card_attributes']
+            ).create()
+
+        if request.save_to_db:
+            db_log.append(create_credit_card(db, parsed_cc))
+        
+        if request.return_json:
+            out_parsed_cards.append(parsed_cc.to_json())
     
-    for cc in cc_list: cc_parsed_list.append({"benefits" : get_benefits(cc['card_attributes']),
-        "credit_needed" : get_credit_needed(cc['credit_needed']),
-        "reward_category_map" : get_reward_category_map(cc['card_attributes']),
-        "issuer" : get_issuer(cc['issuer']),
-        "apr" : get_apr(cc['card_attributes'])
-    })
-    return json.dumps(cc_parsed_list)
-    
+    return ParseResponse(raw_json_out=out_parsed_cards, db_log=db_log)  # Remove json.dumps()
           
