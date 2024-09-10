@@ -1,3 +1,6 @@
+## Sites this Project Scrapes
+[Cardrating.com](https://www.cardratings.com/credit-card-list.html)
+
 ## On Startup
 Set the path variable to the root directory of the repo
 ```
