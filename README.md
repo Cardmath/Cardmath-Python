@@ -1,25 +1,31 @@
-# Run this way
+## On Startup
+Set the path variable to the root directory of the repo
+```
+export PYTHONPATH=$(pwd)
+```
 
-Install Postman with
+## Start FastAPI server locally
+```
+fastapi dev app.py
+```
 
-On Mac:
+## To run tests:
+```
+pytest -s tests/test_app.py
+```
+You might want to replace test_app.py with a different filepath
 
+## Install Postman
+### On Mac:
 ```
 curl -o- "https://dl-cli.pstmn.io/install/osx_arm64.sh" | sh
 ```
-
-On Linux
+### On Linux
 ```
 curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
 ```
 
-Send JSON requests with the form as given by the ExampleRequest classes that inherit pydantic BaseModel
-
-export PYTHONPATH=$(pwd)
-fastapi dev app.py
-
-# Sample Output
-
+## Old Sample Output
 ```
 Found 80 cards.
 Long description used: 31
