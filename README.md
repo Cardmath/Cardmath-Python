@@ -28,6 +28,18 @@ curl -o- "https://dl-cli.pstmn.io/install/osx_arm64.sh" | sh
 curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
 ```
 
+## Postman Endpoint Tests
+
+localhost:8000/download
+```
+{
+    "url" : "https://www.cardratings.com/credit-card-list.html",
+    "file_path" : "/home/johannes/CreditCards/cardratings.html",
+    "force_download" : true,
+    "user_agent" : "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0"
+}
+```
+
 ## Old Sample Output
 ```
 Found 80 cards.
