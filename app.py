@@ -1,13 +1,13 @@
-from fastapi import Depends, FastAPI, HTTPException
-from sqlalchemy.orm import Session
-import os
-import json
-import requests
-from schemas import *
-from extract_utils import extract_cardratings
-from database.sql_alchemy_db import SessionLocal, engine
 from database import models
 from database.crud import *
+from database.sql_alchemy_db import SessionLocal, engine
+from extract_utils import extract_cardratings
+from fastapi import Depends, FastAPI
+from schemas import *
+from sqlalchemy.orm import Session
+import json
+import os
+import requests
 
 # Dependency
 def get_db():

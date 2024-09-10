@@ -1,6 +1,6 @@
 from .sql_alchemy_db import Base
-from pydantic import BaseModel
 from enums import *
+from pydantic import BaseModel
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float
 from sqlalchemy.orm import relationship
 import json
