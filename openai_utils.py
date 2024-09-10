@@ -18,7 +18,7 @@ def prompt_gpt4_for_json(prompt):
                 "role": "system",
                 "content": prompt,
                 "max_tokens" : 2000,
-                "temperature" : 0.1
+                "temperature" : 0.0
             }
         ],
         model="gpt-4o",
