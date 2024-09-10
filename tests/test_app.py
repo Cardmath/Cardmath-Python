@@ -23,6 +23,8 @@ def test_download():
     
     assert response.status_code == 200
     assert os.path.exists(SAFE_LOCAL_DOWNLOAD_SPOT)
+    remove_if_exists(SAFE_LOCAL_DOWNLOAD_SPOT)
+    assert not os.path.exists(SAFE_LOCAL_DOWNLOAD_SPOT)
 
 def test_parse_with_raw_json():
     request_data = json.dumps({
