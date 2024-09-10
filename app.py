@@ -1,6 +1,7 @@
 from database import models
 from database.crud import *
 from database.sql_alchemy_db import SessionLocal, engine
+from download_utils import download_html
 from extract_utils import extract_cardratings
 from fastapi import Depends, FastAPI
 from schemas import *
@@ -20,19 +21,27 @@ def get_db():
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
     
+# Download a website locally
 @app.post("/download")
-def download(request : DownloadRequest, db: Session = Depends(get_db)):
-    if os.path.exists(request.file_path) or not request.force_download:
-        return "File already exists or download not forced."
-    else:
-        headers = {
-            'User-Agent': request.user_agent
-        }
-        response = requests.get(request.fallback_url, headers=headers)
-        with open(request.file_path, 'wb') as file:
-            file.write(response.content)
-        return f"File downloaded at {request.file_path}."
+def download(request: DownloadRequest) -> DownloadResponse:
+    file_path = request.file_path
+    exists = os.path.exists(file_path)
+    file_overwritten = False
+    status_code = "No Status Code"
+    
+    if exists and not request.force_download:
+        status_code = "200"
+    elif not exists or request.force_download:
+        file_path, status_code = download_html(user_agent=request.user_agent,
+                                               url=request.url,
+                                               file_path=file_path)
+        file_overwritten = exists
 
+    return DownloadResponse(
+        status_code=status_code,
+        file_path=file_path,
+        file_overwritten=file_overwritten)
+    
 @app.post("/extract")
 def extract(request : ExtractRequest, db: Session = Depends(get_db)) -> ExtractResponse:    
     cc_list = extract_cardratings(request.raw_html, request.max_items_to_extract)

@@ -1,9 +1,28 @@
-import pytest
+from app import app, parse, ParseRequest, ParseResponse, ExtractRequest, DownloadRequest
+from download_utils import remove_if_exists
 from fastapi.testclient import TestClient
-from app import app, parse, ParseRequest, ParseResponse, ExtractRequest
 import json
+import os
+import pytest
 
 client = TestClient(app)
+
+SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/CreditCards/cardratings.html"
+
+def test_download():
+    remove_if_exists(SAFE_LOCAL_DOWNLOAD_SPOT)
+    assert not os.path.exists(SAFE_LOCAL_DOWNLOAD_SPOT)
+
+    request_data = DownloadRequest(
+        url = "https://www.cardratings.com/credit-card-list.html",
+        file_path = SAFE_LOCAL_DOWNLOAD_SPOT,
+        force_download = True,
+        user_agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0"
+    )
+    response = client.post("/download", content=request_data.model_dump_json())
+    
+    assert response.status_code == 200
+    assert os.path.exists(SAFE_LOCAL_DOWNLOAD_SPOT)
 
 def test_parse_with_raw_json():
     request_data = json.dumps({
@@ -30,9 +49,7 @@ def test_extract_with_raw_html():
     assert "card_title" in json_response
     assert "issuer" in json_response
     assert "credit_needed" in json_response
-    
-# TODO WRITE DOWNLOAD TESTS
-    
+        
     
 TEST_HTML = """
 <!DOCTYPE html>

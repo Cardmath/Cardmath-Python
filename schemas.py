@@ -39,7 +39,10 @@ class DownloadRequest(BaseModel):
     user_agent : str = USER_AGENT
     
 class DownloadResponse(BaseModel):
-    pass
+    status_code : str
+    exists: bool = False # File already exists
+    file_path : str = None # Path to downloaded file
+    file_overwritten : bool = False # File was overwritten
     
 class ExtractRequest(BaseModel):
     raw_html : str
