@@ -31,7 +31,6 @@ def get_reward_category_map(card_description : str):
             reward_amt = 0
             print(f"Unexpected reward format: {category, reward} ")
 
-        
         reward_type = single_nearest(reward_type, RewardUnit)
         try :
             reward_amt = float(reward_amt)
