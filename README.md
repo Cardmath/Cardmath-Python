@@ -1,3 +1,6 @@
+## Issue Tracker
+[Google Doc](https://docs.google.com/document/d/1fCZ-KVuJ2Rv4VMN8IJ3mdNmXG8HH2luKAAgKBecQnmI/edit?usp=sharing)
+
 ## Sites this Project Scrapes
 [Cardrating.com](https://www.cardratings.com/credit-card-list.html)
 
