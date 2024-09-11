@@ -13,7 +13,6 @@ def extract_cardratings(raw_html, max_items_to_extract=100):
     out_card_list = []
     soup = BeautifulSoup(raw_html, 'html.parser')
     cards = soup.find_all(class_="CardDetails")
-    print(f"Found {len(cards)} cards.")
     
     for card in cards:
         if (len(out_card_list) >= max_items_to_extract):
@@ -30,15 +29,20 @@ def extract_cardratings(raw_html, max_items_to_extract=100):
             card_attributes = mid_detail.find(class_="longDescription").find('ul').findAll('li')
             description_used = LONG_DESCRIPTION_USED    
         else:
-            card_attributes = card.find('ul').findAll('li')
+            card_attributes = card.find('ul')
+            if card_attributes is not None:
+                card_attributes = card_attributes.findAll('li')
             description_used = MEDIUM_DESCRIPTION_USED
+        
+        processed_card_attributes : str = "" 
+        if card_attributes is not None and isinstance(card_attributes, list):
+            processed_card_attributes = "\n - ".join([card_attribute.get_text(strip=True).replace("\n", "") for card_attribute in card_attributes])
             
-        #start constructing a json object
-        card = {"card_title": card_title.get_text(strip=True),
+        card = {"name": card_title.get_text(strip=True),
                 "issuer": issuer.get_text(strip=True),
-                "credit_needed": credit_needed.get_text(strip=True),
+                "score_needed": credit_needed.get_text(strip=True),
                 "description_used": description_used,
-                "card_attributes": "\n - ".join([card_attribute.get_text(strip=True).replace("\n", "") for card_attribute in card_attributes])}
+                "card_attributes": processed_card_attributes}
         
         out_card_list.append(card)
         
