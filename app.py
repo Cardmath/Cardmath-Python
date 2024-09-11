@@ -1,14 +1,13 @@
 from database import models
-import database.crud as crud
 from database.sql_alchemy_db import SessionLocal, engine
 from download_utils import download_html
 from extract_utils import extract_cardratings
 from fastapi import Depends, FastAPI
 from schemas import *
 from sqlalchemy.orm import Session
+import database.crud as crud
 import json
 import os
-import requests
 
 # Dependency
 def get_db():
@@ -54,28 +53,25 @@ def extract(request : ExtractRequest, db: Session = Depends(get_db)) -> ExtractR
     if request.save_to_db:
         for cc in cc_list:
             crud.create_cardratings_scrape(db, cc)
-    
+            
     return ExtractResponse(raw_json_out=json_data, db_log= [0, 1]) # PLACEHOLDER DB LOG
     
 
 @app.post("/parse") 
 def parse(request : ParseRequest, db: Session = Depends(get_db)) -> ParseResponse:
-    unparsed_ccs : list = []        
-    if len(request.raw_json_in) > 0:
-        unparsed_ccs = json.loads(request.raw_json_in)
+    json_in = json.loads(request.raw_json_in)
+    
+    unparsed_ccs : List[dict] = []
+    if len(json_in) > 0:
+        for unparsed_cc in json_in:
+            unparsed_ccs.append(unparsed_cc)
     else :
         unparsed_ccs = crud.get_all_cardratings_scrapes(db)
         
     out_parsed_cards : list = []
     db_log = []  # Add db_log field
     for cc in unparsed_ccs:
-        parsed_cc = CreditCardCreate(
-            name=cc['name'],
-            issuer=cc['issuer'], 
-            score_needed=cc['score_needed'],
-            description_used=cc['description_used'],
-            card_attributes=cc['card_attributes']
-            ).create()
+        parsed_cc = CreditCardCreate.model_construct(cc).create()
 
         if request.save_to_db:
             db_result = crud.create_credit_card(db, parsed_cc)

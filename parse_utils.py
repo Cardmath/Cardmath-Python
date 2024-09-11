@@ -24,7 +24,7 @@ def get_reward_category_map(card_description : str):
     for category, reward in reward_category_map.items():
         if isinstance(reward, (tuple, list)) and len(reward) == 2:
             reward_type, reward_amt = reward
-        elif isinstance(reward, dict):
+        elif isinstance(reward, dict) and len(reward) == 1:
             reward_type, reward_amt = list(reward.items())[0]
         else :
             reward_type = None

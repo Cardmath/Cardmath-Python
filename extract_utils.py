@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from schemas import CreditCardCreate
 
 cardratings_scraped_path = '/home/johannes/CreditCards/cardratings/cardratings.html'
 
@@ -38,11 +39,11 @@ def extract_cardratings(raw_html, max_items_to_extract=100):
         if card_attributes is not None and isinstance(card_attributes, list):
             processed_card_attributes = "\n - ".join([card_attribute.get_text(strip=True).replace("\n", "") for card_attribute in card_attributes])
             
-        card = {"name": card_title.get_text(strip=True),
-                "issuer": issuer.get_text(strip=True),
-                "score_needed": credit_needed.get_text(strip=True),
-                "description_used": description_used,
-                "card_attributes": processed_card_attributes}
+        card = CreditCardCreate(name= card_title.get_text(strip=True),
+                issuer= issuer.get_text(strip=True),
+                score_needed= credit_needed.get_text(strip=True),
+                description_used= description_used,
+                card_attributes= processed_card_attributes).model_dump_json()
         
         out_card_list.append(card)
         

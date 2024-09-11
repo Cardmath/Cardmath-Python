@@ -1,7 +1,7 @@
 from database.models import CreditCard
 from parse_utils import *
 from pydantic import BaseModel
-from typing import Tuple, List
+from typing import List, Optional
 import hashlib
 
 
@@ -10,11 +10,11 @@ import hashlib
 USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0'
 
 class CreditCardCreate(BaseModel):
-    name : str
-    issuer : str
-    score_needed : str
-    description_used : int
-    card_attributes : str
+    name : str = "No name"
+    issuer : str = "No issuer"
+    score_needed : str = "No score needed"
+    description_used : int = 0
+    card_attributes : str = "No card attributes"
     
     def create(self):
         name = self.name.replace('\u00AE', '')
@@ -31,6 +31,14 @@ class CreditCardCreate(BaseModel):
                           reward_category_map=reward_category_map,
                           apr=apr,
                           id=id)
+        
+class CreditCardModel(BaseModel):
+    name: Optional[str] = None
+    issuer: Optional[str] = None
+    reward_category_map: Optional[str] = None
+    benefits: Optional[List[str]] = None
+    credit_needed: Optional[List[str]] = None
+    apr: Optional[float] = None
 
 class DownloadRequest(BaseModel):
     url: str
@@ -57,7 +65,7 @@ class ExtractResponse(BaseModel):
 
     
 class ParseRequest(BaseModel):
-    raw_json_in : str
+    raw_json_in : str # list of json maps
     return_json: bool = True
     max_items_to_parse: int = 10
     save_to_db: bool = False
