@@ -45,7 +45,8 @@ class DownloadResponse(BaseModel):
     file_overwritten : bool = False # File was overwritten
     
 class ExtractRequest(BaseModel):
-    raw_html : str
+    file_path : str = ""
+    raw_html : str = "" 
     return_json: bool = True
     max_items_to_extract: int = 10
     save_to_db: bool = False

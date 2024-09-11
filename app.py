@@ -1,5 +1,5 @@
 from database import models
-from database.crud import *
+import database.crud as crud
 from database.sql_alchemy_db import SessionLocal, engine
 from download_utils import download_html
 from extract_utils import extract_cardratings
@@ -43,13 +43,17 @@ def download(request: DownloadRequest) -> DownloadResponse:
         file_overwritten=file_overwritten)
     
 @app.post("/extract")
-def extract(request : ExtractRequest, db: Session = Depends(get_db)) -> ExtractResponse:    
+def extract(request : ExtractRequest, db: Session = Depends(get_db)) -> ExtractResponse:
+    if len(request.raw_html) == 0 :
+        with open(request.file_path, "r") as f:
+            request.raw_html = f.read()    
+    
     cc_list = extract_cardratings(request.raw_html, request.max_items_to_extract)
     json_data = json.dumps(cc_list)
     
     if request.save_to_db:
         for cc in cc_list:
-            create_cardratings_scrape(db, cc)
+            crud.create_cardratings_scrape(db, cc)
     
     return ExtractResponse(raw_json_out=json_data, db_log= [0, 1]) # PLACEHOLDER DB LOG
     
@@ -60,7 +64,7 @@ def parse(request : ParseRequest, db: Session = Depends(get_db)) -> ParseRespons
     if len(request.raw_json_in) > 0:
         unparsed_ccs = json.loads(request.raw_json_in)
     else :
-        unparsed_ccs = get_all_cardratings_scrapes(db)
+        unparsed_ccs = crud.get_all_cardratings_scrapes(db)
         
     out_parsed_cards : list = []
     db_log = []  # Add db_log field
@@ -74,7 +78,7 @@ def parse(request : ParseRequest, db: Session = Depends(get_db)) -> ParseRespons
             ).create()
 
         if request.save_to_db:
-            db_result = create_credit_card(db, parsed_cc)
+            db_result = crud.create_credit_card(db, parsed_cc)
             db_log.append(db_result)
         
         if request.return_json:
