@@ -9,6 +9,56 @@ client = TestClient(app)
 
 SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/CreditCards/cardratings.html"
 
+def test_end_to_end():
+    
+    remove_if_exists(SAFE_LOCAL_DOWNLOAD_SPOT)
+    assert not os.path.exists(SAFE_LOCAL_DOWNLOAD_SPOT)
+    
+    download_request = DownloadRequest(
+        url = "https://www.cardratings.com/credit-card-list.html",
+        file_path = SAFE_LOCAL_DOWNLOAD_SPOT,
+        force_download = True,
+        user_agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0"
+    )
+    download_response = client.post("/download", content=download_request.model_dump_json())
+    
+    print("[End-to-End Test] Download Request Sent")
+    assert download_response.status_code == 200
+    download_path = json.loads(download_response.content.decode("utf-8"))["file_path"]
+    print("[End-to-End Test] Download Response Received")
+    assert download_path == SAFE_LOCAL_DOWNLOAD_SPOT
+    print("[End-to-End Test] Downloaded Response Processed")
+
+    extract_request = ExtractRequest(
+        file_path=SAFE_LOCAL_DOWNLOAD_SPOT,
+        return_json = True,
+        max_items_to_extract = 1,
+        save_to_db = False
+    )
+    
+    print("[End-to-End Test] Extract Request Sent")
+    extract_response = client.post("/extract", content=extract_request.model_dump_json()) 
+    assert extract_response.status_code == 200
+    print("[End-to-End Test] Extract Response Received")
+    raw_json_in = json.loads(extract_response.content.decode("utf-8"))["raw_json_out"]
+    print("[End-to-End Test] Extract Response Processed")
+    
+    parse_request_with_raw = ParseRequest(
+        raw_json_in = raw_json_in,
+        return_json = True,
+        max_items_to_parse = 1,
+        save_to_db = False
+    )
+    parse_response_with_raw = client.post("/parse", content=parse_request_with_raw.model_dump_json())
+    print("[End-to-End Test] Parse Request Sent")
+    assert parse_response_with_raw.status_code == 200
+    print("[End-to-End Test] Parse Response Received")
+    raw_json_out = json.loads(parse_response_with_raw.content.decode("utf-8"))["raw_json_out"]
+    assert len(json.loads(raw_json_out[0])["name"]) > 0
+    print("[End-to-End Test] Parse Response Processed")
+    print("Successful End-to-End Test")
+    
+
 def test_download():
     remove_if_exists(SAFE_LOCAL_DOWNLOAD_SPOT)
     assert not os.path.exists(SAFE_LOCAL_DOWNLOAD_SPOT)
@@ -48,9 +98,9 @@ def test_extract_with_raw_html():
     )    
     response = client.post("/extract", content=request_data.model_dump_json())
     json_response = response.json()["raw_json_out"]
-    assert "card_title" in json_response
+    assert "name" in json_response
     assert "issuer" in json_response
-    assert "credit_needed" in json_response
+    assert "score_needed" in json_response
         
     
 TEST_HTML = """
