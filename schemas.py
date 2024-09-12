@@ -1,4 +1,4 @@
-from database.models import CreditCard
+from database.creditcard import CreditCard
 from parse_utils import *
 from pydantic import BaseModel
 from typing import List, Optional

@@ -1,4 +1,4 @@
-from database import models
+from database import creditcard
 from database.sql_alchemy_db import SessionLocal, engine
 from download_utils import download_html
 from extract_utils import extract_cardratings
@@ -17,7 +17,7 @@ def get_db():
     finally:
         db.close()
 
-models.Base.metadata.create_all(bind=engine)
+creditcard.Base.metadata.create_all(bind=engine)
 app = FastAPI()
     
 # Download a website locally
