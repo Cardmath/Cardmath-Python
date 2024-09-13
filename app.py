@@ -1,24 +1,75 @@
+from auth.schemas import Token
+from auth.schemas import User, UserInDB, UserCreate
+from auth.utils import oauth2_scheme
 from database import creditcard
-from database.sql_alchemy_db import SessionLocal, engine
+from database.sql_alchemy_db import engine, get_db
+from datetime import timedelta
 from download_utils import download_html
 from extract_utils import extract_cardratings
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from schemas import *
 from sqlalchemy.orm import Session
+from typing import Annotated
+import auth.utils as auth_utils
+import database.auth.crud as auth_crud
 import database.crud as crud
 import json
 import os
 
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 creditcard.Base.metadata.create_all(bind=engine)
 app = FastAPI()
+
+@app.post("/token")
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: Session = Depends(get_db)
+) -> Token:
+    user = auth_utils.authenticate_user(db=db, username=form_data.username, password=form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,           
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=auth_utils.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth_utils.create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
+
+@app.post("/register")
+async def register_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: Session = Depends(get_db)
+) -> Token:
+    if auth_crud.get_user_by_username(db, form_data.username) is not None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,           
+            detail="Username is already taken",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    hashed_password = auth_utils.get_password_hash(form_data.password)
+    user = UserCreate(username=form_data.username, 
+                email=form_data.username, 
+                full_name=form_data.username,
+                disabled=False,
+                password=form_data.password)
+    auth_crud.create_user(db, user)
+    access_token_expires = timedelta(minutes=auth_utils.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth_utils.create_access_token(
+        data={"sub": form_data.username}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
+
+@app.get("/users/me")
+async def read_users_me(current_user: Annotated[User, Depends(auth_utils.get_current_user)]):
+    return current_user
+
+@app.get("/transactions/")
+async def transactions(token: Annotated[str, Depends(oauth2_scheme)]):
+    return {"token": token}
+
     
 # Download a website locally
 @app.post("/download")

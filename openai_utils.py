@@ -6,7 +6,7 @@ import os
 
 load_dotenv()
 client = OpenAI(
-    api_key=os.getenv('OPENAI_API_KEY')
+    api_key=os.getenv('OPENAI_API_KEY', "your_openai_api_key")
 )
 
 separator = "\n - "

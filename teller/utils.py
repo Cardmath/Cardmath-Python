@@ -1,8 +1,8 @@
-from pydantic import BaseModel
-import requests
-from models import TransactionModel, TransactionDetailsModel, CounterpartyModel
 from dotenv import load_dotenv
+from models import TransactionModel, TransactionDetailsModel, CounterpartyModel
+from pydantic import BaseModel
 import os
+import requests
 
 TELLER_API_ENTRYPOINT = "https://api.teller.io/"
 TELLER_ACCOUNTS = TELLER_API_ENTRYPOINT + "accounts"
@@ -32,6 +32,6 @@ class Teller(BaseModel):
             return []
     
 load_dotenv()
-client = Teller(cert=os.getenv("TELLER_CERT"), cert_key=os.getenv("TELLER_CERT_KEY"))
+client = Teller(cert=os.getenv("TELLER_CERT", "your_teller_cert"), cert_key=os.getenv("TELLER_CERT_KEY", "your_teller_cert_key"))
 
 client.get_transactions("PLACEHOLDER_ACCOUNT_ID", "PLACEHOLDER_AUTH_TOKEN")
