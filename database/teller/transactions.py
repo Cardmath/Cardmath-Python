@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
 from sqlalchemy.orm import relationship
-from sql_alchemy_db import Base
+from database.sql_alchemy_db import Base
 
 class Transaction(Base):
     __tablename__ = 'transactions'
@@ -24,7 +24,7 @@ class TransactionDetails(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     processing_status = Column(String, nullable=False)
-    category = Column(String, nullable=False)
+    category = Column(String, nullable=True)
     
     counterparty_id = Column(Integer, ForeignKey('counterparty.id'), nullable=False)
     counterparty = relationship("Counterparty", back_populates="transaction_details")

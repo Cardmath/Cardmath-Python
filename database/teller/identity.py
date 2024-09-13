@@ -1,8 +1,6 @@
-from sql_alchemy_db import Base
-
+from database.sql_alchemy_db import Base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-from sql_alchemy_db import Base
 
 class Account(Base):
     __tablename__ = 'accounts'
