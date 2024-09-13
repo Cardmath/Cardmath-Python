@@ -25,6 +25,17 @@ async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db)
 ) -> Token:
+    """
+    Authenticates a user and generates an access token.
+    Parameters:
+        form_data (OAuth2PasswordRequestForm): The form data containing the username and password.
+        db (Session, optional): The database session. Defaults to Depends(get_db).
+    Returns:
+        Token: The generated access token.
+    Raises:
+        HTTPException: If the username or password is incorrect.
+    """
+    
     user = auth_utils.authenticate_user(db=db, username=form_data.username, password=form_data.password)
     if not user:
         raise HTTPException(
@@ -43,6 +54,17 @@ async def register_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db)
 ) -> Token:
+    """
+    Register a user and generate an access token.
+    Args:
+        form_data (OAuth2PasswordRequestForm): The form data containing the user's credentials.
+        db (Session, optional): The database session. Defaults to Depends(get_db).
+    Returns:
+        Token: The generated access token.
+    Raises:
+        HTTPException: If the username is already taken.
+    """
+    
     if auth_crud.get_user_by_username(db, form_data.username) is not None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,           
@@ -64,16 +86,28 @@ async def register_for_access_token(
 
 @app.get("/users/me")
 async def read_users_me(current_user: Annotated[User, Depends(auth_utils.get_current_user)]):
-    return current_user
-
-@app.get("/transactions/")
-async def transactions(token: Annotated[str, Depends(oauth2_scheme)]):
-    return {"token": token}
-
+    """
+    Reads the current user's information.
+    Parameters:
+    - current_user: Annotated[User, Depends(auth_utils.get_current_user)]
+        The current user object.
+    Returns:
+    - current_user: Annotated[User, Depends(auth_utils.get_current_user)]
+        The current user object.
+    """
     
-# Download a website locally
+    return current_user
+    
 @app.post("/download")
 def download(request: DownloadRequest) -> DownloadResponse:
+    """
+    Downloads a file from the given URL and saves it to the specified file path.
+    Args:
+        request (DownloadRequest): The download request object containing the necessary information.
+    Returns:
+        DownloadResponse: The download response object containing the status code, file path, and file overwritten flag.
+    """
+    
     file_path = request.file_path
     exists = os.path.exists(file_path)
     file_overwritten = False
@@ -94,6 +128,15 @@ def download(request: DownloadRequest) -> DownloadResponse:
     
 @app.post("/extract")
 def extract(request : ExtractRequest, db: Session = Depends(get_db)) -> ExtractResponse:
+    """
+    Extracts credit card ratings from raw HTML content or a file path.
+    Parameters:
+    - request (ExtractRequest): The request object containing the raw HTML content and file path.
+    - db (Session, optional): The database session. Defaults to the session obtained from get_db.
+    Returns:
+    - ExtractResponse: The response object containing the extracted credit card ratings in JSON format and a database log.
+    """
+    
     if len(request.raw_html) == 0 :
         with open(request.file_path, "r") as f:
             request.raw_html = f.read()    
@@ -110,6 +153,17 @@ def extract(request : ExtractRequest, db: Session = Depends(get_db)) -> ExtractR
 
 @app.post("/parse") 
 def parse(request : ParseRequest, db: Session = Depends(get_db)) -> ParseResponse:
+    """
+    Parses the input JSON data and creates credit card objects.
+    Args:
+        request (ParseRequest): The request object containing the input JSON data.
+        db (Session, optional): The database session. Defaults to Depends(get_db).
+    Returns:
+        ParseResponse: The response object containing the parsed credit card data and database log.
+    Raises:
+        None
+    """
+    
     json_in = json.loads(request.raw_json_in)
     
     unparsed_ccs : List[dict] = []
