@@ -1,3 +1,4 @@
+import './App.css';
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Button } from 'primereact/button';
@@ -26,10 +27,12 @@ const App = () => {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/teller-connect" element={<TellerConnectComponent onSuccess={handleSuccess}/>} />
                 <Route path="/" element={
-                    <div>
-                        <h1>Welcome to Your React App</h1>
-                        <Button label="Login" icon="pi pi-sign-in" onClick={() => window.location.href = '/login'} />
-                        <Button label="Teller Connect" icon="pi pi-check" onClick={() => window.location.href = '/teller-connect'} />
+                    <div className="landing-page">
+                        <h1>Welcome to Cardmath</h1>
+                        <div className="button-group">
+                            <Button label="Login" icon="pi pi-sign-in" onClick={() => window.location.href = '/login'} />
+                            <Button label="Teller Connect" icon="pi pi-check" onClick={() => window.location.href = '/teller-connect'} />
+                        </div>
                     </div>
                 } />
             </Routes>
