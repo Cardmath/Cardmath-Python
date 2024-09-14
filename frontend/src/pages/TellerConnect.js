@@ -4,7 +4,9 @@ import { useTellerConnect } from 'teller-connect-react';
 const TellerConnectComponent = ({ onSuccess }) => {
     const config = {
         // Define your Teller Connect configuration here
-        applicationId: 'your-app-id', // Replace with your actual application ID
+        selectAccount: "disabled",
+        environment: 'sandbox',
+        applicationId: 'app_p3oodma27qfrj3hs8a000', // Replace with your actual application ID
         onSuccess: onSuccess,
     };
 
