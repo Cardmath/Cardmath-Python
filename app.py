@@ -7,6 +7,7 @@ from datetime import timedelta
 from download_utils import download_html
 from extract_utils import extract_cardratings
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from schemas import *
 from sqlalchemy.orm import Session
@@ -19,6 +20,14 @@ import os
 
 creditcard.Base.metadata.create_all(bind=engine)
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this to your needs
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 @app.post("/token")
 async def login_for_access_token(
