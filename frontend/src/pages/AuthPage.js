@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
+import './AuthPage.css';  // Optional: for custom styles
+import 'primeicons/primeicons.css';                        // Icons
+import 'primereact/resources/primereact.min.css';          // Core CSS
+import 'primereact/resources/themes/saga-blue/theme.css';  // Theme
+import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Password } from 'primereact/password';
-import { Button } from 'primereact/button';
-import 'primereact/resources/themes/saga-blue/theme.css';  // Theme
-import 'primereact/resources/primereact.min.css';          // Core CSS
-import 'primeicons/primeicons.css';                        // Icons
-import './LoginPage.css';  // Optional: for custom styles
+import React, { useState } from 'react';
 
-const LoginPage = () => {
+const AuthPage = ({ userHasAccount }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+
+    var endpoint = userHasAccount ? 'http://localhost:8000/token' : 'http://localhost:8000/register';  
 
     const handleLogin = () => {
         const formData = new URLSearchParams();
         formData.append('username', username);
         formData.append('password', password);
-        fetch('http://localhost:8000/register', {
+        fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -26,9 +28,10 @@ const LoginPage = () => {
                 return response.json();
             }
             throw new Error('Network response was not ok.');
-        }).then(data => {
-            // Handle the data
-            window.location.href = '/account-linking';
+        })
+        .then(data => {
+            localStorage.setItem('token', data.token);
+            window.location.href = '/connect';
         })
         .catch(error => {
             console.error('There was an error!', error)
@@ -37,9 +40,9 @@ const LoginPage = () => {
 
     return (
         <div className="login-container">
-            <h2>Login</h2>
+            <h2>{userHasAccount ? "Login" : "Register"}</h2>
             <div className="p-field">
-                <label htmlFor="username">Username</label>
+                <label htmlFor="username">Email</label>
                 <InputText id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
             </div>
             <div className="p-field">
@@ -51,4 +54,4 @@ const LoginPage = () => {
     );
 };
 
-export default LoginPage;
+export default AuthPage;
