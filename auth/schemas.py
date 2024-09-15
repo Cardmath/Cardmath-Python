@@ -1,9 +1,14 @@
 from database.auth.user import User, UserInDB
 from pydantic import BaseModel
-from pydantic_sqlalchemy import sqlalchemy_to_pydantic
 
-UserModel = sqlalchemy_to_pydantic(User, exclude=['id'])
-UserInDBModel = sqlalchemy_to_pydantic(UserInDB)
+class UserSchema(BaseModel):
+    username: str
+    email: str
+    full_name: str | None = None
+    disabled: bool
+
+class UserInDBSchema(UserSchema):
+    hashed_password: str
 
 class Token(BaseModel):
     access_token: str
@@ -12,8 +17,8 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: str | None = None
 
-class UserCreate(UserModel):
+class UserCreate(UserSchema):
     password: str
 
-class UserUpdate(UserModel):
+class UserUpdate(UserSchema):
     password: str | None = None
