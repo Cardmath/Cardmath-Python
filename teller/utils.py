@@ -1,7 +1,8 @@
 from dotenv import load_dotenv
-from models import TransactionModel, TransactionDetailsModel, CounterpartyModel
+from teller.schemas import TransactionSchema
 from pydantic import BaseModel
 import os
+from typing import List
 import requests
 
 TELLER_API_ENTRYPOINT = "https://api.teller.io/"
@@ -12,26 +13,17 @@ class Teller(BaseModel):
     cert : str
     cert_key: str
     
-    def get_transactions(self, account_id : str, auth_token : str):
+    def get_transactions(self, account_id : str, auth_token : str) -> List[TransactionSchema]:
         uri = f"{TELLER_ACCOUNTS}/{account_id}/{TRANSACTIONS}"
         response = requests.get(uri, auth=(auth_token, ""), cert=(self.cert, self.cert_key))
         if response.status_code == 200:
             transactions = response.json()
-            transaction_models = [TransactionModel(**transaction) for transaction in transactions]
-            transaction_details_models = [TransactionDetailsModel(**transaction["details"]) for transaction in transactions]
-            transaction_counterparty_models = [
-                CounterpartyModel(**transaction["details"]["counterparty"])
-                for transaction in transactions
-                if transaction["details"].get("counterparty") is not None
-            ]            
-            print(transaction_models[-1]) 
-            print(transaction_details_models[-1])
-            print(transaction_counterparty_models[-1])
-            return transaction_models
+            parsed_transactions = [TransactionSchema.model_validate(transaction) for transaction in transactions]           
+            return parsed_transactions
         else:
+            print(f"Error getting transactions: {response.status_code}")
             return []
     
 load_dotenv()
 client = Teller(cert=os.getenv("TELLER_CERT", "your_teller_cert"), cert_key=os.getenv("TELLER_CERT_KEY", "your_teller_cert_key"))
-
-client.get_transactions("PLACEHOLDER_ACCOUNT_ID", "PLACEHOLDER_AUTH_TOKEN")
+client.get_transactions("acc_p3oog0ncgd0ho7vl7q000", "token_lyrmqden5d4dnxujmnoo3jhibi")
