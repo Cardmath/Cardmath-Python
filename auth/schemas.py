@@ -1,5 +1,6 @@
 from database.auth.user import User, UserInDB
 from pydantic import BaseModel
+from teller.schemas import AccessTokenSchema
 
 class UserSchema(BaseModel):
     username: str

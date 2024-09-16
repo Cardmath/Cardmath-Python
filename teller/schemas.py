@@ -1,6 +1,25 @@
-from pydantic import BaseModel
-from typing import Optional
 from datetime import date
+from pydantic import BaseModel
+from typing import Optional, List
+
+class TellerUserSchema(BaseModel):
+    id: str
+
+class InstitutionSchema(BaseModel):
+    name: str
+
+class EnrollmentDetailsSchema(BaseModel):
+    id: str
+    institution: InstitutionSchema
+
+class AccessTokenSchema(BaseModel):
+    accessToken: str
+    user: TellerUserSchema
+    enrollment: EnrollmentDetailsSchema
+    signatures: List[str]
+
+    class Config:
+        orm_mode = True
 
 class CounterPartySchema(BaseModel):
     type: Optional[str] = None

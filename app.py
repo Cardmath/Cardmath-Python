@@ -2,6 +2,7 @@ from auth.schemas import Token
 from auth.schemas import User, UserInDB, UserCreate
 from auth.utils import oauth2_scheme
 from database import creditcard
+from database.auth.crud import update_user_with_enrollment
 from database.sql_alchemy_db import engine, get_db
 from datetime import timedelta
 from download_utils import download_html
@@ -11,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from schemas import *
 from sqlalchemy.orm import Session
+from teller.schemas import AccessTokenSchema
 from typing import Annotated
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
@@ -93,19 +95,14 @@ async def register_for_access_token(
     )
     return Token(access_token=access_token, token_type="bearer")
 
-@app.get("/users/me")
-async def read_users_me(current_user: Annotated[User, Depends(auth_utils.get_current_user)]):
+
+@app.post("/enrollment")
+async def enroll(current_user: Annotated[User, Depends(auth_utils.get_current_user)], access_token: AccessTokenSchema, db: Session = Depends(get_db)):
     """
-    Reads the current user's information.
-    Parameters:
-    - current_user: Annotated[User, Depends(auth_utils.get_current_user)]
-        The current user object.
-    Returns:
-    - current_user: Annotated[User, Depends(auth_utils.get_current_user)]
-        The current user object.
+    Parses the output from Teller Connect and enrolls the user.
     """
+    update_user_with_enrollment(db, access_token, current_user.id)    
     
-    return current_user
     
 @app.post("/download")
 def download(request: DownloadRequest) -> DownloadResponse:

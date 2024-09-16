@@ -30,7 +30,7 @@ const AuthPage = ({ userHasAccount }) => {
             throw new Error('Network response was not ok.');
         })
         .then(data => {
-            localStorage.setItem('token', data.token);
+            localStorage.setItem('token', data.access_token);
             window.location.href = '/connect';
         })
         .catch(error => {
@@ -52,6 +52,25 @@ const AuthPage = ({ userHasAccount }) => {
             <Button label="Login" icon="pi pi-sign-in" onClick={handleLogin} />
         </div>
     );
+};
+
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+};
+
+export const fetchWithAuth = (url, options = {}) => {
+    const headers = getAuthHeaders();
+    return fetch(url, {
+        ...options,
+        headers: {
+            ...headers,
+            ...options.headers
+        }
+    });
 };
 
 export default AuthPage;

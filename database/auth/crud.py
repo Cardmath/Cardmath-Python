@@ -1,7 +1,10 @@
 from auth.schemas import UserCreate, UserUpdate
-from database.auth.user import User, UserInDB
+from database.auth.user import User, UserInDB, Enrollment
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+from teller.schemas import AccessTokenSchema
 from typing import List, Optional
+
 
 def get_user(db: Session, user_id: int) -> Optional[User]:
     return db.query(User).filter(User.id == user_id).first()
@@ -27,6 +30,21 @@ def create_user(db: Session, user: UserCreate) -> UserInDB:
     return db_user
 
 def get_password_hash(password: str) -> str:
-    from passlib.context import CryptContext
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     return pwd_context.hash(password)
+
+def update_user_with_enrollment(db: Session, enrollment_schema: AccessTokenSchema, user_id: int) -> Optional[User]:
+    user = get_user(db, user_id)
+    
+    db_enrollment = Enrollment(
+        user_id=user_id,
+        access_token=enrollment_schema.accessToken,
+        enrollment_id=enrollment_schema.enrollment.id,
+        institution_name=enrollment_schema.enrollment.institution.name,
+        signatures=enrollment_schema.signatures
+    )
+    user.enrollments.append(db_enrollment)
+    db.commit()
+    db.refresh(db_enrollment)
+    
+    return user

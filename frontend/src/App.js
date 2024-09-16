@@ -25,7 +25,7 @@ const App = () => {
             <Routes>
                 <Route path="/login" element={<AuthPage userHasAccount={true} />} />
                 <Route path="/register" element={<AuthPage userHasAccount={false} />} />
-                <Route path="/connect" element={<TellerConnectComponent onSuccess={handleSuccess}/>} />
+                <Route path="/connect" element={<TellerConnectComponent />} />
                 <Route path="/" element={
                     <div className="landing-page">
                         <h1>Welcome to Cardmath</h1>
