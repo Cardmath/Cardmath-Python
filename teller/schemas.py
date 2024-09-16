@@ -11,7 +11,31 @@ class InstitutionSchema(BaseModel):
 class EnrollmentDetailsSchema(BaseModel):
     id: str
     institution: InstitutionSchema
+    
+class InstitutionSchema(BaseModel):
+    name : str
+    id : str
 
+class LinksSchema(BaseModel):
+    balances: str
+    self: str
+    transactions: str
+
+class AccountSchema(BaseModel):
+    enrollment_id : str
+    links : LinksSchema
+    institution: InstitutionSchema
+    type: str
+    name: str
+    subtype: str
+    currency: str
+    id: str
+    last_four: str
+    status: str
+
+    class Config:
+        orm_mode = True
+        
 class AccessTokenSchema(BaseModel):
     accessToken: str
     user: TellerUserSchema

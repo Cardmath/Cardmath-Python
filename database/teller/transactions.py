@@ -1,41 +1,40 @@
+from database.sql_alchemy_db import Base
 from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
 from sqlalchemy.orm import relationship
-from database.sql_alchemy_db import Base
 
 class Transaction(Base):
     __tablename__ = 'transactions'
     
-    id = Column(String, primary_key=True)
-    description = Column(String, nullable=False)
-    date = Column(Date, nullable=False)
+    txn_id = Column(String, primary_key= True, nullable=False)
+    
     account_id = Column(String, nullable=False)
-    account_link = Column(String, nullable=False)
-    self_link = Column(String, nullable=False)
     amount = Column(Float, nullable=False)
-    type = Column(String, nullable=False)
+    date = Column(Date, nullable=False)
+    description = Column(String, nullable=False)
+    
+    details = relationship("TransactionDetails", back_populates="transaction", uselist=False)
+    
     status = Column(String, nullable=False)
     running_balance = Column(Float, nullable=True)
-    
-    details_id = Column(Integer, ForeignKey('transaction_details.id'), nullable=False)
-    details = relationship("TransactionDetails", back_populates="transaction")
+    type = Column(String, nullable=False)
 
+        
 class TransactionDetails(Base):
     __tablename__ = 'transaction_details'
     
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    txn_id = Column(String, ForeignKey('transactions.txn_id'), primary_key=True)
+    counterparty_id = Column(Integer, ForeignKey('counterparty.id'))
     processing_status = Column(String, nullable=False)
     category = Column(String, nullable=True)
     
-    counterparty_id = Column(Integer, ForeignKey('counterparty.id'), nullable=False)
     counterparty = relationship("Counterparty", back_populates="transaction_details")
-    
-    transaction = relationship("Transaction", back_populates="details")
+    transaction = relationship("Transaction", back_populates="details", uselist=False)
 
 class Counterparty(Base):
     __tablename__ = 'counterparty'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
-    type = Column(String, nullable=False)
+    name = Column(String, nullable=True)
+    type = Column(String, nullable=True)
     
-    transaction_details = relationship("TransactionDetails", back_populates="counterparty")
+    transaction_details = relationship("TransactionDetails", back_populates="counterparty", uselist=True) 

@@ -12,20 +12,34 @@ const TellerConnectComponent = () => {
                 },
                 body: JSON.stringify(data),
             });            
+            
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error('Failed sending Teller enrollment to server.');
             }
+
+            response = await fetchWithAuth('http://localhost:8000/get_transactions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }); 
+            
+            if (!response.ok) {
+                throw new Error('Failed prefetching Teller transactions.');
+            }
+
+            window.location.href = '/questions'; // TODO IMPLEMENT QUESTIONS 
+
         } catch (error) {
             console.error('Error sending enrollment to server:', error);
         }
-        window.location.href = '/questions'; // TODO IMPLEMENT QUESTIONS 
     };
 
     const config = {
-        // Define your Teller Connect configuration here
+        // Teller Connect configuration
         selectAccount: "disabled",
         environment: 'sandbox',
-        applicationId: 'app_p3oodma27qfrj3hs8a000', // Replace with your actual application ID
+        applicationId: 'app_p3oodma27qfrj3hs8a000',
         onSuccess: handleSuccess,
     };
 
@@ -39,5 +53,7 @@ const TellerConnectComponent = () => {
 
     return <></>;
 };
+
+
 
 export default TellerConnectComponent;

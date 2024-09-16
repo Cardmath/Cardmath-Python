@@ -13,6 +13,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from schemas import *
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema
+from teller.utils import Teller
 from typing import Annotated
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
@@ -22,6 +23,7 @@ import os
 
 creditcard.Base.metadata.create_all(bind=engine)
 app = FastAPI()
+teller_client = Teller()
 
 app.add_middleware(
     CORSMiddleware,
@@ -82,7 +84,6 @@ async def register_for_access_token(
             detail="Username is already taken",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    hashed_password = auth_utils.get_password_hash(form_data.password)
     user = UserCreate(username=form_data.username, 
                 email=form_data.username, 
                 full_name=form_data.username,
@@ -95,6 +96,14 @@ async def register_for_access_token(
     )
     return Token(access_token=access_token, token_type="bearer")
 
+@app.post("/get_transactions")
+async def get_transactions(
+    current_user: Annotated[User, Depends(auth_utils.get_current_user)],
+    db: Session = Depends(get_db)):
+    """
+    Get transactions for the current user.
+    """
+    return teller_client.get_transactions(db=db, current_user=current_user)
 
 @app.post("/enrollment")
 async def enroll(current_user: Annotated[User, Depends(auth_utils.get_current_user)], access_token: AccessTokenSchema, db: Session = Depends(get_db)):

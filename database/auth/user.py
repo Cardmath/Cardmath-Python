@@ -27,3 +27,21 @@ class Enrollment(Base):
     institution_name = Column(String, nullable=False)
     signatures = Column(JSON, nullable=False)
     user = relationship("User", back_populates="enrollments")
+    
+    accounts = relationship("Account", back_populates="enrollment")
+    
+class Account(Base):
+    __tablename__ = 'accounts'
+    
+    id = Column(String, primary_key=True, index=True)  # Account ID from API Response
+    enrollment_id = Column(String, ForeignKey('enrollments.enrollment_id'), nullable=False)
+    institution_name = Column(String, nullable=False)
+    institution_id = Column(String, nullable=False)
+    type = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    subtype = Column(String, nullable=False)
+    currency = Column(String, nullable=False)
+    last_four = Column(String, nullable=False)
+    status = Column(String, nullable=False)
+    
+    enrollment = relationship("Enrollment", back_populates="accounts")
