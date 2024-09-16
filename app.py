@@ -1,6 +1,5 @@
 from auth.schemas import Token
-from auth.schemas import User, UserInDB, UserCreate
-from auth.utils import oauth2_scheme
+from auth.schemas import User, UserCreate
 from database import creditcard
 from database.auth.crud import update_user_with_enrollment
 from database.sql_alchemy_db import engine, get_db
@@ -191,14 +190,14 @@ def parse(request : ParseRequest, db: Session = Depends(get_db)) -> ParseRespons
     out_parsed_cards : list = []
     db_log = []  # Add db_log field
     for cc in unparsed_ccs:
-        parsed_cc = CreditCardCreate.model_construct(cc).create()
+        parsed_cc = CreditCardCreate.model_construct(cc)
 
         if request.save_to_db:
-            db_result = crud.create_credit_card(db, parsed_cc)
+            db_result = crud.create_credit_card(db, parsed_cc.create())
             db_log.append(db_result)
         
         if request.return_json:
-            out_parsed_cards.append(parsed_cc.to_json())
+            out_parsed_cards.append(parsed_cc.model_dump_json())
     
     return ParseResponse(raw_json_out=out_parsed_cards, db_log=db_log)  # Remove json.dumps()
           

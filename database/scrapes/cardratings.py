@@ -1,5 +1,4 @@
-# result of scraping Cardratings website
-from ..sql_alchemy_db import Base
+from database.sql_alchemy_db import Base
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float
 
 class CardratingsScrape(Base):

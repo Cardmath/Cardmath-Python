@@ -1,10 +1,7 @@
-from database.creditcard import CreditCard
 from creditcard.parse_utils import *
+from database.creditcard import CreditCard
 from pydantic import BaseModel
 from typing import List, Optional
-import hashlib
-
-
 
 # TODO move this into a config file
 USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0'
@@ -23,14 +20,12 @@ class CreditCardCreate(BaseModel):
         credit_needed = get_credit_needed(self.score_needed)
         reward_category_map = get_reward_category_map(self.card_attributes)
         apr = get_apr(self.card_attributes)
-        id = hashlib.sha1((self.name + self.issuer + self.score_needed + str(self.description_used) + self.card_attributes).encode()).hexdigest()
         return CreditCard(name=name, 
                           issuer=issuer,
                           benefits=benefits,
                           credit_needed=credit_needed,
                           reward_category_map=reward_category_map,
-                          apr=apr,
-                          id=id)
+                          apr=apr)
         
 class CreditCardModel(BaseModel):
     name: Optional[str] = None
