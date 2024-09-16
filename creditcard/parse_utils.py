@@ -1,5 +1,5 @@
-from enums import *
-from openai_utils import prompt_gpt4_for_json, benefits_prompt, purchase_category_map_prompt, retry_openai_until_json_valid
+from creditcard.enums import *
+from creditcard.openai_utils import prompt_gpt4_for_json, benefits_prompt, purchase_category_map_prompt, retry_openai_until_json_valid
 
 RIGHTS_RESERVED = '\u00AE'
 

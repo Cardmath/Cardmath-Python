@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from schemas import CreditCardCreate
+from creditcard.schemas import CreditCardCreate
 
 cardratings_scraped_path = '/home/johannes/CreditCards/cardratings/cardratings.html'
 

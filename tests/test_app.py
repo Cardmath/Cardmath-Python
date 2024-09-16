@@ -1,7 +1,7 @@
 from app import app, parse
-from download_utils import remove_if_exists
+from creditcard.download_utils import remove_if_exists
 from fastapi.testclient import TestClient
-from schemas import *
+from creditcard.schemas import *
 import json
 import os
 import pytest

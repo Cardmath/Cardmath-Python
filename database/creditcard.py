@@ -1,5 +1,5 @@
 from .sql_alchemy_db import Base
-from enums import *
+from creditcard.enums import *
 from pydantic import BaseModel
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float
 from sqlalchemy.orm import relationship

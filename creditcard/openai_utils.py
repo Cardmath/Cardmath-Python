@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from enums import PurchaseCategory, RewardUnit, Benefit
+from creditcard.enums import PurchaseCategory, RewardUnit, Benefit
 from openai import OpenAI
 import json
 import os

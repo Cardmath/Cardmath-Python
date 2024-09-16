@@ -5,12 +5,12 @@ from database import creditcard
 from database.auth.crud import update_user_with_enrollment
 from database.sql_alchemy_db import engine, get_db
 from datetime import timedelta
-from download_utils import download_html
-from extract_utils import extract_cardratings
+from creditcard.download_utils import download_html
+from creditcard.extract_utils import extract_cardratings
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
-from schemas import *
+from creditcard.schemas import *
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema
 from teller.utils import Teller
