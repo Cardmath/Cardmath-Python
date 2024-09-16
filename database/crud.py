@@ -1,5 +1,5 @@
-from .creditcard import CreditCard
-from .scrapes.cardratings import CardratingsScrape
+from database.creditcard import CreditCard
+from database.scrapes.cardratings import CardratingsScrape
 from sqlalchemy.orm import Session
 from typing import List
 

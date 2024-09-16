@@ -1,4 +1,4 @@
-from .sql_alchemy_db import Base
+from database.sql_alchemy_db import Base
 from creditcard.enums import *
 from sqlalchemy import Column, String, Float, JSON
 
