@@ -1,29 +1,29 @@
 from auth.schemas import Token
 from auth.schemas import User, UserCreate
+from creditcard.endpoints.download import download
+from creditcard.endpoints.extract import extract
+from creditcard.endpoints.parse import parse
+from creditcard.schemas import *
 from database import creditcard
 from database.auth.crud import update_user_with_enrollment
 from database.sql_alchemy_db import engine, get_db
 from datetime import timedelta
-from creditcard.download_utils import download_html
-from creditcard.extract_utils import extract_cardratings
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
-from creditcard.schemas import *
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema
 from teller.utils import Teller
 from typing import Annotated
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
-import database.crud as crud
-import json
-import os
+
+SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/CreditCards/cardratings.html"
 
 creditcard.Base.metadata.create_all(bind=engine)
-app = FastAPI()
 teller_client = Teller()
 
+app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Adjust this to your needs
@@ -113,91 +113,13 @@ async def enroll(current_user: Annotated[User, Depends(auth_utils.get_current_us
     
     
 @app.post("/download")
-def download(request: DownloadRequest) -> DownloadResponse:
-    """
-    Downloads a file from the given URL and saves it to the specified file path.
-    Args:
-        request (DownloadRequest): The download request object containing the necessary information.
-    Returns:
-        DownloadResponse: The download response object containing the status code, file path, and file overwritten flag.
-    """
-    
-    file_path = request.file_path
-    exists = os.path.exists(file_path)
-    file_overwritten = False
-    status_code = "No Status Code"
-    
-    if exists and not request.force_download:
-        status_code = "200"
-    elif not exists or request.force_download:
-        file_path, status_code = download_html(user_agent=request.user_agent,
-                                               url=request.url,
-                                               file_path=file_path)
-        file_overwritten = exists
-
-    return DownloadResponse(
-        status_code=status_code,
-        file_path=file_path,
-        file_overwritten=file_overwritten)
+def download_endpoint(request: DownloadRequest) -> DownloadResponse:
+    return download(request)
     
 @app.post("/extract")
-def extract(request : ExtractRequest, db: Session = Depends(get_db)) -> ExtractResponse:
-    """
-    Extracts credit card ratings from raw HTML content or a file path.
-    Parameters:
-    - request (ExtractRequest): The request object containing the raw HTML content and file path.
-    - db (Session, optional): The database session. Defaults to the session obtained from get_db.
-    Returns:
-    - ExtractResponse: The response object containing the extracted credit card ratings in JSON format and a database log.
-    """
-    
-    if len(request.raw_html) == 0 :
-        with open(request.file_path, "r") as f:
-            request.raw_html = f.read()    
-    
-    cc_list = extract_cardratings(request.raw_html, request.max_items_to_extract)
-    json_data = json.dumps(cc_list)
-    
-    if request.save_to_db:
-        for cc in cc_list:
-            crud.create_cardratings_scrape(db, cc)
-            
-    return ExtractResponse(raw_json_out=json_data, db_log= [0, 1]) # PLACEHOLDER DB LOG
-    
+def extract_endpoint(request : ExtractRequest, db: Session = Depends(get_db)) -> ExtractResponse:
+    return extract(request, db)
 
 @app.post("/parse") 
-def parse(request : ParseRequest, db: Session = Depends(get_db)) -> ParseResponse:
-    """
-    Parses the input JSON data and creates credit card objects.
-    Args:
-        request (ParseRequest): The request object containing the input JSON data.
-        db (Session, optional): The database session. Defaults to Depends(get_db).
-    Returns:
-        ParseResponse: The response object containing the parsed credit card data and database log.
-    Raises:
-        None
-    """
-    
-    json_in = json.loads(request.raw_json_in)
-    
-    unparsed_ccs : List[dict] = []
-    if len(json_in) > 0:
-        for unparsed_cc in json_in:
-            unparsed_ccs.append(unparsed_cc)
-    else :
-        unparsed_ccs = crud.get_all_cardratings_scrapes(db)
-        
-    out_parsed_cards : list = []
-    db_log = []  # Add db_log field
-    for cc in unparsed_ccs:
-        parsed_cc = CreditCardCreate.model_construct(cc)
-
-        if request.save_to_db:
-            db_result = crud.create_credit_card(db, parsed_cc.create())
-            db_log.append(db_result)
-        
-        if request.return_json:
-            out_parsed_cards.append(parsed_cc.model_dump_json())
-    
-    return ParseResponse(raw_json_out=out_parsed_cards, db_log=db_log)  # Remove json.dumps()
-          
+def parse_endpoint(request : ParseRequest, db: Session = Depends(get_db)) -> ParseResponse:
+    return parse(request, db)

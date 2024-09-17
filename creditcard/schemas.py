@@ -1,4 +1,4 @@
-from creditcard.parse_utils import *
+from creditcard.utils.parse import *
 from database.creditcard import CreditCard
 from pydantic import BaseModel
 from typing import List, Optional
@@ -60,7 +60,7 @@ class ExtractResponse(BaseModel):
 
     
 class ParseRequest(BaseModel):
-    raw_json_in : str # list of json maps
+    raw_json_in : str = None# list of json maps
     return_json: bool = True
     max_items_to_parse: int = 10
     save_to_db: bool = False

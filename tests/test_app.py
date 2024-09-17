@@ -1,14 +1,12 @@
-from app import app, parse
-from creditcard.download_utils import remove_if_exists
-from fastapi.testclient import TestClient
+from app import app, parse, SAFE_LOCAL_DOWNLOAD_SPOT
 from creditcard.schemas import *
+from creditcard.utils.download import remove_if_exists
+from fastapi.testclient import TestClient
 import json
 import os
 import pytest
 
 client = TestClient(app)
-
-SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/CreditCards/cardratings.html"
 
 def test_end_to_end():
     

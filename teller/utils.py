@@ -1,6 +1,6 @@
 from auth.schemas import User
 from database.auth.user import Enrollment, Account
-from dotenv import load_dotenv
+from database.creditcard import CreditCard
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from teller.schemas import TransactionSchema, AccountSchema
@@ -12,15 +12,24 @@ import requests
 TELLER_API_ENTRYPOINT = "https://api.teller.io/"
 TELLER_ACCOUNTS = TELLER_API_ENTRYPOINT + "accounts"
 TRANSACTIONS = "transactions"
+CREDIT_TYPE = "credit"
+CREDIT_CARD_SUBTYPE = "credit card"
 
 # ONLY FETCHES THE FIRST ENROLLMENT 
 def get_current_user_enrollment(current_user: User, db: Session) -> Enrollment:
-    enrollment: Enrollment = db.query(Enrollment).filter(Enrollment.user_id == current_user.id).first()
-    return enrollment
+    return db.query(Enrollment).filter(Enrollment.user_id == current_user.id).first()
 
-def get_enrollment_accounts(enrollment: Enrollment, db: Session) -> str:
-    account: Account = db.query(Account).filter(Account.enrollment_id == enrollment.enrollment_id).first()
-    return account
+def get_enrollment_accounts(enrollment: Enrollment, db: Session) -> Account:
+    return db.query(Account).filter(Account.enrollment_id == enrollment.enrollment_id).first()
+
+def get_account_credit_cards(account: Account, db: Session) -> CreditCard:
+    is_credit_card = account.type == CREDIT_TYPE and account.subtype == CREDIT_CARD_SUBTYPE
+    
+    if not is_credit_card:
+        return [] 
+        
+    return db.query(CreditCard).filter(CreditCard.name == account.name 
+                                       and account.institution_name == CreditCard.issuer).first()
 
 class Teller(BaseModel):
     cert: str = os.getenv("TELLER_CERT")
