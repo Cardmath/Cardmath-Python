@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
-from creditcard.schemas import CreditCardCreate
+from creditcard.schemas import CardRatingsScrapeSchema
+from typing import List
 
 cardratings_scraped_path = '/home/johannes/CreditCards/cardratings/cardratings.html'
 
@@ -10,7 +11,7 @@ MEDIUM_DESCRIPTION_USED = 1
 # Produces a dictionary of form:
 # (issuer, card name) --> [card attr_0, card_attr_1, ...] 
 # where card attr is a plain text string
-def extract_cardratings(raw_html, max_items_to_extract=100):  
+def extract_cardratings(raw_html, max_items_to_extract=100) -> List[CardRatingsScrapeSchema]:  
     out_card_list = []
     soup = BeautifulSoup(raw_html, 'html.parser')
     cards = soup.find_all(class_="CardDetails")
@@ -39,11 +40,11 @@ def extract_cardratings(raw_html, max_items_to_extract=100):
         if card_attributes is not None and isinstance(card_attributes, list):
             processed_card_attributes = "\n - ".join([card_attribute.get_text(strip=True).replace("\n", "") for card_attribute in card_attributes])
             
-        card = CreditCardCreate(name= card_title.get_text(strip=True),
-                issuer= issuer.get_text(strip=True),
-                score_needed= credit_needed.get_text(strip=True),
+        card = CardRatingsScrapeSchema(name = card_title.get_text(strip=True),
                 description_used= description_used,
-                card_attributes= processed_card_attributes).model_dump_json()
+                unparsed_issuer = issuer.get_text(strip=True),
+                unparsed_credit_needed = credit_needed.get_text(strip=True),
+                unparsed_card_attributes = processed_card_attributes)
         
         out_card_list.append(card)
         

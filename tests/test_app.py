@@ -89,7 +89,7 @@ def test_extract_with_raw_html():
     json_response = response.json()["raw_json_out"]
     assert "name" in json_response
     assert "issuer" in json_response
-    assert "score_needed" in json_response
+    assert "unparsed_credit_needed" in json_response
         
     
 TEST_HTML = """

@@ -1,5 +1,5 @@
-from database.sql_alchemy_db import Base
 from creditcard.enums import *
+from database.sql_alchemy_db import Base
 from sqlalchemy import Column, String, Float, JSON, Integer
 
 # standard CreditCard object
@@ -10,7 +10,7 @@ class CreditCard(Base):
     name = Column(String, nullable=False)  
     issuer = Column(String) # Issuer enum
     reward_category_map = Column(JSON) # Store mapping as json dumps
-    benefits = Column(String) # Benefits enum in json array
+    benefits = Column(JSON) # Benefits enum in json array
     credit_needed = Column(JSON) # CreditNeeded enum in json array 
     apr = Column(Float)
     

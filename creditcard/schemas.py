@@ -1,5 +1,6 @@
 from creditcard.utils.parse import *
 from database.creditcard import CreditCard
+from database.scrapes.cardratings import CardratingsScrape
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -26,6 +27,31 @@ class CreditCardCreate(BaseModel):
                           credit_needed=credit_needed,
                           reward_category_map=reward_category_map,
                           apr=apr)
+        
+class CardRatingsScrapeSchema(BaseModel):
+    name: str
+    description_used: int
+    unparsed_issuer: str
+    unparsed_credit_needed: str
+    unparsed_card_attributes: str
+    
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+    def create(self) -> CardratingsScrape:
+        return CardratingsScrape(name=self.name,
+                                 description_used=self.description_used,
+                                 unparsed_issuer=self.unparsed_issuer,
+                                 unparsed_credit_needed=self.unparsed_credit_needed,
+                                 unparsed_card_attributes=self.unparsed_card_attributes)
+        
+    def to_credit_card_create(self) -> CreditCardCreate:
+        return CreditCardCreate(name=self.name,
+                                issuer=self.unparsed_issuer,
+                                score_needed=self.unparsed_credit_needed,
+                                description_used=self.description_used,
+                                card_attributes=self.unparsed_card_attributes)
         
 class CreditCardModel(BaseModel):
     name: Optional[str] = None
@@ -55,7 +81,7 @@ class ExtractRequest(BaseModel):
     save_to_db: bool = False
     
 class ExtractResponse(BaseModel):
-    raw_json_out: str = None    
+    raw_json_out: Optional[str] = None    
     db_log : List[bool]
 
     

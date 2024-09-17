@@ -20,11 +20,14 @@ def extract(request : ExtractRequest, db: Session) -> ExtractResponse:
             request.raw_html = f.read()    
     
     cc_list = extract_cardratings(request.raw_html, request.max_items_to_extract)
-    json_data = json.dumps(cc_list)
-    
     if request.save_to_db:
         for cc in cc_list:
-            crud.create_cardratings_scrape(db, cc)
+            cc_created = cc.create()
+            crud.create_cardratings_scrape(db, cc_created)
+    
+    json_data = None
+    if request.return_json:
+        json_data = json.dumps([cc.model_dump_json() for cc in cc_list])
             
     return ExtractResponse(raw_json_out=json_data, db_log= [0, 1]) # PLACEHOLDER DB LOG
     

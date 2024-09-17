@@ -1,5 +1,6 @@
 from auth.schemas import Token
 from auth.schemas import User, UserCreate
+from contextlib import asynccontextmanager
 from creditcard.endpoints.download import download
 from creditcard.endpoints.extract import extract
 from creditcard.endpoints.parse import parse
@@ -18,12 +19,39 @@ from typing import Annotated
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
 
-SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/CreditCards/cardratings.html"
+SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/CreditCards/cardratings/cardratings.html"
 
 creditcard.Base.metadata.create_all(bind=engine)
 teller_client = Teller()
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # download(
+    #     request=DownloadRequest(url = "https://www.cardratings.com/credit-card-list.html",
+    #         file_path = SAFE_LOCAL_DOWNLOAD_SPOT,
+    #         force_download = True,
+    #         user_agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0")
+    # )
+    with get_db() as db:
+        extract(
+            request=ExtractRequest(file_path=SAFE_LOCAL_DOWNLOAD_SPOT,
+                return_json = False,
+                max_items_to_extract = 10,
+                save_to_db=True),
+            db=db
+        )
+        
+    with get_db() as db:
+        parse(
+            request=ParseRequest(return_json = False,
+                max_items_to_parse = 10,
+                save_to_db=True),
+            db = db
+        )
+    
+    yield
+    
+app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Adjust this to your needs
@@ -76,7 +104,7 @@ async def register_for_access_token(
     Raises:
         HTTPException: If the username is already taken.
     """
-    
+
     if auth_crud.get_user_by_username(db, form_data.username) is not None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,           

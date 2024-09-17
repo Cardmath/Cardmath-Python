@@ -9,7 +9,8 @@ def create_credit_card(db: Session, cc : CreditCard) -> bool:
         db.commit()
         db.refresh(cc)
         return True
-    except: 
+    except Exception as e: 
+        print(e, "FAILED TO CREATE CREDIT CARD")
         return False
     
 def create_cardratings_scrape(db: Session, cc_scrape : CardratingsScrape) -> bool:
@@ -18,7 +19,8 @@ def create_cardratings_scrape(db: Session, cc_scrape : CardratingsScrape) -> boo
         db.commit()
         db.refresh(cc_scrape)
         return True
-    except: 
+    except Exception as e:
+        print(e, "FAILED TO CREATE CARDRATINGS SCRAPE") 
         return False
      
 def get_credit_card(db: Session, uid: str):
@@ -27,5 +29,6 @@ def get_credit_card(db: Session, uid: str):
 def get_all_credit_cards(db: Session) -> List[CreditCard]:
     return db.query(CreditCard).all()
 
-def get_all_cardratings_scrapes(db: Session) -> List[CardratingsScrape]:
-    return db.query(CardratingsScrape).all()
+# get the first n credit cards
+def get_cardratings_scrapes(db: Session, n : int) -> List[CardratingsScrape]:
+    return db.query(CardratingsScrape).limit(n).all()
