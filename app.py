@@ -8,6 +8,7 @@ from creditcard.schemas import *
 from database import creditcard
 from database.auth.crud import update_user_with_enrollment
 from database.sql_alchemy_db import engine, get_db
+from database.sql_alchemy_db import SessionLocal
 from datetime import timedelta
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,32 +23,36 @@ import database.auth.crud as auth_crud
 SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/CreditCards/cardratings/cardratings.html"
 
 creditcard.Base.metadata.create_all(bind=engine)
-teller_client = Teller()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # download(
-    #     request=DownloadRequest(url = "https://www.cardratings.com/credit-card-list.html",
-    #         file_path = SAFE_LOCAL_DOWNLOAD_SPOT,
-    #         force_download = True,
-    #         user_agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0")
-    # )
-    with get_db() as db:
-        extract(
-            request=ExtractRequest(file_path=SAFE_LOCAL_DOWNLOAD_SPOT,
+    db : Session = SessionLocal()
+    try :
+        download(request=DownloadRequest(url = "https://www.cardratings.com/credit-card-list.html",
+                file_path = SAFE_LOCAL_DOWNLOAD_SPOT,
+                force_download = False,
+                user_agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0"))
+    except Exception as e:
+        print(e, "Error downloading cards!")
+    
+    try :
+        extract(request=ExtractRequest(file_path=SAFE_LOCAL_DOWNLOAD_SPOT,
                 return_json = False,
                 max_items_to_extract = 10,
                 save_to_db=True),
-            db=db
-        )
-        
-    with get_db() as db:
-        parse(
-            request=ParseRequest(return_json = False,
-                max_items_to_parse = 10,
-                save_to_db=True),
-            db = db
-        )
+            db=db)
+    except Exception as e:
+        print(e, "Error extracting cards!")
+    
+    try :
+        parse(request=ParseRequest(return_json = False,
+            max_items_to_parse = 10,
+            save_to_db=True),
+        db = db)
+    except Exception as e:
+        print(e, "Error parsing cards - Probably an issue with OpenAI API connection")
+    finally:
+        db.close()
     
     yield
     
@@ -124,22 +129,17 @@ async def register_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 
 @app.post("/get_transactions")
-async def get_transactions(
-    current_user: Annotated[User, Depends(auth_utils.get_current_user)],
-    db: Session = Depends(get_db)):
-    """
-    Get transactions for the current user.
-    """
-    return teller_client.get_transactions(db=db, current_user=current_user)
+async def get_transactions(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
+                           db: Session = Depends(get_db)):
+    teller_client = Teller()
+    return await teller_client.fetch_user_transactions(db=db, current_user=current_user)
 
 @app.post("/enrollment")
-async def enroll(current_user: Annotated[User, Depends(auth_utils.get_current_user)], access_token: AccessTokenSchema, db: Session = Depends(get_db)):
-    """
-    Parses the output from Teller Connect and enrolls the user.
-    """
+async def enroll(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
+                 access_token: AccessTokenSchema,
+                 db: Session = Depends(get_db)):
     update_user_with_enrollment(db, access_token, current_user.id)    
-    
-    
+
 @app.post("/download")
 def download_endpoint(request: DownloadRequest) -> DownloadResponse:
     return download(request)
