@@ -61,6 +61,31 @@ class RewardUnit(str, Enum):
     ALASKA_MILEAGE_PLAN_MILES = "Alaska Mileage Plan Miles"
     RADISSON_REWARDS_POINTS = "Radisson Rewards Points"
     
+    def get_value(reward_unit):
+        _values = {
+            RewardUnit.CHASE_ULTIMATE_REWARDS: 0.0125, #  average from 1 to 1.5 cents.
+            RewardUnit.AMEX_MEMBERSHIP_REWARDS: 0.006, # redeem for statement credits
+            RewardUnit.CITI_THANKYOU_POINTS: 0.01, # 1 cent each when redeemed
+            RewardUnit.CAPITAL_ONE_MILES: 0.005,  
+            RewardUnit.WELLS_FARGO_GO_FAR_REWARDS: 0.01, 
+            RewardUnit.BANK_OF_AMERICA_PREFERRED_REWARDS: 0.01,
+            RewardUnit.BARCLAYS_ARRIVAL_POINTS: 0.01,
+            RewardUnit.DISCOVER_CASHBACK_BONUS: 0.01,
+            RewardUnit.US_BANK_ALTITUDE_POINTS: 0.0125, # 1.5 cents per point for travel, otherwise 1 cent per point
+            RewardUnit.PNC_POINTS: 0.002, # 0.14 cents to 0.36. Best for travel.
+            RewardUnit.HILTON_HONORS_POINTS: 0.006,
+            RewardUnit.MARRIOTT_BONVOY_POINTS: 0.009,
+            RewardUnit.WORLD_OF_HYATT_POINTS: 0.017,
+            RewardUnit.DELTA_SKYMILES: 0.012,
+            RewardUnit.UNITED_MILEAGEPLUS: 0.014, # average of 1.2 to 1.6 cents
+            RewardUnit.AA_ADVANTAGE_MILES: 0.012, # when book flights 0.016
+            RewardUnit.SOUTHWEST_RAPID_REWARDS: 0.014, # 1.3 cents to 1.5 cents.
+            RewardUnit.IHG_ONE_REWARDS_POINTS: 0.006, 
+            RewardUnit.JETBLUE_TRUEBLUE_POINTS: 0.0136,
+            RewardUnit.ALASKA_MILEAGE_PLAN_MILES: 0.015, # from 1.2 cents to 1.8 cents. 
+            RewardUnit.RADISSON_REWARDS_POINTS: 0.0045 # average of 0.4 cents to 0.5 cents 
+        }
+        return _values.get(reward_unit, 0.0)
 
 # Define an enum for benefits
 class Benefit(str, Enum):

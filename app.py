@@ -132,7 +132,7 @@ async def register_for_access_token(
 async def get_transactions(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                            db: Session = Depends(get_db)):
     teller_client = Teller()
-    return await teller_client.fetch_user_transactions(db=db, current_user=current_user)
+    await teller_client.fetch_user_transactions(db=db, current_user=current_user)
 
 @app.post("/enrollment")
 async def enroll(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
@@ -145,9 +145,9 @@ def download_endpoint(request: DownloadRequest) -> DownloadResponse:
     return download(request)
     
 @app.post("/extract")
-def extract_endpoint(request : ExtractRequest, db: Session = Depends(get_db)) -> ExtractResponse:
+def extract_endpoint(request: ExtractRequest, db: Session = Depends(get_db)) -> ExtractResponse:
     return extract(request, db)
 
 @app.post("/parse") 
-def parse_endpoint(request : ParseRequest, db: Session = Depends(get_db)) -> ParseResponse:
+def parse_endpoint(request: ParseRequest, db: Session = Depends(get_db)) -> ParseResponse:
     return parse(request, db)
