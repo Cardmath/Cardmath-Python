@@ -20,7 +20,7 @@ CREDIT_TYPE = "credit"
 CREDIT_CARD_SUBTYPE = "credit_card"
 
 ## TODO TEST AND REFACTOR THIS METHOD
-async def update_current_user_credit_cards(current_user: User, db: Session) -> List[Account]:
+async def update_user_credit_cards(current_user: User, db: Session) -> List[Account]:
     out_cards : List[CreditCard] = []
     enrollments : List[Enrollment] = await read_current_user_enrollments(current_user, db)
     for enrollment in enrollments:
