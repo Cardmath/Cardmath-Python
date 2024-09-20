@@ -1,9 +1,22 @@
 from creditcard.enums import *
-from creditcard.schemas import ExtractRequest, ExtractResponse
 from creditcard.utils.extract import extract_cardratings
-from database import crud
+from database.creditcard import crud
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from typing import Optional, List
+
 import json
+
+class ExtractRequest(BaseModel):
+    file_path : str = ""
+    raw_html : str = "" 
+    return_json: bool = True
+    max_items_to_extract: int = 10
+    save_to_db: bool = False
+    
+class ExtractResponse(BaseModel):
+    raw_json_out: Optional[str] = None    
+    db_log : List[bool]
 
 def extract(request : ExtractRequest, db: Session) -> ExtractResponse:
     """
@@ -22,7 +35,7 @@ def extract(request : ExtractRequest, db: Session) -> ExtractResponse:
     cc_list = extract_cardratings(request.raw_html, request.max_items_to_extract)
     if request.save_to_db:
         for cc in cc_list:
-            cc_created = cc.create()
+            cc_created = cc.cardratings_scrape()
             crud.create_cardratings_scrape(db, cc_created)
     
     json_data = None

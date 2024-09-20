@@ -116,6 +116,7 @@ class CreditNeeded(str, Enum):
     POOR = "Bad" # 0-629 
     
 class PurchaseCategory(str, Enum):
+    OTHER = "Other"
     TRAVEL = "Travel"
     DINING = "Dining"
     GROCERIES = "Groceries"

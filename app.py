@@ -2,11 +2,14 @@ from auth.schemas import Token
 from auth.schemas import User, UserCreate
 from contextlib import asynccontextmanager
 from creditcard.endpoints.download import download
+from creditcard.endpoints.download import DownloadRequest, DownloadResponse
 from creditcard.endpoints.extract import extract
+from creditcard.endpoints.extract import ExtractRequest, ExtractResponse
 from creditcard.endpoints.parse import parse
+from creditcard.endpoints.parse import ParseRequest, ParseResponse
 from creditcard.schemas import *
-from database import creditcard
 from database.auth.crud import update_user_with_enrollment
+from database.creditcard import creditcard
 from database.sql_alchemy_db import engine, get_db
 from database.sql_alchemy_db import SessionLocal
 from datetime import timedelta
@@ -15,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema
+from teller.schemas import GetTransactionsResponse
 from teller.utils import Teller
 from typing import Annotated
 import auth.utils as auth_utils
@@ -40,7 +44,7 @@ async def lifespan(app: FastAPI):
                 return_json = False,
                 max_items_to_extract = 10,
                 save_to_db=True),
-            db=db)
+                db=db)
     except Exception as e:
         print(e, "Error extracting cards!")
     
@@ -48,7 +52,7 @@ async def lifespan(app: FastAPI):
         parse(request=ParseRequest(return_json = False,
             max_items_to_parse = 10,
             save_to_db=True),
-        db = db)
+            db = db)
     except Exception as e:
         print(e, "Error parsing cards - Probably an issue with OpenAI API connection")
     finally:
@@ -130,9 +134,9 @@ async def register_for_access_token(
 
 @app.post("/get_transactions")
 async def get_transactions(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
-                           db: Session = Depends(get_db)):
+                           db: Session = Depends(get_db)) -> GetTransactionsResponse:
     teller_client = Teller()
-    await teller_client.fetch_user_transactions(db=db, current_user=current_user)
+    return await teller_client.fetch_user_transactions(db=db, current_user=current_user)
 
 @app.post("/enrollment")
 async def enroll(current_user: Annotated[User, Depends(auth_utils.get_current_user)],

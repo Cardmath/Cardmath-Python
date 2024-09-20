@@ -1,7 +1,21 @@
 from creditcard.enums import *
-from creditcard.schemas import DownloadRequest, DownloadResponse
 from creditcard.utils.download import download_html
+from pydantic import BaseModel
 import os
+
+USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0'
+
+class DownloadRequest(BaseModel):
+    url: str
+    file_path: str
+    force_download: bool = False
+    user_agent : str = USER_AGENT
+    
+class DownloadResponse(BaseModel):
+    status_code : str
+    exists: bool = False # File already exists
+    file_path : str = None # Path to downloaded file
+    file_overwritten : bool = False # File was overwritten
 
 def download(request : DownloadRequest) -> DownloadResponse:
     """

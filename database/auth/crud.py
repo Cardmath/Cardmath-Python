@@ -45,6 +45,6 @@ def update_user_with_enrollment(db: Session, enrollment_schema: AccessTokenSchem
     )
     user.enrollments.append(db_enrollment)
     db.commit()
-    db.refresh(db_enrollment)
+    db.refresh(user)
     
     return user

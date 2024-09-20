@@ -1,5 +1,6 @@
+from database.auth.user import Account
 from datetime import date
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 
 class TellerUserSchema(BaseModel):
@@ -23,7 +24,7 @@ class LinksSchema(BaseModel):
 
 class AccountSchema(BaseModel):
     enrollment_id : str
-    links : LinksSchema
+    links : Optional[LinksSchema] = None
     institution: InstitutionSchema
     type: str
     name: str
@@ -33,8 +34,18 @@ class AccountSchema(BaseModel):
     last_four: str
     status: str
 
-    class Config:
-        orm_mode = True
+    def from_db(account : Account):
+        return AccountSchema(
+            id=account.id,
+            enrollment_id=account.enrollment_id,
+            institution=InstitutionSchema(name=account.institution_name, id=account.institution_id),
+            type = account.type,
+            name = account.name,
+            subtype = account.subtype,
+            currency = account.currency,
+            last_four=account.last_four,
+            status=account.status
+        )
         
 class AccessTokenSchema(BaseModel):
     accessToken: str
@@ -42,23 +53,20 @@ class AccessTokenSchema(BaseModel):
     enrollment: EnrollmentDetailsSchema
     signatures: List[str]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CounterPartySchema(BaseModel):
     type: Optional[str] = None
     name: Optional[str] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TransactionDetailsSchema(BaseModel):
     processing_status: str
     category: Optional[str] = None
     counterparty: Optional[CounterPartySchema] = None
-    
-    class Config:
-        orm_mode = True
+
+    model_config = ConfigDict(from_attributes=True)
 
 class TransactionSchema(BaseModel):
     description: str
@@ -71,5 +79,11 @@ class TransactionSchema(BaseModel):
     running_balance: Optional[str] = None 
     details: TransactionDetailsSchema
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
+        
+class GetTransactionsResponse(BaseModel):
+    number : int # number of transactions returned
+    total_spend : Optional[int] = None # total amount spent
+    transactions : Optional[List[TransactionSchema]] = None
+
+    model_config = ConfigDict(from_attributes=True)

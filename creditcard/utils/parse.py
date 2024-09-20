@@ -1,7 +1,17 @@
 from creditcard.enums import *
 from creditcard.utils.openai import prompt_gpt4_for_json, benefits_prompt, purchase_category_map_prompt, retry_openai_until_json_valid
+from pydantic import BaseModel
+from typing import List
 
 RIGHTS_RESERVED = '\u00AE'
+
+class RewardAmount(BaseModel):
+    reward_unit : RewardUnit
+    amount : float
+
+class RewardCategoryRelation(BaseModel):
+    category : PurchaseCategory
+    reward: RewardAmount
 
 def get_issuer(card_name : str): 
     best_issuer = single_nearest(card_name, Issuer)
@@ -16,8 +26,7 @@ def get_benefits(card_description : str):
     openai_response = prompt_gpt4_for_json(benefits_prompt(card_description))
     return multiple_nearest(openai_response, Benefit) 
     
-
-def get_reward_category_map(card_description : str):
+def get_reward_category_map(card_description : str) -> List[RewardCategoryRelation]:
     out_rewards = []
     reward_category_map = retry_openai_until_json_valid(purchase_category_map_prompt, card_description)
     

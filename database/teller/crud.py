@@ -3,7 +3,6 @@ from database.teller.transactions import Transaction, Counterparty, TransactionD
 from sqlalchemy.orm import Session
 from teller.schemas import TransactionSchema, AccountSchema
 
-
 def create_transaction(db: Session, transaction: TransactionSchema) -> Transaction:
     db_txn = Transaction(
         txn_id = transaction.id,
@@ -51,12 +50,12 @@ def create_transaction(db: Session, transaction: TransactionSchema) -> Transacti
     db.refresh(db_txn)
     return db_txn
 
-def create_account(db : Session, account : AccountSchema) -> Account: 
+def create_account(db : Session, account : AccountSchema, schema=True) -> Account: 
     db_account = Account(
         id=account.id,
         enrollment_id = account.enrollment_id,
         institution_name = account.institution.name,
-        institution_id = account.institution.name,
+        institution_id = account.institution.id,
         type = account.type,
         name = account.name,
         subtype = account.subtype,
@@ -67,4 +66,8 @@ def create_account(db : Session, account : AccountSchema) -> Account:
     db.add(db_account)
     db.commit()
     db.refresh(db_account)
+    
+    if schema:
+        return AccountSchema.from_db(db_account)
+    
     return db_account

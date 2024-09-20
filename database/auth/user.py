@@ -1,8 +1,6 @@
 from database.sql_alchemy_db import Base
-from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, JSON
 from sqlalchemy.orm import relationship
-
 
 class User(Base):
     __tablename__ = 'users'
