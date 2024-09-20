@@ -8,7 +8,7 @@ from creditcard.endpoints.extract import ExtractRequest, ExtractResponse
 from creditcard.endpoints.parse import parse
 from creditcard.endpoints.parse import ParseRequest, ParseResponse
 from creditcard.schemas import *
-from database.auth.crud import update_user_with_enrollment
+from database.auth.crud import update_user_enrollment
 from database.creditcard import creditcard
 from database.sql_alchemy_db import engine, get_db
 from database.sql_alchemy_db import SessionLocal
@@ -145,7 +145,7 @@ async def get_transactions(current_user: Annotated[User, Depends(auth_utils.get_
 async def enroll(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                  access_token: AccessTokenSchema,
                  db: Session = Depends(get_db)):
-    update_user_with_enrollment(db, access_token, current_user.id)    
+    update_user_enrollment(db, access_token, current_user.id)    
 
 @app.post("/download")
 def download_endpoint(request: DownloadRequest) -> DownloadResponse:

@@ -34,7 +34,7 @@ def get_password_hash(password: str) -> str:
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     return pwd_context.hash(password)
 
-def update_user_with_enrollment(db: Session, enrollment_schema: AccessTokenSchema, user_id: int) -> Optional[User]:
+def update_user_enrollment(db: Session, enrollment_schema: AccessTokenSchema, user_id: int) -> Optional[User]:
     user = get_user(db, user_id)
     
     db_enrollment = Enrollment(
