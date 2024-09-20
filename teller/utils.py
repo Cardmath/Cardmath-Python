@@ -1,4 +1,5 @@
 from auth.schemas import User
+from database.auth import crud as user_crud
 from database.auth.user import Enrollment, Account
 from database.creditcard.creditcard import CreditCard
 from database.teller.transactions import Transaction
@@ -16,10 +17,10 @@ TELLER_API_ENTRYPOINT = "https://api.teller.io/"
 TELLER_ACCOUNTS = TELLER_API_ENTRYPOINT + "accounts"
 TRANSACTIONS = "transactions"
 CREDIT_TYPE = "credit"
-CREDIT_CARD_SUBTYPE = "credit card"
+CREDIT_CARD_SUBTYPE = "credit_card"
 
 ## TODO TEST AND REFACTOR THIS METHOD
-async def read_current_user_credit_cards(current_user: User, db: Session) -> List[Account]:
+async def update_current_user_credit_cards(current_user: User, db: Session) -> List[Account]:
     out_cards : List[CreditCard] = []
     enrollments : List[Enrollment] = await read_current_user_enrollments(current_user, db)
     for enrollment in enrollments:
@@ -27,6 +28,8 @@ async def read_current_user_credit_cards(current_user: User, db: Session) -> Lis
         for account in accounts:
             credit_cards : List[CreditCard] = await get_account_credit_cards(account, db)
             out_cards.extend(credit_cards)
+    
+    await user_crud.update_user_with_credit_cards(db, out_cards, current_user.id)
     return out_cards
 
 async def read_current_user_enrollments(current_user: User, db: Session) -> List[Enrollment]:
@@ -39,9 +42,11 @@ async def read_enrollment_accounts(enrollment: Enrollment, db: Session, schema=T
         return [AccountSchema.from_db(account) for account in accounts]
     return accounts
 
+def is_credit_card_account(account: Account) -> bool:
+    return account.type == CREDIT_TYPE and account.subtype == CREDIT_CARD_SUBTYPE
+
 async def get_account_credit_cards(account: Account, db: Session) -> List[CreditCard]:
-    is_credit_card = account.type == CREDIT_TYPE and account.subtype == CREDIT_CARD_SUBTYPE
-    
+    is_credit_card = is_credit_card_account(account)    
     if not is_credit_card:
         print(f"[WARNING] Account {account.id} is not a credit card")
         return [] 

@@ -1,6 +1,13 @@
 from database.sql_alchemy_db import Base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, JSON, Table
 from sqlalchemy.orm import relationship
+
+user_credit_card_association = Table(
+    'user_credit_card_association',
+    Base.metadata,
+    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
+    Column('credit_card_id', Integer, ForeignKey('credit_cards.id'), primary_key=True)
+)
 
 class User(Base):
     __tablename__ = 'users'
@@ -11,6 +18,7 @@ class User(Base):
     full_name = Column(String, nullable=True)
     disabled = Column(Boolean, default=False)
     enrollments = relationship("Enrollment", back_populates="user")
+    credit_cards = relationship("CreditCard", secondary=user_credit_card_association, back_populates="users")
 
 class UserInDB(User):
     hashed_password = Column(String, nullable=False)

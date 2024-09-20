@@ -1,5 +1,7 @@
 from creditcard.enums import *
 from database.sql_alchemy_db import Base
+from sqlalchemy.orm import relationship
+from database.auth.user import user_credit_card_association
 from sqlalchemy import Column, String, Float, JSON, Integer
 
 # standard CreditCard object
@@ -13,6 +15,7 @@ class CreditCard(Base):
     benefits = Column(JSON) # Benefits enum in json array
     credit_needed = Column(JSON) # CreditNeeded enum in json array 
     apr = Column(Float)
+    users = relationship("User", secondary=user_credit_card_association, back_populates="credit_cards")
     
     def __str__(self):
         return (f"CreditCard(name={self.name}, issuer={self.issuer}, "

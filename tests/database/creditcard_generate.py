@@ -5,7 +5,7 @@ from database.creditcard.creditcard import CreditCard
 from database.creditcard.crud import create_credit_card
 from typing import List
 
-GENERIC_CHASE_CARD_NAME = "Generic Chase Card"
+TELLER_GENERIC_CHASE_CARD = "Platinum Card"
 chase_reward_category_map : List[RewardCategoryRelation] = [RewardCategoryRelation(category=PurchaseCategory.DINING,
                                                                                    reward=RewardAmount(reward_unit=RewardUnit.CHASE_ULTIMATE_REWARDS, amount=2)),
                             RewardCategoryRelation(category=PurchaseCategory.TRAVEL,
@@ -13,7 +13,7 @@ chase_reward_category_map : List[RewardCategoryRelation] = [RewardCategoryRelati
                             RewardCategoryRelation(category=PurchaseCategory.OTHER,
                                                    reward=RewardAmount(reward_unit=RewardUnit.CHASE_ULTIMATE_REWARDS, amount=1))]
 chase_card = CreditCardSchema(
-        name = GENERIC_CHASE_CARD_NAME,
+        name = TELLER_GENERIC_CHASE_CARD,
         issuer = Issuer.CHASE,
         reward_category_map = chase_reward_category_map,
         benefits=[Benefit.AIRPORT_LOUNGE_ACCESS, Benefit.CONCIERGE_SERVICE],

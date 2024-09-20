@@ -4,6 +4,7 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema
 from typing import List, Optional
+from database.creditcard.creditcard import CreditCard
 
 
 def get_user(db: Session, user_id: int) -> Optional[User]:
@@ -47,4 +48,12 @@ def update_user_with_enrollment(db: Session, enrollment_schema: AccessTokenSchem
     db.commit()
     db.refresh(user)
     
+    return user
+
+async def update_user_with_credit_cards(db : Session, credit_cards : List[CreditCard], user_id : int) -> Optional[User]:
+    user = get_user(db, user_id)
+    for credit_card in credit_cards:
+        user.credit_cards.append(credit_card)
+    db.commit()
+    db.refresh(user)
     return user

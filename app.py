@@ -19,7 +19,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema
 from teller.schemas import GetTransactionsResponse
-from teller.utils import Teller
+from teller.utils import Teller, update_current_user_credit_cards
 from typing import Annotated
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
@@ -136,7 +136,10 @@ async def register_for_access_token(
 async def get_transactions(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                            db: Session = Depends(get_db)) -> GetTransactionsResponse:
     teller_client = Teller()
-    return await teller_client.fetch_user_transactions(db=db, current_user=current_user)
+    transactions_response = await teller_client.fetch_user_transactions(db=db, current_user=current_user)
+    await update_current_user_credit_cards(current_user=current_user, db=db)
+    return transactions_response
+    
 
 @app.post("/enrollment")
 async def enroll(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
