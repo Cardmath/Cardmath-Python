@@ -41,10 +41,10 @@ def authenticate_user(username: str, password: str, db: Session = Depends(get_db
     user = get_user_by_username(db, username)
     if not user:
         return False
-    else:
-        hashed_password = get_password_hash(password) 
-        if not verify_password(plain_password=password, hashed_password=hashed_password):
-            return False
+    
+    if not verify_password(plain_password=password, hashed_password=user.hashed_password):
+        return False
+    
     return user
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], 

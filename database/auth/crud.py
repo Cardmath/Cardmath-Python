@@ -10,8 +10,8 @@ from database.creditcard.creditcard import CreditCard
 def get_user(db: Session, user_id: int) -> Optional[User]:
     return db.query(User).filter(User.id == user_id).first()
 
-def get_user_by_username(db: Session, username: str) -> Optional[User]:
-    return db.query(User).filter(User.username == username).first()
+def get_user_by_username(db: Session, username: str) -> Optional[UserInDB]:
+    return db.query(UserInDB).filter(User.username == username).first()
 
 def get_users(db: Session, skip: int = 0, limit: int = 10) -> List[User]:
     return db.query(User).offset(skip).limit(limit).all()
