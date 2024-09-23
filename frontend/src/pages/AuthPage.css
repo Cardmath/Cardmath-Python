@@ -15,3 +15,11 @@
     display: block;
     margin-bottom: 0.5rem;
 }
+
+.p-icon-field {
+    width: 100%;
+}
+
+.p-inputtext {
+    width: 100%;
+}
