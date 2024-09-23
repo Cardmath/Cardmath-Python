@@ -19,7 +19,7 @@ const AuthPage = ({ userHasAccount }) => {
 
     var endpoint = userHasAccount ? 'http://localhost:8000/token' : 'http://localhost:8000/register';  
 
-    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&,.])[A-Za-z\d@$!%*?&,.]{8,}$/;
 
     const handlePasswordChange = (newPassword) => {
         setPassword(newPassword);
@@ -31,7 +31,7 @@ const AuthPage = ({ userHasAccount }) => {
         }
     };
 
-    const footer = (
+    const register_footer = (
         <div className='pt-2'>
             <b>Pick a Strong password</b>
             <ul>
@@ -45,7 +45,7 @@ const AuthPage = ({ userHasAccount }) => {
     );
 
     const handleLogin = () => {
-        if (!passwordValid) {
+        if (!userHasAccount && !passwordValid) {
             console.log('Password is invalid');
             setAlert({visible: true, 
                 message: 'Password must be at least 8 characters long, include at least one uppercase letter, one lowercase letter, one digit, and one special character (@$!%*?&).',
@@ -66,6 +66,19 @@ const AuthPage = ({ userHasAccount }) => {
         }).then(response => {
             if (response.ok) {
                 return response.json();
+            } else if (response.status == 401) {
+                if (userHasAccount) {
+                    setAlert({visible: true, 
+                        message: 'Email already in use: An account is already associated with this email address. Please log in or use a different email to create a new account.',
+                        type: 'error',
+                        heading: 'Email already in use'})
+                } else {
+                    setAlert({visible: true, 
+                        message: 'Username already taken',
+                        type: 'error',
+                        heading: 'Registration Failed'})
+                
+                }
             }
             throw new Error('Network response was not ok.');
         })
@@ -130,7 +143,7 @@ const AuthPage = ({ userHasAccount }) => {
                         <InputText tabIndex={0} value={username} id="email" type="text" placeholder="Email address" className="w-full mb-4" onChange={(e) => setUsername(e.target.value)}/>
 
                         <label htmlFor="password" className="block text-900 font-medium mb-2">Password</label>
-                        <Password footer={footer} tabIndex={0} value={password} feedback={!userHasAccount} id="password" type="text" placeholder="Password" className="w-full mb-4" onChange={(e) => handlePasswordChange(e.target.value)} toggleMask/>
+                        <Password footer={register_footer} tabIndex={0} value={password} feedback={!userHasAccount} id="password" type="text" placeholder="Password" className="w-full mb-4" onChange={(e) => handlePasswordChange(e.target.value)} toggleMask/>
 
                         <div className="flex align-items-center justify-content-between mb-6">
                             <div className="flex align-items-center">
