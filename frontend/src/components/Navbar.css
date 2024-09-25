@@ -1,0 +1,4 @@
+.navbar-container {
+    z-index: 1000; /* Ensure the Navbar is always on top */
+    position: relative; /* Ensure the z-index takes effect */
+}

@@ -15,11 +15,13 @@ const AuthPage = ({ userHasAccount }) => {
     const [password, setPassword] = useState('');
     const [checked3, setChecked3] = useState(false);
     const [passwordValid, setPasswordValid] = useState(false);
+    const [usernameValid , setUsernameValid] = useState(false);
     const [alert, setAlert] = useState({visible: false, message: '', heading : '', type: 'error'});
 
     var endpoint = userHasAccount ? 'http://localhost:8000/token' : 'http://localhost:8000/register';  
 
     const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&,.])[A-Za-z\d@$!%*?&,.]{8,}$/;
+    const isEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
     const handlePasswordChange = (newPassword) => {
         setPassword(newPassword);
@@ -30,6 +32,16 @@ const AuthPage = ({ userHasAccount }) => {
             setPasswordValid(false);
         }
     };
+
+    const handleUsernameChange = (newUsername) => {
+        setUsername(newUsername);
+
+        if (isEmailRegex.test(newUsername)) {
+            setUsernameValid(true)
+        } else {
+            setUsernameValid(false)
+        }
+    }
 
     const register_footer = (
         <div className='pt-2'>
@@ -54,6 +66,15 @@ const AuthPage = ({ userHasAccount }) => {
             return;
         }
 
+        if (!usernameValid) {
+            console.log('Email is invalid');
+            setAlert({visible: true, 
+                message: "Please enter a valid email address. Make sure it includes an '@' and a valid domain (e.g., example@domain.com).",
+                type: 'error',
+                heading: 'Invalid Email'});
+            return;
+        }
+
         const formData = new URLSearchParams();
         formData.append('username', username);
         formData.append('password', password);
@@ -67,26 +88,23 @@ const AuthPage = ({ userHasAccount }) => {
             if (response.ok) {
                 return response.json();
             } else if (response.status == 401) {
-                if (userHasAccount) {
+                if (!userHasAccount) {
                     setAlert({visible: true, 
                         message: 'Email already in use: An account is already associated with this email address. Please log in or use a different email to create a new account.',
                         type: 'error',
                         heading: 'Email already in use'})
                 } else {
                     setAlert({visible: true, 
-                        message: 'Username already taken',
+                        message: 'Incorrect email or password: Please check your email and password and try again.',
                         type: 'error',
-                        heading: 'Registration Failed'})
-                
+                        heading: 'Incorrect Credentials'})
                 }
             }
             throw new Error('Network response was not ok.');
-        })
-        .then(data => {
-            localStorage.setItem('token', data.access_token);
+        }).then(data => {
+            localStorage.setItem('cardmath_access_token', data.access_token);
             window.location.href = '/connect';
-        })
-        .catch(error => {
+        }).catch(error => {
             console.error('There was an error!', error)
         });
     };
@@ -140,7 +158,7 @@ const AuthPage = ({ userHasAccount }) => {
                         <div className="text-900 text-2xl font-medium mb-6">{userHasAccount ? "Login" : "Register"}</div>
 
                         <label htmlFor="email" className="block text-900 font-medium mb-2">Email</label>
-                        <InputText tabIndex={0} value={username} id="email" type="text" placeholder="Email address" className="w-full mb-4" onChange={(e) => setUsername(e.target.value)}/>
+                        <InputText tabIndex={0} value={username} id="email" type="text" placeholder="Email address" className="w-full mb-4" onChange={(e) => handleUsernameChange(e.target.value)}/>
 
                         <label htmlFor="password" className="block text-900 font-medium mb-2">Password</label>
                         <Password footer={register_footer} tabIndex={0} value={password} feedback={!userHasAccount} id="password" type="text" placeholder="Password" className="w-full mb-4" onChange={(e) => handlePasswordChange(e.target.value)} toggleMask/>
@@ -172,7 +190,7 @@ const AuthPage = ({ userHasAccount }) => {
 };
 
 const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('cardmath_access_token');
     return {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
