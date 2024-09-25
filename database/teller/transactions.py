@@ -5,9 +5,9 @@ from sqlalchemy.orm import relationship
 class Transaction(Base):
     __tablename__ = 'transactions'
     
-    txn_id = Column(String, primary_key= True, nullable=False)
+    txn_id = Column(String, primary_key= True, nullable=False) # returned by teller
     
-    account_id = Column(String, nullable=False)
+    account_id = Column(String, nullable=False) # account_id from teller
     amount = Column(Float, nullable=False)
     date = Column(Date, nullable=False)
     description = Column(String, nullable=False)

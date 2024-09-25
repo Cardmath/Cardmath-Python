@@ -81,7 +81,7 @@ def test_get_transactions():
     access_token = data["access_token"]
     
     response = client.post(
-        "/get_transactions",
+        "/process_new_enrollment",
         headers={"Content-Type": "application/json", "Authorization": f"Bearer {access_token}"},
     )
     assert response.status_code == 200, response.text

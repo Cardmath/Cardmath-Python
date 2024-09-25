@@ -1,5 +1,5 @@
 from database.sql_alchemy_db import Base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, JSON, Table
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, JSON, Table, Date
 from sqlalchemy.orm import relationship
 
 user_credit_card_association = Table(
@@ -32,6 +32,7 @@ class Enrollment(Base):
     enrollment_id = Column(String, nullable=False)
     institution_name = Column(String, nullable=False)
     signatures = Column(JSON, nullable=False)
+    last_updated = Column(Date, nullable=False) # Last updated time in minutes
     user = relationship("User", back_populates="enrollments")
     
     accounts = relationship("Account", back_populates="enrollment")
@@ -48,6 +49,7 @@ class Account(Base):
     subtype = Column(String, nullable=False)
     currency = Column(String, nullable=False)
     last_four = Column(String, nullable=False)
+    last_updated = Column(Date, nullable=False)
     status = Column(String, nullable=False)
     
     enrollment = relationship("Enrollment", back_populates="accounts")

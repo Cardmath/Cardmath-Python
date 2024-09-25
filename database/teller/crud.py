@@ -1,5 +1,6 @@
 from database.auth.user import Account
 from database.teller.transactions import Transaction, Counterparty, TransactionDetails
+from datetime import datetime 
 from sqlalchemy.orm import Session
 from teller.schemas import TransactionSchema, AccountSchema
 
@@ -62,6 +63,7 @@ def create_account(db : Session, account : AccountSchema, schema=True) -> Accoun
         currency = account.currency,
         last_four = account.last_four,
         status = account.status,
+        last_updated = datetime.now()
     )
     db.add(db_account)
     db.commit()

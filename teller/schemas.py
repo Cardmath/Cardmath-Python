@@ -81,7 +81,7 @@ class TransactionSchema(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
         
-class GetTransactionsResponse(BaseModel):
+class PreferencesPrefillResponse(BaseModel):
     number : int # number of transactions returned
     total_spend : Optional[int] = None # total amount spent
     transactions : Optional[List[TransactionSchema]] = None

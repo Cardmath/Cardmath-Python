@@ -3,11 +3,13 @@ from database.auth import crud as user_crud
 from database.auth.user import Enrollment, Account
 from database.creditcard.creditcard import CreditCard
 from database.teller.transactions import Transaction
+from datetime import datetime, timedelta
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from teller.schemas import TransactionSchema, AccountSchema, GetTransactionsResponse
-from typing import List
-from typing import Union
+from teller.schemas import TransactionSchema, AccountSchema
+from typing import List, Union
+from typing import Optional
+
 import database.teller.crud as teller_crud 
 
 import os
@@ -20,20 +22,35 @@ CREDIT_TYPE = "credit"
 CREDIT_CARD_SUBTYPE = "credit_card"
 
 ## TODO TEST AND REFACTOR THIS METHOD
-async def update_user_credit_cards(current_user: User, db: Session) -> List[Account]:
+async def update_user_credit_cards(user: User, db: Session) -> List[Account]:
+    '''
+    Reads all of a user's accounts and determines which ones correspond to credit cards in our DB
+    '''
     out_cards : List[CreditCard] = []
-    enrollments : List[Enrollment] = await read_current_user_enrollments(current_user, db)
+    enrollments : List[Enrollment] = await read_user_enrollments(user, db)
     for enrollment in enrollments:
         accounts : List[Account] = await read_enrollment_accounts(enrollment, db)
         for account in accounts:
             credit_cards : List[CreditCard] = await get_account_credit_cards(account, db)
             out_cards.extend(credit_cards)
     
-    await user_crud.update_user_with_credit_cards(db, out_cards, current_user.id)
+    await user_crud.update_user_with_credit_cards(db, out_cards, user.id)
     return out_cards
 
-async def read_current_user_enrollments(current_user: User, db: Session) -> List[Enrollment]:
-    enrollments : List[Enrollment] = db.query(Enrollment).filter(Enrollment.user_id == current_user.id).all()
+async def read_user_enrollments(user: User, db: Session) -> List[Enrollment]:
+    '''
+    Reads all of a user's enrollments from the DB
+    '''
+    enrollments : List[Enrollment] = db.query(Enrollment).filter(Enrollment.user_id == user.id).all()
+    return enrollments
+
+async def read_user_new_enrollment(user: User, db: Session) -> Enrollment:
+    '''
+    Reads an arbitrary enrollment of the user from the DB that has been updated in the last 10 minutes
+    '''
+    ten_minutes_ago = datetime.now() - timedelta(minutes=10)
+    # TODO update this query to use the enrollment relationship with the user
+    enrollments : List[Enrollment] = db.query(Enrollment).filter(Enrollment.user_id == user.id and Enrollment.last_updated >= ten_minutes_ago).first()
     return enrollments
 
 async def read_enrollment_accounts(enrollment: Enrollment, db: Session, schema=True) -> List[Account]:
@@ -48,7 +65,7 @@ def is_credit_card_account(account: Account) -> bool:
 async def get_account_credit_cards(account: Account, db: Session) -> List[CreditCard]:
     is_credit_card = is_credit_card_account(account)    
     if not is_credit_card:
-        print(f"[WARNING] Account {account.id} is not a credit card")
+        print(f"[INFO] Account {account.id} is not a credit card")
         return [] 
         
     return db.query(CreditCard).filter(CreditCard.name == account.name 
@@ -95,16 +112,19 @@ class Teller(BaseModel):
         return accounts
     
     async def fetch_user_transactions(self, db: Session, current_user: User) -> List[Transaction]:
-        user_enrollments : List[Enrollment] = await read_current_user_enrollments(current_user, db)
+        user_enrollments : List[Enrollment] = await read_user_enrollments(current_user, db)
         fetched_transactions : List[Transaction] = []
         for enrollment in user_enrollments:
-            transactions_temp = await self.get_enrollment_transactions(enrollment, db)
+            transactions_temp = await self.fetch_enrollment_transactions(enrollment, db)
             if transactions_temp is not None:
                 fetched_transactions.extend(transactions_temp)
+        return fetched_transactions        
         
-        return GetTransactionsResponse(number=len(fetched_transactions))
+    async def fetch_enrollment_transactions(self, enrollment: Optional[Enrollment], db: Session) -> List[Transaction]:
+        if enrollment is None:
+            print("[WARNING] Enrollment is None")
+            return []
         
-    async def get_enrollment_transactions(self, enrollment: Enrollment, db: Session) -> List[Transaction]:
         user_accounts : List[Account] = await self.get_enrollment_accounts(enrollment, db)
         
         out_transactions : List[Transaction] = []

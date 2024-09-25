@@ -8,7 +8,6 @@ from creditcard.endpoints.extract import ExtractRequest, ExtractResponse
 from creditcard.endpoints.parse import parse
 from creditcard.endpoints.parse import ParseRequest, ParseResponse
 from creditcard.schemas import *
-from database.auth.crud import update_user_enrollment
 from database.creditcard import creditcard
 from database.sql_alchemy_db import engine, get_db
 from database.sql_alchemy_db import SessionLocal
@@ -18,11 +17,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema
-from teller.schemas import GetTransactionsResponse
-from teller.utils import Teller, update_user_credit_cards
 from typing import Annotated
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
+import teller.endpoints as teller_endpoints
 
 SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/CreditCards/cardratings/cardratings.html"
 
@@ -132,20 +130,17 @@ async def register_for_access_token(
     )
     return Token(access_token=access_token, token_type="bearer")
 
-@app.post("/get_transactions")
-async def get_transactions(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
-                           db: Session = Depends(get_db)) -> GetTransactionsResponse:
-    teller_client = Teller()
-    transactions_response = await teller_client.fetch_user_transactions(db=db, current_user=current_user)
-    await update_user_credit_cards(current_user=current_user, db=db)
-    return transactions_response
+@app.post("/process_new_enrollment")
+async def process_new_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
+                           db: Session = Depends(get_db)):
+    return await teller_endpoints.process_new_enrollment(current_user, db)
     
 
-@app.post("/enrollment")
-async def enroll(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
+@app.post("/receive_teller_enrollment")
+async def receive_teller_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                  access_token: AccessTokenSchema,
                  db: Session = Depends(get_db)):
-    update_user_enrollment(db, access_token, current_user.id)    
+    return await teller_endpoints.receive_teller_enrollment(db=db, access_token=access_token, user=current_user) 
 
 @app.post("/download")
 def download_endpoint(request: DownloadRequest) -> DownloadResponse:

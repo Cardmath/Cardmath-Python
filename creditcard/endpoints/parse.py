@@ -25,13 +25,13 @@ def parse(request : ParseRequest, db : Session) -> ParseResponse:
         json_in = json.loads(request.raw_json_in)
         parsed_ccs = [CardRatingsScrapeSchema.model_construct(cc) for cc in json_in]
     else :
-        parsed_ccs : List[CardratingsScrape] = crud.get_cardratings_scrapes(db, n=request.max_items_to_parse)
-        parsed_ccs : List[CardRatingsScrapeSchema] = [CardRatingsScrapeSchema(name=cc.name, 
+        cc_scrapes : List[CardratingsScrape] = crud.get_cardratings_scrapes(db, n=request.max_items_to_parse)
+        cc_scrapes : List[CardRatingsScrapeSchema] = [CardRatingsScrapeSchema(name=cc.name, 
                                                                               description_used=cc.description_used,
                                                                               unparsed_issuer=cc.unparsed_issuer,
                                                                               unparsed_credit_needed=cc.unparsed_credit_needed,
                                                                               unparsed_card_attributes = cc.unparsed_card_attributes) for cc in parsed_ccs]
-        parsed_ccs : List[CreditCardSchema] = [cc.credit_card() for cc in parsed_ccs]
+        parsed_ccs : List[CreditCardSchema] = [cc.credit_card_schema() for cc in cc_scrapes]
         
     out_parsed_cards : list = []
     db_log = []  # Add db_log field
@@ -44,6 +44,8 @@ def parse(request : ParseRequest, db : Session) -> ParseResponse:
         if request.return_json:
             out_parsed_cards.append(parsed_cc.model_dump_json())
 
+    # START create a mock card
+    
     mock_create = CreditCardSchema(
                 name="Platinum Card",
                 issuer=Issuer.CHASE,
@@ -56,6 +58,8 @@ def parse(request : ParseRequest, db : Session) -> ParseResponse:
         out_parsed_cards.append(mock_create.model_dump_json())
     if request.save_to_db:
         db_result = crud.create_credit_card(db, mock_create.credit_card())
+    
+    # END create a mock card
 
     return ParseResponse(raw_json_out=out_parsed_cards, db_log=db_log)
           

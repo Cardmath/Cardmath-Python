@@ -1,11 +1,12 @@
-from auth.schemas import UserCreate, UserUpdate
+from auth.schemas import UserCreate
 from database.auth.user import User, UserInDB, Enrollment
+from database.creditcard.creditcard import CreditCard
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema
 from typing import List, Optional
-from database.creditcard.creditcard import CreditCard
 
+from datetime import datetime
 
 def get_user(db: Session, user_id: int) -> Optional[User]:
     return db.query(User).filter(User.id == user_id).first()
@@ -34,21 +35,22 @@ def get_password_hash(password: str) -> str:
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     return pwd_context.hash(password)
 
-def update_user_enrollment(db: Session, enrollment_schema: AccessTokenSchema, user_id: int) -> Optional[User]:
-    user = get_user(db, user_id)
+async def update_user_enrollment(db: Session, enrollment_schema: AccessTokenSchema, user_id: int) -> Optional[Enrollment]:
+    user = get_user(db=db, user_id=user_id)
     
     db_enrollment = Enrollment(
         user_id=user_id,
         access_token=enrollment_schema.accessToken,
         enrollment_id=enrollment_schema.enrollment.id,
         institution_name=enrollment_schema.enrollment.institution.name,
-        signatures=enrollment_schema.signatures
+        signatures=enrollment_schema.signatures,
+        last_updated=datetime.now()
     )
     user.enrollments.append(db_enrollment)
     db.commit()
     db.refresh(user)
     
-    return user
+    return db_enrollment
 
 async def update_user_with_credit_cards(db : Session, credit_cards : List[CreditCard], user_id : int) -> Optional[User]:
     user = get_user(db, user_id)

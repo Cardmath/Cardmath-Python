@@ -10,7 +10,7 @@ const TellerConnectComponent = () => {
     const handleSuccess = async (data) => {
         setShowSpinner(true);
         try {
-            let response = await fetchWithAuth('http://localhost:8000/enrollment', {
+            let response = await fetchWithAuth('http://localhost:8000/receive_teller_enrollment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -22,7 +22,7 @@ const TellerConnectComponent = () => {
                 throw new Error('Failed sending Teller enrollment to server.');
             }
 
-            response = await fetchWithAuth('http://localhost:8000/get_transactions', {
+            response = await fetchWithAuth('http://localhost:8000/process_new_enrollment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
