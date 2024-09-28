@@ -56,7 +56,7 @@ const AuthPage = ({ userHasAccount }) => {
         </div>
     );
 
-    const handleLogin = () => {
+    const handleAuth = () => {
         if (!userHasAccount && !passwordValid) {
             console.log('Password is invalid');
             setAlert({visible: true, 
@@ -103,7 +103,11 @@ const AuthPage = ({ userHasAccount }) => {
             throw new Error('Network response was not ok.');
         }).then(data => {
             localStorage.setItem('cardmath_access_token', data.access_token);
-            window.location.href = '/connect';
+            if (userHasAccount) {
+                window.location.href = '/preferences';
+            } else {
+                window.location.href = '/connect';
+            }
         }).catch(error => {
             console.error('There was an error!', error)
         });
@@ -171,13 +175,13 @@ const AuthPage = ({ userHasAccount }) => {
                             <a className="font-medium no-underline ml-2 text-blue-500 text-right cursor-pointer">Forgot password?</a>
                         </div>
 
-                        <Button label={userHasAccount ? "Login" : "Register"} icon="pi pi-user" className="w-full" onClick={handleLogin}/>
+                        <Button label={userHasAccount ? "Login" : "Register"} icon="pi pi-user" className="w-full" onClick={handleAuth}/>
 
                         <Divider align="center" className="my-6">
                             <span className="text-600 font-normal text-sm">OR</span>
                         </Divider>
 
-                        <Button label="Sign In with Google" icon="pi pi-google" className="w-full p-button-secondary" onClick={handleLogin}/>
+                        <Button label="Sign In with Google" icon="pi pi-google" className="w-full p-button-secondary" onClick={handleAuth}/>
 
                         <div className="mt-6 text-center text-600">
                             Don't have an account? <a href="/register" tabIndex="0" className="font-medium text-blue-500">Sign up</a>
