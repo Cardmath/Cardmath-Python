@@ -92,14 +92,13 @@ class Teller(BaseModel):
     
     async def get_enrollment_accounts(self, enrollment : Enrollment, db : Session) -> List[AccountSchema]: 
         enrollment_accounts_db : List[Account] = await read_enrollment_accounts(enrollment, db)
-        if (enrollment_accounts_db is None or len(enrollment_accounts_db) == 0):
-            enrollment_accounts : List[AccountSchema] = await self.fetch_enrollment_accounts(enrollment)
-            for account in enrollment_accounts:
-                teller_crud.create_account(db, account)
-            return enrollment_accounts
+        if (enrollment_accounts_db and len(enrollment_accounts_db) > 0):
+            return enrollment_accounts_db
 
-        return [AccountSchema.from_db(account) for account in enrollment_accounts_db]
-
+        enrollment_accounts : List[AccountSchema] = await self.fetch_enrollment_accounts(enrollment)
+        for account in enrollment_accounts:
+            teller_crud.create_account(db, account)
+        return enrollment_accounts
                     
     async def get_list_enrollments_accounts(self, db: Session, enrollments : List[Enrollment]) -> List[AccountSchema]:
         if enrollments is None:
