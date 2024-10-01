@@ -1,7 +1,9 @@
 from database.auth.user import Account
 from datetime import date
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 from typing import Optional, List
+
+import creditcard.enums as enums
 
 class TellerUserSchema(BaseModel):
     id: str
@@ -80,10 +82,77 @@ class TransactionSchema(BaseModel):
     details: TransactionDetailsSchema
 
     model_config = ConfigDict(from_attributes=True)
-        
-class PreferencesPrefillResponse(BaseModel):
-    number : int # number of transactions returned
-    total_spend : Optional[int] = None # total amount spent
-    transactions : Optional[List[TransactionSchema]] = None
+
+class CreditProfileSchema(BaseModel):
+    credit_score : Optional[int] = None
+    salary : Optional[int] = None
+    lifestyle : Optional[enums.Lifestyle] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator('credit_score')
+    @classmethod
+    def credit_score_must_be_between_300_and_850(cls, v):
+        if v is not None and (v < 300 or v > 850):
+            raise ValueError('must be between 300 and 850')
+        return v
+    
+    @field_validator('salary')
+    @classmethod
+    def salary_positive(cls, v):
+        if v is not None and v < 0:
+            raise ValueError('must be positive')
+        return v
+
+class BanksPreferencesSchema(BaseModel):
+    have_banks : Optional[List[enums.Issuer]] = None
+    preferred_banks : Optional[List[enums.Issuer]] = None
+    avoid_banks : Optional[List[enums.Issuer]] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @classmethod
+    @model_validator(mode="before")
+    def no_intersection(cls, data):
+        print(data)
+        if isinstance(data, dict):
+            if len(set(data.get('preferred_banks')).intersection(data.get('have_banks'))) != 0:
+                raise ValueError('have_banks and avoid_banks cannot be used together')
+            if len(set(data.get('preferred_banks')).intersection(data.get('have_banks'))) != 0:
+                raise ValueError('preferred_banks and avoid_banks cannot be used together')
+            if len(set(data.get('preferred_banks')).intersection(data.get('have_banks'))) != 0:
+                raise ValueError('preferred_banks and have_banks cannot be used together')
+            
+        # TODO decide how to resolve intersections
+            
+        return data
+    
+class TravelPreferencesSchema(BaseModel):
+    preferred_airlines : Optional[List[enums.Airline]] = None
+    avoid_airlines : Optional[List[enums.Airline]] = None
+    frequent_travel_destinations : Optional[List[str]] = None
+    desired_benefits : Optional[List[str]] = None
+
+    model_config = ConfigDict(from_attributes=True)
+    
+class ConsumerPreferencesSchema(BaseModel):
+    favorite_restaurants : Optional[List[str]] = None
+    favorite_stores : Optional[List[str]] = None
+
+    model_config = ConfigDict(strict=True, from_attributes=True)
+
+
+class BusinessPreferencesSchema(BaseModel):
+    business_type : Optional[enums.BusinessType] = None
+    business_size : Optional[enums.BusinessSize] = None
+
+    model_config = ConfigDict(strict=True, from_attributes=True)
+
+class PreferencesSchema(BaseModel):
+    credit_profile : Optional[CreditProfileSchema] = None
+    banks_preferences : Optional[BanksPreferencesSchema] = None
+    travel_preferences : Optional[TravelPreferencesSchema] = None
+    consumer_preferences : Optional[ConsumerPreferencesSchema] = None
+    business_preferences : Optional[BusinessPreferencesSchema] = None
 
     model_config = ConfigDict(from_attributes=True)

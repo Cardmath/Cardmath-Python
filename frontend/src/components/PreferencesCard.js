@@ -5,8 +5,17 @@ import { Divider } from 'primereact/divider';
 import { MultiSelect } from 'primereact/multiselect';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { FloatLabel } from 'primereact/floatlabel';
+import { fetchWithAuth } from '../pages/AuthPage';
+import { Dropdown } from 'primereact/dropdown';
 
 const PreferencesCard = () => {
+    function checkProperties(obj) {
+        for (var key in obj) {
+            if (obj[key] !== null && obj[key] != "")
+                return false;
+        }
+        return true;
+    }
 
     const [activeTab, setActiveTab] = useState('CreditProfile');
 
@@ -18,69 +27,111 @@ const PreferencesCard = () => {
     const [selectedBanks, setSelectedBanks] = useState(null);
     const [selectedAvoidBanks, setSelectedAvoidBanks] = useState(null);
     const banks = [
-        { name: 'Chase', code: 'CHASE' },
-        { name: 'Bank of America', code: 'BOA' },
-        { name: 'Wells Fargo', code: 'WF' },
-        { name: 'Citi', code: 'CITI' },
-        { name: 'Capital One', code: 'CAPONE' },
-        { name: 'American Express', code: 'AMEX' },
-        { name: 'Discover', code: 'DISCOVER' },
-        { name: 'US Bank', code: 'USBANK' },
-        { name: 'PNC Bank', code: 'PNC' },
-        { name: 'TD Bank', code: 'TD' },
-        { name: 'HSBC', code: 'HSBC' }
+        'Chase',
+        'Bank of America',
+        'Wells Fargo',
+        'Citi',
+        'Capital One',
+        'American Express',
+        'Discover',
+        'US Bank',
+        'PNC Bank',
+        'TD Bank',
+        'HSBC'
     ];    
     
     const [selectedAirlines, setSelectedAirlines] = useState(null);
     const [selectedAvoidAirlines, setSelectedAvoidAirlines] = useState(null);
     const airlines = [
-        { name: 'American Airlines', code: 'AA' },
-        { name: 'Delta Airlines', code: 'DL' },
-        { name: 'United Airlines', code: 'UA' },
-        { name: 'Southwest Airlines', code: 'SW' },
-        { name: 'Alaska Airlines', code: 'AK' },
-        { name: 'JetBlue Airways', code: 'JB' },
-        { name: 'Spirit Airlines', code: 'SP' },
-        { name: 'Frontier Airlines', code: 'FR' },
-        { name: 'Hawaiian Airlines', code: 'HA' },
+        'American Airlines',
+        'Delta Airlines',
+        'United Airlines',
+        'Southwest Airlines',
+        'Alaska Airlines',
+        'JetBlue Airways',
+        'Spirit Airlines',
+        'Frontier Airlines',
+        'Hawaiian Airlines',
     ];
 
     const [selectedRestaurants, setSelectedRestaurants] = useState(null);
     const restaurants = [
-        { name: 'Starbucks', code: 'STARBUCKS' },
-        { name: 'McDonalds', code: 'MCDONALDS' },
-        { name: 'Panera Bread', code: 'PANERA' },
-        { name: 'Chipotle', code: 'CHIPOTLE' },
-        { name: 'Subway', code: 'SUBWAY' },
-        { name: 'Pizza Hut', code: 'PIZZAHUT' },
-        { name: 'Domino\'s Pizza', code: 'DOMINOS' },
-        { name: 'Applebee\'s', code: 'APPLEBEES' },
-        { name: 'Olive Garden', code: 'OLIVEGARDEN' },
-        { name: 'Red Lobster', code: 'REDLOBSTER' },
+        'Starbucks',
+        'McDonalds',
+        'Panera Bread',
+        'Chipotle',
+        'Subway',
+        'Pizza Hut',
+        'Domino\'s Pizza',
+        'Applebee\'s',
+        'Olive Garden',
+        'Red Lobster',
     ];
 
     const [selectedShopping, setSelectedShopping] = useState(null);
     const shopping = [
-        { name: 'Amazon', code: 'AMAZON' },
-        { name: 'Target', code: 'TARGET' },
-        { name: 'Walmart', code: 'WALMART' },
-        { name: 'Best Buy', code: 'BESTBUY' },
-        { name: 'Costco', code: 'COSTCO' },
-        { name: 'Home Depot', code: 'HOMEDEPOT' },
-        { name: 'Lowe\'s', code: 'LOWES' },
-        { name: 'GameStop', code: 'GAMESTOP' },
-        { name: 'Bed Bath & Beyond', code: 'BEDBATHANDBEYOND' },
-        { name: 'TJX Companies', code: 'TJX' },
+        'Amazon',
+        'Target',
+        'Walmart',
+        'Best Buy',
+        'Costco',
+        'Home Depot',
+        'Lowe\'s',
+        'GameStop',
+        'Bed Bath & Beyond',
+        'TJX Companies',
     ];
 
     const [selectedLifestyle, setSelectedLifestyle] = useState(null);
     const lifestyle = [
-        { name: 'Retired', code: 'RETIRED' },
-        { name: 'Student', code: 'STUDENT' },
-        { name: 'Early Career', code: 'EARLYCAREER' },
-        { name: 'Mid Career', code: 'MIDCAREER' },
-        { name: 'Late Career', code: 'LATECAREER' },
+        'Retired',
+        'Student',
+        'Early Career',
+        'Mid-Career',
+        'Late Career',
     ];
+
+    const [creditScore, setCreditScore] = useState(null);
+    const [salary, setSalary] = useState(null);
+
+    const sendPreferences = () => {
+        const credit_profile_out = { 
+            credit_score: creditScore !== null ? creditScore : null,
+            salary: salary !== null ? salary : null,
+            lifestyle : selectedLifestyle !== null ? selectedLifestyle : null
+        };
+
+        const banks_preferences_out = {
+            have_banks: selectedHaveBanks !== null ? [...selectedHaveBanks] : null,
+            preferred_banks: selectedBanks !== null ? [...selectedBanks] : null,
+            avoid_banks: selectedAvoidBanks !== null ? [...selectedAvoidBanks] : null
+        }
+
+        const travel_preferences_out = {
+            preferred_airlines : selectedAirlines !== null ? [...selectedAirlines] : null,
+            avoid_airlines : selectedAvoidAirlines !== null ? [...selectedAvoidAirlines] : null,
+            frequent_travel_destinations : null,
+            desired_benefits : null
+        }
+        
+        const consumer_preferences_out = {
+            favorite_restaurants: selectedRestaurants !== null ? [...selectedRestaurants] : null,
+            favorite_stores: selectedShopping !== null ? [...selectedShopping] : null,
+        };        
+
+        fetchWithAuth('http://localhost:8000/ingest_user_preferences', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                credit_profile: checkProperties(credit_profile_out) ? null : credit_profile_out, 
+                banks_preferences: checkProperties(banks_preferences_out) ? null : banks_preferences_out,
+                travel_preferences: checkProperties(travel_preferences_out) ? null : travel_preferences_out,
+                consumer_preferences: checkProperties(consumer_preferences_out) ? null : consumer_preferences_out
+            })
+        }).then(() => {
+            console.log("Preferences submitted!");
+        });
+    }
         
 
     return (        
@@ -143,7 +194,7 @@ const PreferencesCard = () => {
                                     <label htmlFor="email" className="block text-medium text-900 mb-2">
                                         Approximate Credit Score
                                     </label>
-                                    <InputTextarea className='p-2 w-6' autoResize id="email" type="text" keyfilter="int" placeholder="300-850" rows={1} cols={1} />
+                                    <InputTextarea onChange={(e) => setCreditScore(e.target.value)} className='p-2 w-6' autoResize id="email" type="text" keyfilter="int" placeholder="300-850" rows={1} cols={1} />
                                 </FloatLabel>
                             </div>
                             <div className="mb-4 pt-5">
@@ -151,19 +202,19 @@ const PreferencesCard = () => {
                                     <label htmlFor="bio" className="block text-medium text-900 mb-2">
                                         Approximate Salary (USD)
                                     </label>
-                                    <InputTextarea className='p-2 w-6' autoResize id="bio" type="text" keyfilter="int" placeholder="e.g. 65,000" rows={1} cols={1} />
+                                    <InputTextarea onChange={(e) => setSalary(e.target.value)} className='p-2 w-6' autoResize id="bio" type="text" keyfilter="int" placeholder="e.g. 65,000" rows={1} cols={1} />
                                 </FloatLabel>                                                            
                             </div>
                             <div className="mb-4 mb-2">
                                 <label className="block text-medium mb-2">
                                     Lifestyle
                                 </label>
-                                <MultiSelect className="p-1 w-6" value={selectedLifestyle} onChange={(e) => setSelectedLifestyle(e.value)} options={lifestyle} optionLabel="name" 
-                                    placeholder="Select your Lifestyle" maxSelectedLabels={2} />
+                                <Dropdown className="p-1 w-6" value={selectedLifestyle} onChange={(e) => setSelectedLifestyle(e.value)} options={lifestyle} 
+                                    placeholder="Select your Lifestyle" />
                             </div>
                             
                             <div>
-                                <Button label="Save" className="p-ripple w-auto"></Button>
+                            <Button onClick={() => sendPreferences()} label="Save" className="p-ripple w-auto"></Button>
                             </div>
                         </div>
                     </div>
@@ -180,7 +231,7 @@ const PreferencesCard = () => {
                                     Banks you are already a part of
                                 </label>
                                 
-                                <MultiSelect value={selectedHaveBanks} onChange={(e) => setSelectedHaveBanks(e.value)} options={banks} optionLabel="name" 
+                                <MultiSelect value={selectedHaveBanks} onChange={(e) => setSelectedHaveBanks(e.value)} options={banks}
                                     placeholder="Select Preferred Banks" maxSelectedLabels={3} className="w-full md:w-20rem" />
                                 
                             </div>
@@ -189,7 +240,7 @@ const PreferencesCard = () => {
                                     Preferred Banks
                                 </label>
                                 
-                                <MultiSelect value={selectedBanks} onChange={(e) => setSelectedBanks(e.value)} options={banks} optionLabel="name" 
+                                <MultiSelect value={selectedBanks} onChange={(e) => setSelectedBanks(e.value)} options={banks}
                                     placeholder="Select Preferred Banks" maxSelectedLabels={3} className="w-full md:w-20rem" />
                                 
                             </div>
@@ -197,10 +248,10 @@ const PreferencesCard = () => {
                                 <label htmlFor="bio" className="block text-medium mb-2">
                                     Banks to Avoid
                                 </label>
-                                <MultiSelect value={selectedAvoidBanks} onChange={(e) => setSelectedAvoidBanks(e.value)} options={banks} optionLabel="name" 
+                                <MultiSelect value={selectedAvoidBanks} onChange={(e) => setSelectedAvoidBanks(e.value)} options={banks}
                                     placeholder="Select Banks to Avoid" maxSelectedLabels={3} className="w-full md:w-20rem" /></div>
                             <div>
-                                <Button label="Update Profile" className="p-ripple w-auto"></Button>
+                                <Button onClick={() => sendPreferences()} label="Save" className="p-ripple w-auto"></Button>
                             </div>
                         </div>
                     </div>
@@ -216,7 +267,7 @@ const PreferencesCard = () => {
                                     Preferred Airlines
                                 </label>
                                 
-                                <MultiSelect value={selectedAirlines} onChange={(e) => setSelectedAirlines(e.value)} options={airlines} optionLabel="name" 
+                                <MultiSelect value={selectedAirlines} onChange={(e) => setSelectedAirlines(e.value)} options={airlines}
                                     placeholder="Select Preferred Airlines" maxSelectedLabels={3} className="w-full md:w-20rem" />
                                 
                             </div>
@@ -224,10 +275,10 @@ const PreferencesCard = () => {
                                 <label htmlFor="bio" className="block text-medium mb-2">
                                     Airlines to Avoid
                                 </label>
-                                <MultiSelect value={selectedAvoidAirlines} onChange={(e) => setSelectedAvoidAirlines(e.value)} options={airlines} optionLabel="name" 
+                                <MultiSelect value={selectedAvoidAirlines} onChange={(e) => setSelectedAvoidAirlines(e.value)} options={airlines}
                                     placeholder="Select Airlines to Avoid" maxSelectedLabels={3} className="w-full md:w-20rem" /></div>
                             <div>
-                                <Button label="Update Profile" className="p-ripple w-auto"></Button>
+                                <Button onClick={() => sendPreferences()} label="Save" className="p-ripple w-auto"></Button>
                             </div>
                         </div>
                     </div>
@@ -242,17 +293,17 @@ const PreferencesCard = () => {
                                 <label className="block text-medium mb-2">
                                     Favorite Restaurants
                                 </label>
-                                <MultiSelect value={selectedRestaurants} onChange={(e) => setSelectedRestaurants(e.value)} options={restaurants} optionLabel="name" 
+                                <MultiSelect value={selectedRestaurants} onChange={(e) => setSelectedRestaurants(e.value)} options={restaurants}
                                     placeholder="Select you favorite restaurants" maxSelectedLabels={3} className="w-full md:w-20rem" />
                             </div>
                             <div className="mb-4">
                                 <label htmlFor="bio" className="block text-medium mb-2">
                                     Favorite Stores
                                 </label>
-                                <MultiSelect value={selectedShopping} onChange={(e) => setSelectedShopping(e.value)} options={shopping} optionLabel="name" 
+                                <MultiSelect value={selectedShopping} onChange={(e) => setSelectedShopping(e.value)} options={shopping}
                                     placeholder="Select your favorite stores" maxSelectedLabels={3} className="w-full md:w-20rem" /></div>
                             <div>
-                                <Button label="Update Profile" className="p-ripple w-auto"></Button>
+                                <Button onClick={() => sendPreferences()} label="Save" className="p-ripple w-auto"></Button>
                             </div>  
                         </div>
                     </div>
@@ -267,17 +318,17 @@ const PreferencesCard = () => {
                                 <label className="block text-medium mb-2">
                                     Favorite Restaurants
                                 </label>
-                                <MultiSelect value={selectedRestaurants} onChange={(e) => setSelectedRestaurants(e.value)} options={restaurants} optionLabel="name" 
+                                <MultiSelect value={selectedRestaurants} onChange={(e) => setSelectedRestaurants(e.value)} options={restaurants}
                                     placeholder="Select you favorite restaurants" maxSelectedLabels={3} className="w-full md:w-20rem" />
                             </div>
                             <div className="mb-4">
                                 <label htmlFor="bio" className="block text-medium mb-2">
                                     Preferred Stores
                                 </label>
-                                <MultiSelect value={selectedShopping} onChange={(e) => setSelectedShopping(e.value)} options={shopping} optionLabel="name" 
+                                <MultiSelect value={selectedShopping} onChange={(e) => setSelectedShopping(e.value)} options={shopping}
                                     placeholder="Select your favorite stores" maxSelectedLabels={3} className="w-full md:w-20rem" /></div>
                             <div>
-                                <Button label="Update Profile" className="p-ripple w-auto"></Button>
+                                <Button onClick={() => sendPreferences()} label="Save" className="p-ripple w-auto"></Button>
                             </div>  
                         </div>
                     </div>

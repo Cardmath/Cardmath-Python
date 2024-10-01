@@ -128,3 +128,40 @@ class PurchaseCategory(str, Enum):
     ELECTRONICS_AND_TECHNOLOGY = "Electronics and Technology"
     CHARITABLE_DONATIONS = "Charitable Donations"
     ONLINE_SHOPPING = "Online Shopping"
+
+class BusinessType(str, Enum):
+    OTHER = "Other"
+    RESTAURANT = "Restaurant"
+    HOTEL = "Hotel"
+    HOTEL_RENTAL = "Hotel Rental"
+    TECHNOLOGY = "Technology"
+    HEALTHCARE = "Healthcare"
+    ENTERTAINMENT = "Entertainment"
+    CONSUMER_GOODS = "Consumer Goods"
+    CONSTRUCTION = "Construction"
+
+class BusinessSize(str, Enum):
+    OTHER = "Other"
+    SMALL = "Small"
+    MEDIUM = "Medium"
+    LARGE = "Large"
+
+class Airline(str, Enum):
+    AMERICAN_AIRLINES = "American Airlines"
+    UNITED_AIRLINES = "United Airlines"
+    ALASKAN_AIRLINES = "Alaskan Airlines"
+    DELTA_AIRLINES = "Delta Airlines"
+    JETBLUE_AIRLINES = "JetBlue Airlines"
+    SOUTHWEST_AIRLINES = "Southwest Airlines"
+    SKYWEST_AIRLINES = "SkyWest Airlines"
+    ALASKA_AIRLINES = "Alaska Airlines"
+    SPIRIT_AIRLINES = "Spirit Airlines"
+    HAWAII_AIRLINES = "Hawaiian Airlines"
+
+class Lifestyle(str, Enum):
+    STUDENT = "Student"
+    EARLY_CAREER = "Early Career"
+    MID_CAREER = "Mid-Career"
+    LATE_CAREER = "Late Career"
+    RETIRED = "Retired"
+    
