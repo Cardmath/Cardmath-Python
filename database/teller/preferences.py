@@ -43,7 +43,7 @@ class BusinessPreferences(Base):
     user_id = Column(Integer, ForeignKey('preferences.user_id'), primary_key=True)
     preferences = relationship("Preferences", back_populates="business_preferences")
 
-    business_type = Column(String, nullable=True)
+    business_type = Column(JSON, nullable=True)
     business_size = Column(String, nullable=True)
     
 
