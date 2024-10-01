@@ -139,14 +139,14 @@ class ConsumerPreferencesSchema(BaseModel):
     favorite_restaurants : Optional[List[str]] = None
     favorite_stores : Optional[List[str]] = None
 
-    model_config = ConfigDict(strict=True, from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BusinessPreferencesSchema(BaseModel):
-    business_type : Optional[enums.BusinessType] = None
+    business_type : Optional[List[enums.IndustryType]] = None
     business_size : Optional[enums.BusinessSize] = None
 
-    model_config = ConfigDict(strict=True, from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
 class PreferencesSchema(BaseModel):
     credit_profile : Optional[CreditProfileSchema] = None

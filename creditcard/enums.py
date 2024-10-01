@@ -129,7 +129,7 @@ class PurchaseCategory(str, Enum):
     CHARITABLE_DONATIONS = "Charitable Donations"
     ONLINE_SHOPPING = "Online Shopping"
 
-class BusinessType(str, Enum):
+class IndustryType(str, Enum):
     OTHER = "Other"
     RESTAURANT = "Restaurant"
     HOTEL = "Hotel"
@@ -141,10 +141,11 @@ class BusinessType(str, Enum):
     CONSTRUCTION = "Construction"
 
 class BusinessSize(str, Enum):
-    OTHER = "Other"
-    SMALL = "Small"
-    MEDIUM = "Medium"
-    LARGE = "Large"
+    MICRO = "Micro (less than 10 employees)"
+    SMALL = "Small (10-49 employees)"
+    MEDIUM = "Medium (50-199 employees)"
+    LARGE = "Large (200-499 employees)"
+    ENTERPRISE = "Enterprise (500 or more employees)"
 
 class Airline(str, Enum):
     AMERICAN_AIRLINES = "American Airlines"

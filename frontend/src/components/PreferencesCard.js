@@ -8,7 +8,7 @@ import { FloatLabel } from 'primereact/floatlabel';
 import { fetchWithAuth } from '../pages/AuthPage';
 import { Dropdown } from 'primereact/dropdown';
 
-const PreferencesCard = () => {
+const PreferencesCard = ( {setAlert} ) => {
     function checkProperties(obj) {
         for (var key in obj) {
             if (obj[key] !== null && obj[key] != "")
@@ -39,7 +39,14 @@ const PreferencesCard = () => {
         'TD Bank',
         'HSBC'
     ];    
-    
+    const findBanksIntersection = () => {
+        const intersection = selectedBanks?.filter(x => selectedAvoidBanks?.includes(x)) || [];
+        if (intersection.length > 0) {
+            return intersection;
+        }
+        return null;
+    }
+
     const [selectedAirlines, setSelectedAirlines] = useState(null);
     const [selectedAvoidAirlines, setSelectedAvoidAirlines] = useState(null);
     const airlines = [
@@ -53,6 +60,14 @@ const PreferencesCard = () => {
         'Frontier Airlines',
         'Hawaiian Airlines',
     ];
+    const findAirlinesIntersection = () => {
+        const intersection = selectedAirlines?.filter(x => selectedAvoidAirlines?.includes(x)) || [];
+        if (intersection.length > 0) {
+            return intersection;
+        }
+        return null;
+    }
+
 
     const [selectedRestaurants, setSelectedRestaurants] = useState(null);
     const restaurants = [
@@ -94,6 +109,28 @@ const PreferencesCard = () => {
     const [creditScore, setCreditScore] = useState(null);
     const [salary, setSalary] = useState(null);
 
+    const [selectedIndustries, setSelectedIndustries] = useState(null);
+    const industries = [
+        'Other',
+        'Restaurant',
+        'Hotel',
+        'Hotel Rental',
+        'Technology',
+        'Healthcare',
+        'Entertainment',
+        'Consumer Goods',
+        'Construction',
+    ];
+
+    const [selectedBusinessSize, setSelectedBusinessSize] = useState(null);
+    const businessSizes = [
+        'Micro (less than 10 employees)',
+        'Small (10-49 employees)',
+        'Medium (50-199 employees)',
+        'Large (200-499 employees)',
+        'Enterprise (500 or more employees)',
+    ]
+
     const sendPreferences = () => {
         const credit_profile_out = { 
             credit_score: creditScore !== null ? creditScore : null,
@@ -107,17 +144,46 @@ const PreferencesCard = () => {
             avoid_banks: selectedAvoidBanks !== null ? [...selectedAvoidBanks] : null
         }
 
+        var intersection = findBanksIntersection();
+        console.log(intersection);
+        if (intersection !== null) {
+            setAlert({
+                visible: true,
+                message: 'You cannot avoid and prefer the same bank. Violating Banks: ' + intersection.join(', '),
+                heading: 'Preference Contradiction',
+                type: 'error'
+            })
+            return;
+        }
+
         const travel_preferences_out = {
             preferred_airlines : selectedAirlines !== null ? [...selectedAirlines] : null,
             avoid_airlines : selectedAvoidAirlines !== null ? [...selectedAvoidAirlines] : null,
             frequent_travel_destinations : null,
             desired_benefits : null
         }
+
+        var intersection = findAirlinesIntersection();
+        console.log(intersection);
+        if (intersection !== null) {
+            setAlert({
+                visible: true,
+                message: 'You cannot avoid and prefer the same airline. Violating airlines: ' + intersection.join(', '),
+                heading: 'Preference Contradiction',
+                type: 'error'
+            })
+            return;
+        }
         
         const consumer_preferences_out = {
             favorite_restaurants: selectedRestaurants !== null ? [...selectedRestaurants] : null,
             favorite_stores: selectedShopping !== null ? [...selectedShopping] : null,
         };        
+
+        const business_preferences_out = {
+            business_type: selectedIndustries !== null ? [...selectedIndustries] : null,
+            business_size: selectedBusinessSize !== null ? selectedBusinessSize : null
+        }
 
         fetchWithAuth('http://localhost:8000/ingest_user_preferences', {
             method: 'POST',
@@ -126,11 +192,20 @@ const PreferencesCard = () => {
                 credit_profile: checkProperties(credit_profile_out) ? null : credit_profile_out, 
                 banks_preferences: checkProperties(banks_preferences_out) ? null : banks_preferences_out,
                 travel_preferences: checkProperties(travel_preferences_out) ? null : travel_preferences_out,
-                consumer_preferences: checkProperties(consumer_preferences_out) ? null : consumer_preferences_out
+                consumer_preferences: checkProperties(consumer_preferences_out) ? null : consumer_preferences_out,
+                business_preferences: checkProperties(business_preferences_out) ? null : business_preferences_out
             })
         }).then(() => {
             console.log("Preferences submitted!");
-        });
+        }).then( () => {
+            setAlert({
+                visible: false,
+                message: '',
+                heading: '',
+                type: 'error'
+            })    
+        }
+        );
     }
         
 
@@ -228,11 +303,11 @@ const PreferencesCard = () => {
                         <div className="flex-auto p-fluid">
                             <div className="mb-4">
                                 <label className="block text-medium mb-2">
-                                    Banks you are already a part of
+                                    Banks you have Accounts with
                                 </label>
                                 
                                 <MultiSelect value={selectedHaveBanks} onChange={(e) => setSelectedHaveBanks(e.value)} options={banks}
-                                    placeholder="Select Preferred Banks" maxSelectedLabels={3} className="w-full md:w-20rem" />
+                                    placeholder="Select Your Banks" maxSelectedLabels={3} className="w-full md:w-20rem" />
                                 
                             </div>
                             <div className="mb-4">
@@ -316,17 +391,17 @@ const PreferencesCard = () => {
                         <div className="flex-auto p-fluid">
                             <div className="mb-4">
                                 <label className="block text-medium mb-2">
-                                    Favorite Restaurants
+                                    How Big is Your Business
                                 </label>
-                                <MultiSelect value={selectedRestaurants} onChange={(e) => setSelectedRestaurants(e.value)} options={restaurants}
-                                    placeholder="Select you favorite restaurants" maxSelectedLabels={3} className="w-full md:w-20rem" />
+                                <Dropdown value={selectedBusinessSize} onChange={(e) => setSelectedBusinessSize(e.value)} options={businessSizes}
+                                    placeholder="Select your business size" className="w-full md:w-20rem" />
                             </div>
                             <div className="mb-4">
                                 <label htmlFor="bio" className="block text-medium mb-2">
-                                    Preferred Stores
+                                    What Industries Does Your Business Operate In
                                 </label>
-                                <MultiSelect value={selectedShopping} onChange={(e) => setSelectedShopping(e.value)} options={shopping}
-                                    placeholder="Select your favorite stores" maxSelectedLabels={3} className="w-full md:w-20rem" /></div>
+                                <MultiSelect value={selectedIndustries} onChange={(e) => setSelectedIndustries(e.value)} options={industries}
+                                    placeholder="Select all applicable industries" maxSelectedLabels={3} className="w-full md:w-20rem" /></div>
                             <div>
                                 <Button onClick={() => sendPreferences()} label="Save" className="p-ripple w-auto"></Button>
                             </div>  

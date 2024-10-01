@@ -153,7 +153,7 @@ async def replace_consumer_preferences(user : User, db: Session, preferences: sc
     return consumer_preferences
 
 async def replace_business_preferences(user : User, db: Session, preferences: schemas.BusinessPreferencesSchema) -> None:
-    db_business_preferences = user.preferences.business_preferences.first()
+    db_business_preferences = db.query(BusinessPreferences).filter_by(user_id=user.id).first()
     if db_business_preferences :
         db.delete(db_business_preferences)
         print("[INFO] Replaced business preferences.")
