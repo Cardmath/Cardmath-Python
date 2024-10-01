@@ -121,12 +121,12 @@ const AuthPage = ({ userHasAccount }) => {
                     <div className="w-full lg:w-6 p-4 lg:p-7" style={{ backgroundColor: 'rgba(255,255,255,.7)' }}>
                         <img src="hero-2.jpg" alt="Image" height="50" className="mb-6" />
                         <div className="text-xl text-black-alpha-90 font-500 mb-3">Welcome to Cardmath</div>
-                        <p className="text-black-alpha-50 line-height-3 mt-0 mb-6">Quis vel eros donec ac odio tempor orci dapibus. In hac habitasse platea dictumst quisque.</p>
+                        <p className="text-black-alpha-50 line-height-3 mt-0 mb-6">Choose your credit card more intelligently by matching it to your spending habits and lifestyle needs.</p>
                         <ul className="list-none p-0 m-0">
                             <li className="flex align-items-start mb-4">
                                 <div>
                                     <span className="flex align-items-center justify-content-center bg-purple-400" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
-                                        <i className="text-xl text-white pi pi-inbox"></i>
+                                        <i className="text-xl text-white pi pi-credit-card"></i>
                                     </span>
                                 </div>
                                 <div className="ml-3">
@@ -137,14 +137,14 @@ const AuthPage = ({ userHasAccount }) => {
                             <li className="flex align-items-start mb-4">
                                 <div>
                                     <span className="flex align-items-center justify-content-center bg-purple-400" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
-                                        <i className="text-xl text-white pi pi-globe"></i>
+                                        <i className="text-xl text-white pi pi-calculator"></i>
                                     </span>
                                 </div>
-                                <div className="ml-3">
-                                    <span className="font-medium text-black-alpha-90">Cloud Backups Inbox</span>
-                                    <p className="mt-2 mb-0 text-black-alpha-50 line-height-3">Egestas sed tempus urna et. Auctor elit sed vulputate mi sit amet mauris commodo.</p>
+                                <div className="ml-3">  
+                                    <span className="font-medium text-black-alpha-90">Track Your Spending</span>
+                                    <p className="mt-2 mb-0 text-black-alpha-50 line-height-3">Track your spending and rewards to avoid fees and make the most of your cards.</p>
                                 </div>
-                            </li>
+                            </li>   
                             <li className="flex align-items-start">
                                 <div>
                                     <span className="flex align-items-center justify-content-center bg-purple-400" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
