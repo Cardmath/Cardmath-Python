@@ -12,15 +12,19 @@ from database.creditcard import creditcard
 from database.sql_alchemy_db import engine, get_db
 from database.sql_alchemy_db import SessionLocal
 from datetime import timedelta
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Request, Depends, FastAPI, HTTPException, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from teller.schemas import AccessTokenSchema
+from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
 import teller.endpoints as teller_endpoints
+
+import logging
 
 SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/CreditCards/cardratings/cardratings.html"
 
@@ -57,7 +61,7 @@ async def lifespan(app: FastAPI):
         db.close()
     
     yield
-    
+
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
@@ -66,6 +70,13 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all methods
     allow_headers=["*"],  # Allow all headers
 )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+	exc_str = f'{exc}'.replace('\n', ' ').replace('   ', ' ')
+	logging.error(f"{request}: {exc_str}")
+	content = {'status_code': 10422, 'message': exc_str, 'data': None}
+	return JSONResponse(content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 @app.post("/token")
 async def login_for_access_token(
@@ -141,6 +152,12 @@ async def receive_teller_enrollment(current_user: Annotated[User, Depends(auth_u
                  access_token: AccessTokenSchema,
                  db: Session = Depends(get_db)):
     return await teller_endpoints.receive_teller_enrollment(db=db, access_token=access_token, user=current_user) 
+
+@app.post("/ingest_user_preferences")
+async def ingest_user_preferences(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
+                 preferences: PreferencesSchema,
+                 db: Session = Depends(get_db)):
+    return await teller_endpoints.ingest_user_preferences(preferences=preferences, db=db, user=current_user)
 
 @app.post("/download")
 def download_endpoint(request: DownloadRequest) -> DownloadResponse:
