@@ -9,7 +9,7 @@ from creditcard.endpoints.parse import parse
 from creditcard.endpoints.parse import ParseRequest, ParseResponse
 from creditcard.schemas import *
 from database.creditcard import creditcard
-from database.sql_alchemy_db import engine, get_db
+from database.sql_alchemy_db import engine, get_db, print_sql_schema
 from database.sql_alchemy_db import SessionLocal
 from datetime import timedelta
 from fastapi import Request, Depends, FastAPI, HTTPException, status
@@ -29,6 +29,7 @@ import logging
 SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/CreditCards/cardratings/cardratings.html"
 
 creditcard.Base.metadata.create_all(bind=engine)
+print_sql_schema()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
