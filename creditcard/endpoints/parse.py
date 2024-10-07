@@ -22,16 +22,20 @@ class ParseResponse(BaseModel):
 def parse(request : ParseRequest, db : Session) -> ParseResponse:    
     parsed_ccs = []
     if request.raw_json_in is not None and len(request.raw_json_in) > 0:
+        print("[INFO] Parsing raw json")
         json_in = json.loads(request.raw_json_in)
         parsed_ccs = [CardRatingsScrapeSchema.model_construct(cc) for cc in json_in]
     else :
+        print("[INFO] Parsing scraped data")
         cc_scrapes : List[CardratingsScrape] = crud.get_cardratings_scrapes(db, n=request.max_items_to_parse)
-        cc_scrapes : List[CardRatingsScrapeSchema] = [CardRatingsScrapeSchema(name=cc.name, 
+        print(f"[INFO] Fetched {len(cc_scrapes)} card ratings scrapes")
+        cc_scrapes_schemas : List[CardRatingsScrapeSchema] = [CardRatingsScrapeSchema(name=cc.name, 
                                                                               description_used=cc.description_used,
                                                                               unparsed_issuer=cc.unparsed_issuer,
                                                                               unparsed_credit_needed=cc.unparsed_credit_needed,
-                                                                              unparsed_card_attributes = cc.unparsed_card_attributes) for cc in parsed_ccs]
-        parsed_ccs : List[CreditCardSchema] = [cc.credit_card_schema() for cc in cc_scrapes]
+                                                                              unparsed_card_attributes = cc.unparsed_card_attributes) for cc in cc_scrapes]
+        print(f"[INFO] Constructed {len(cc_scrapes_schemas)} card ratings scrape schemas")  
+        parsed_ccs : List[CreditCardSchema] = [cc.credit_card_schema() for cc in cc_scrapes_schemas]
         
     out_parsed_cards : list = []
     db_log = []  # Add db_log field

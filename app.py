@@ -26,7 +26,7 @@ import teller.endpoints as teller_endpoints
 
 import logging
 
-SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/CreditCards/cardratings/cardratings.html"
+SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/Cardmath/scrapes/cardratings.html"
 
 creditcard.Base.metadata.create_all(bind=engine)
 print_sql_schema()
