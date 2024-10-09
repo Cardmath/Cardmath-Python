@@ -1,5 +1,5 @@
 from auth.schemas import UserCreate
-from database.auth.user import User, UserInDB, Enrollment
+from database.auth.user import User, UserInDB, Enrollment, Account
 from database.creditcard.creditcard import CreditCard
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
@@ -16,6 +16,9 @@ def get_user_by_username(db: Session, username: str) -> Optional[UserInDB]:
 
 def get_users(db: Session, skip: int = 0, limit: int = 10) -> List[User]:
     return db.query(User).offset(skip).limit(limit).all()
+
+def get_account_by_id(db: Session, account_id: str) -> Optional[Account]:
+    return db.query(Account).filter(Account.id == account_id).first()
 
 def create_user(db: Session, user: UserCreate) -> UserInDB:
     hashed_password = get_password_hash(user.password)

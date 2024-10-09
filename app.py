@@ -17,9 +17,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from insights.heavyhitters import read_heavy_hitters
+from insights.schemas import HeavyHittersRequest, HeavyHittersResponse
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
+
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
 import teller.endpoints as teller_endpoints
@@ -29,7 +32,7 @@ import logging
 SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/CreditCards/cardratings/cardratings.html"
 
 creditcard.Base.metadata.create_all(bind=engine)
-print_sql_schema()
+#print_sql_schema() Only for debugging
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -53,7 +56,7 @@ async def lifespan(app: FastAPI):
     
     try :
         parse(request=ParseRequest(return_json = False,
-            max_items_to_parse = 10,
+            max_items_to_parse = 0,
             save_to_db=True),
             db = db)
     except Exception as e:
@@ -171,3 +174,8 @@ def extract_endpoint(request: ExtractRequest, db: Session = Depends(get_db)) -> 
 @app.post("/parse") 
 def parse_endpoint(request: ParseRequest, db: Session = Depends(get_db)) -> ParseResponse:
     return parse(request, db)
+
+@app.post("/read_heavy_hitters") 
+async def heavy_hitters_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
+                   request: HeavyHittersRequest, db: Session = Depends(get_db)) -> HeavyHittersResponse:
+    return await read_heavy_hitters(db, current_user, request)

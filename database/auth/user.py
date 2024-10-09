@@ -54,3 +54,4 @@ class Account(Base):
     status = Column(String, nullable=False)
     
     enrollment = relationship("Enrollment", back_populates="accounts")
+    transactions = relationship("Transaction", back_populates="account", lazy='dynamic')

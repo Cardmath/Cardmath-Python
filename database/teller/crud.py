@@ -1,14 +1,20 @@
-from database.auth.user import Account, User
+from database.auth.user import Account, User, Enrollment
 from database.teller.preferences import Preferences, CreditProfilePreferences, BanksPreferences, TravelPreferences, BusinessPreferences, ConsumerPreferences
 from database.teller.transactions import Transaction, Counterparty, TransactionDetails
 from datetime import datetime 
 from sqlalchemy.orm import Session
 import teller.schemas as schemas
+from teller.utils import read_enrollment_accounts, read_user_enrollments
+from typing import List
 
-def create_transaction(db: Session, transaction: schemas.TransactionSchema) -> Transaction:
+
+def create_transaction(db: Session, account: Account, transaction: schemas.TransactionSchema) -> Transaction:
+    if transaction.account_id != account.id:
+        print("[CRITIAL ERROR] Transaction account id does not match account id")
+     
     db_txn = Transaction(
+        account=account,
         txn_id = transaction.id,
-        account_id = transaction.account_id,
         amount = transaction.amount,
         date = transaction.date,
         description = transaction.description,
@@ -52,7 +58,7 @@ def create_transaction(db: Session, transaction: schemas.TransactionSchema) -> T
     db.refresh(db_txn)
     return db_txn
 
-def create_account(db : Session, account : schemas.AccountSchema, schema=True) -> Account: 
+def create_account(db : Session, account : schemas.AccountSchema) -> Account: 
     db_account = Account(
         id=account.id,
         enrollment_id = account.enrollment_id,
@@ -70,9 +76,7 @@ def create_account(db : Session, account : schemas.AccountSchema, schema=True) -
     db.commit()
     db.refresh(db_account)
     
-    if schema:
-        return schemas.AccountSchema.from_db(db_account)
-    return 
+    return db_account
 
 async def replace_credit_profile_preferences(user : User, db: Session, preferences: schemas.CreditProfileSchema) -> None:
     db_credit_profile = db.query(CreditProfilePreferences).filter_by(user_id=user.id).first()
@@ -198,3 +202,12 @@ async def replace_preferences(user : User, db: Session, preferences: schemas.Pre
         await replace_business_preferences(user, db, preferences.business_preferences)
 
     return
+
+async def read_user_transactions(db: Session, current_user: User) -> List[Transaction]:
+    user_enrollments : List[Enrollment] = await read_user_enrollments(current_user, db)
+    fetched_transactions : List[Transaction] = []
+    for enrollment in user_enrollments:
+        transactions_temp = await get_list_enrollment_transactions(enrollment, db)
+        if transactions_temp is not None:
+            fetched_transactions.extend(transactions_temp)
+    return fetched_transactions   

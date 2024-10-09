@@ -4,14 +4,16 @@ from openai import OpenAI
 import json
 import os
 
-load_dotenv()
-client = OpenAI(
-    api_key=os.getenv('OPENAI_API_KEY', "your_openai_api_key")
-)
-
 separator = "\n - "
 
+
 def prompt_gpt4_for_json(prompt):    
+
+    load_dotenv()
+    client = OpenAI(
+        api_key=os.getenv('OPENAI_API_KEY', "your_openai_api_key")
+    )
+
     chat_completion = client.chat.completions.create(
         messages=[
             {

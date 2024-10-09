@@ -165,4 +165,13 @@ class Lifestyle(str, Enum):
     MID_CAREER = "Mid-Career"
     LATE_CAREER = "Late Career"
     RETIRED = "Retired"
-    
+
+class Vendors(str, Enum):
+    AMAZON = "Amazon"
+    TARGET = "Target"
+    WALGREENS = "Walgreens"
+    WALMART = "Walmart"
+    KROGER = "Kroger"
+    LOWES = "Lowes"
+    ALDI = "Aldi"
+    COSTCO = "Costco"

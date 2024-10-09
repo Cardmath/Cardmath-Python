@@ -10,6 +10,7 @@ from teller.schemas import TransactionSchema, AccountSchema
 from typing import List, Union
 from typing import Optional
 
+import database.auth.crud as auth_crud
 import database.teller.crud as teller_crud 
 
 import os
@@ -53,10 +54,8 @@ async def read_user_new_enrollment(user: User, db: Session) -> Enrollment:
     enrollments : List[Enrollment] = db.query(Enrollment).filter(Enrollment.user_id == user.id and Enrollment.last_updated >= ten_minutes_ago).first()
     return enrollments
 
-async def read_enrollment_accounts(enrollment: Enrollment, db: Session, schema=True) -> List[Account]:
+async def read_enrollment_accounts(enrollment: Enrollment, db: Session) -> List[Account]:
     accounts : List[Account] = db.query(Account).filter(Account.enrollment_id == enrollment.enrollment_id).all()
-    if (schema):
-        return [AccountSchema.from_db(account) for account in accounts]
     return accounts
 
 def is_credit_card_account(account: Account) -> bool:
@@ -70,6 +69,10 @@ async def get_account_credit_cards(account: Account, db: Session) -> List[Credit
         
     return db.query(CreditCard).filter(CreditCard.name == account.name 
                                        and account.institution_name == CreditCard.issuer).all()
+
+# TODO Optimize this query
+async def read_enrollment_transactions(enrollment: Enrollment, db: Session) -> List[Transaction]:
+    return db.query(Transaction).filter(Transaction.enrollment_id == enrollment.enrollment_id).all()
 
 class Teller(BaseModel):
     cert: str = os.getenv("TELLER_CERT")
@@ -90,17 +93,19 @@ class Teller(BaseModel):
             out_accounts.append(AccountSchema.model_validate(account))
         return out_accounts
     
-    async def get_enrollment_accounts(self, enrollment : Enrollment, db : Session) -> List[AccountSchema]: 
+    async def get_enrollment_accounts(self, enrollment : Enrollment, db : Session) -> List[Account]: 
         enrollment_accounts_db : List[Account] = await read_enrollment_accounts(enrollment, db)
         if (enrollment_accounts_db and len(enrollment_accounts_db) > 0):
             return enrollment_accounts_db
 
         enrollment_accounts : List[AccountSchema] = await self.fetch_enrollment_accounts(enrollment)
+        temp_accounts : List[Account] = []
         for account in enrollment_accounts:
-            teller_crud.create_account(db, account)
-        return enrollment_accounts
+            temp_account = await teller_crud.create_account(db=db, account=account)
+            temp_accounts.append(temp_account)  
+        return temp_accounts
                     
-    async def get_list_enrollments_accounts(self, db: Session, enrollments : List[Enrollment]) -> List[AccountSchema]:
+    async def get_list_enrollments_accounts(self, db: Session, enrollments : List[Enrollment]) -> List[Account]:
         if enrollments is None:
             return []
         
@@ -117,7 +122,7 @@ class Teller(BaseModel):
             transactions_temp = await self.fetch_enrollment_transactions(enrollment, db)
             if transactions_temp is not None:
                 fetched_transactions.extend(transactions_temp)
-        return fetched_transactions        
+        return fetched_transactions     
         
     async def fetch_enrollment_transactions(self, enrollment: Optional[Enrollment], db: Session) -> List[Transaction]:
         if enrollment is None:
@@ -140,6 +145,7 @@ class Teller(BaseModel):
             acc_id = account.id
         elif isinstance(account, AccountSchema):
             acc_id = account.id
+            account = db.query(Account).filter(Account.id == acc_id).first()
         else :
             raise TypeError("Invalid account type")
         
@@ -152,7 +158,7 @@ class Teller(BaseModel):
         out_transactions = []
         for transaction in transactions:
             parsed_transaction : TransactionSchema = TransactionSchema.model_validate(transaction)
-            teller_crud.create_transaction(db, parsed_transaction)
+            teller_crud.create_transaction(db, account= account, transaction=parsed_transaction)
             out_transactions.append(parsed_transaction)
         return out_transactions
     
