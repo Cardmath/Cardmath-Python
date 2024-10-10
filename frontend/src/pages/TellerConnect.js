@@ -79,6 +79,7 @@ const TellerConnectComponent = () => {
                 setProcessingError(true);
                 console.log("An error occurred while processing the enrollment. Please try again.");
             }
+            window.location.href = 'http://localhost:3000/dashboard';
         } catch (error) {   
             confirmDialog({
                 header: 'Error',
@@ -94,7 +95,7 @@ const TellerConnectComponent = () => {
             })
             setProcessingError(true);
             console.log("An error occurred while processing the enrollment. Please try again.");
-        }        
+        }
 };
 
     useEffect(() => {
