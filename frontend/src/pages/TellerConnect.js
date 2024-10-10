@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { useTellerConnect } from 'teller-connect-react';
 import { fetchWithAuth } from './AuthPage';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { ConfirmDialog } from 'primereact/confirmdialog';
+import { confirmDialog } from 'primereact/confirmdialog';
 
 const TellerConnectComponent = () => {
 
     const [showSpinner, setShowSpinner] = useState(false); 
+    const [processingError, setProcessingError] = useState(false);
 
     const handleSuccess = async (data) => {
         setShowSpinner(true);
+        var el = document.getElementById("teller-connect-window");
+        el.style.display = 'none';
         try {
             let response = await fetchWithAuth('http://localhost:8000/receive_teller_enrollment', {
                 method: 'POST',
@@ -16,49 +20,122 @@ const TellerConnectComponent = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(data),
-            });            
-            
+            });   
             if (!response.ok) {
-                throw new Error('Failed sending Teller enrollment to server.');
+                confirmDialog({
+                    message: `The server rejected your enrollment. Please confirm that you are logged in and try again.`,
+                    header: 'Error sending Enrollment to Server',
+                    icon: 'pi pi-exclamation-triangle',
+                    accept: () => {
+                        setProcessingError(false);
+                        window.location.href = 'http://localhost:3000/dashboard';   
+                    },
+                    reject: () => {
+                        window.location.reload();
+                        setProcessingError(false);
+                    }                
+                })
+                setProcessingError(true);
+                console.log("The server rejected your enrollment. Please confirm that you are logged in and try again.");
             }
+        } catch (error) {
+            confirmDialog({
+                message: `Error enrolling with Teller Connect. The enrollment was not sent to our server. Please try again.`,
+                header: 'Error Enrolling with Teller Connect',
+                icon: 'pi pi-exclamation-triangle',
+                accept: () => {
+                    setProcessingError(false);
+                    window.location.href = 'http://localhost:3000/dashboard';   
+                },
+                reject: () => {
+                    window.location.reload();
+                    setProcessingError(false);
+                }
+            })
+            setProcessingError(true);
+            console.log("Error enrolling with Teller Connect. The enrollment was not sent to our server. Please try again.");
+        }     
 
-            response = await fetchWithAuth('http://localhost:8000/process_new_enrollment', {
+        try {
+            let response = await fetchWithAuth('http://localhost:8000/process_new_enrollment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
             }); 
-            
             if (!response.ok) {
-                throw new Error('Failed prefetching Teller transactions.');
+                confirmDialog({
+                    header: 'Error',
+                    icon: 'pi pi-exclamation-triangle',
+                    message: 'An error occurred while processing the enrollment. Please try again.',
+                    accept: () => {
+                        setProcessingError(false);
+                        window.location.href = 'http://localhost:3000/dashboard';   
+                    },
+                    reject: () => {
+                        window.location.reload();
+                    }                
+                })
+                setProcessingError(true);
+                console.log("An error occurred while processing the enrollment. Please try again.");
             }
-
-            window.location.href = '/preferences'; // TODO IMPLEMENT QUESTIONS 
-
-        } catch (error) {
-            console.error('Error sending enrollment to server:', error);
-        }
-    };
-
-    const config = {
-        // Teller Connect configuration
-        selectAccount: "disabled",
-        environment: 'sandbox',
-        applicationId: 'app_p3oodma27qfrj3hs8a000',
-        onSuccess: handleSuccess,
-    };
-
-    const { open, ready } = useTellerConnect(config);
+        } catch (error) {   
+            confirmDialog({
+                header: 'Error',
+                icon: 'pi pi-exclamation-triangle',
+                message: 'An error occurred while processing the enrollment. Please try again.',
+                accept: () => {
+                    setProcessingError(false);
+                    window.location.href = 'http://localhost:3000/dashboard';   
+                },
+                reject: () => {
+                    window.location.reload();
+                }            
+            })
+            setProcessingError(true);
+            console.log("An error occurred while processing the enrollment. Please try again.");
+        }        
+};
 
     useEffect(() => {
-        if (ready) {
-            open();
-        }
-    }, [ready, open]);
-
+        const script = document.createElement('script');
+        script.src = "https://cdn.teller.io/connect/connect.js";        
+        script.onload = () => {
+            // Use TellerConnect directly after script loads
+            if (window.TellerConnect) {
+                var tellerConnect = window.TellerConnect.setup({
+                    applicationId: "app_p3oodma27qfrj3hs8a000",
+                    selectAccount: "disabled",
+                    environment: 'sandbox',
+                    onInit: function() {
+                        console.log("Teller Connect has initialized");
+                    },
+                    onSuccess: function(enrollment) {
+                        console.log("User enrolled successfully", enrollment.accessToken);
+                        handleSuccess(enrollment);
+                    },
+                    onExit: function() {
+                        console.log("User closed Teller Connect");
+                        window.location.href = 'http://localhost:3000/dashboard';
+                    }
+                });
+                tellerConnect.open();
+            } else {
+                console.error("TellerConnect is not defined. Make sure the script is loaded correctly.");
+            }
+        };
+        script.onerror = () => {
+            console.error("Failed to load the Teller Connect script.");
+        };
+        document.body.appendChild(script);
+    }, []);
+    
     return (
         <div>
-            {showSpinner && (
+            <div id="teller-connect">
+
+            </div>
+            {showSpinner && !processingError && (
                 <div className="bg-primary-reverse flex h-full h-screen flex-column justify-content-center">
                     <div className="flex align-content-evenly justify-content-center">
                         <ProgressSpinner />
@@ -68,6 +145,7 @@ const TellerConnectComponent = () => {
                     </span>
                 </div>
             )}
+            <ConfirmDialog />
         </div>
     );  
 };

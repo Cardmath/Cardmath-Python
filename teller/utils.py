@@ -2,6 +2,7 @@ from auth.schemas import User
 from database.auth import crud as user_crud
 from database.auth.user import Enrollment, Account
 from database.creditcard.creditcard import CreditCard
+from database.teller import crud as teller_crud
 from database.teller.transactions import Transaction
 from datetime import datetime, timedelta
 from pydantic import BaseModel
@@ -10,7 +11,6 @@ from teller.schemas import TransactionSchema, AccountSchema
 from typing import List, Union
 from typing import Optional
 
-import database.auth.crud as auth_crud
 import database.teller.crud as teller_crud 
 
 import os
@@ -28,7 +28,7 @@ async def update_user_credit_cards(user: User, db: Session) -> List[Account]:
     Reads all of a user's accounts and determines which ones correspond to credit cards in our DB
     '''
     out_cards : List[CreditCard] = []
-    enrollments : List[Enrollment] = await read_user_enrollments(user, db)
+    enrollments : List[Enrollment] = await teller_crud.read_user_enrollments(user, db)
     for enrollment in enrollments:
         accounts : List[Account] = await read_enrollment_accounts(enrollment, db)
         for account in accounts:
@@ -37,13 +37,6 @@ async def update_user_credit_cards(user: User, db: Session) -> List[Account]:
     
     await user_crud.update_user_with_credit_cards(db, out_cards, user.id)
     return out_cards
-
-async def read_user_enrollments(user: User, db: Session) -> List[Enrollment]:
-    '''
-    Reads all of a user's enrollments from the DB
-    '''
-    enrollments : List[Enrollment] = db.query(Enrollment).filter(Enrollment.user_id == user.id).all()
-    return enrollments
 
 async def read_user_new_enrollment(user: User, db: Session) -> Enrollment:
     '''
@@ -116,7 +109,7 @@ class Teller(BaseModel):
         return accounts
     
     async def fetch_user_transactions(self, db: Session, current_user: User) -> List[Transaction]:
-        user_enrollments : List[Enrollment] = await read_user_enrollments(current_user, db)
+        user_enrollments : List[Enrollment] = await teller_crud.read_user_enrollments(current_user, db)
         fetched_transactions : List[Transaction] = []
         for enrollment in user_enrollments:
             transactions_temp = await self.fetch_enrollment_transactions(enrollment, db)

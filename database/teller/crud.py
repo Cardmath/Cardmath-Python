@@ -3,9 +3,15 @@ from database.teller.preferences import Preferences, CreditProfilePreferences, B
 from database.teller.transactions import Transaction, Counterparty, TransactionDetails
 from datetime import datetime 
 from sqlalchemy.orm import Session
-import teller.schemas as schemas
-from teller.utils import read_enrollment_accounts, read_user_enrollments
 from typing import List
+import teller.schemas as schemas
+
+async def read_user_enrollments(user: User, db: Session) -> List[Enrollment]:
+    '''
+    Reads all of a user's enrollments from the DB
+    '''
+    enrollments : List[Enrollment] = db.query(Enrollment).filter(Enrollment.user_id == user.id).all()
+    return enrollments
 
 
 def create_transaction(db: Session, account: Account, transaction: schemas.TransactionSchema) -> Transaction:
@@ -58,7 +64,7 @@ def create_transaction(db: Session, account: Account, transaction: schemas.Trans
     db.refresh(db_txn)
     return db_txn
 
-def create_account(db : Session, account : schemas.AccountSchema) -> Account: 
+async def create_account(db : Session, account : schemas.AccountSchema) -> Account: 
     db_account = Account(
         id=account.id,
         enrollment_id = account.enrollment_id,
@@ -202,12 +208,3 @@ async def replace_preferences(user : User, db: Session, preferences: schemas.Pre
         await replace_business_preferences(user, db, preferences.business_preferences)
 
     return
-
-async def read_user_transactions(db: Session, current_user: User) -> List[Transaction]:
-    user_enrollments : List[Enrollment] = await read_user_enrollments(current_user, db)
-    fetched_transactions : List[Transaction] = []
-    for enrollment in user_enrollments:
-        transactions_temp = await get_list_enrollment_transactions(enrollment, db)
-        if transactions_temp is not None:
-            fetched_transactions.extend(transactions_temp)
-    return fetched_transactions   

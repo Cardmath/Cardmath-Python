@@ -3,6 +3,8 @@ import SimpleSection from '../components/SimpleSection';
 import PreferencesCard from '../components/PreferencesCard';
 import Footer from '../components/Footer';
 import Alert  from '../components/Alert';
+import ConnectBanks from '../components/calltoaction/ConnectBanks';
+
 
 const PreferencesPage = () => {
     const [alert, setAlert] = useState({visible: false, message: '', heading : '', type: 'error'});
@@ -11,6 +13,7 @@ const PreferencesPage = () => {
             <Alert visible={alert.visible} message={alert.message} type={alert.type} heading={alert.heading} setVisible={(visible) => setAlert({ ...alert, visible })}/>
             <SimpleSection sectionTitle="Preferences"/>
             <PreferencesCard setAlert={setAlert}/>
+            <ConnectBanks />
             <Footer />
         </div>
     );

@@ -106,7 +106,7 @@ const AuthPage = ({ userHasAccount }) => {
             if (userHasAccount) {
                 window.location.href = '/preferences';
             } else {
-                window.location.href = '/connect';
+                window.location.href = '/preferences';
             }
         }).catch(error => {
             console.error('There was an error!', error)

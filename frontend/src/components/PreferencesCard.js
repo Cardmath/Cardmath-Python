@@ -211,13 +211,13 @@ const PreferencesCard = ( {setAlert} ) => {
 
     return (        
         <div className="surface-ground px-4 md:px-6 lg:px-8">
-            <div className="flex w-full p-fluid flex-column lg:flex-row">
+            <div className="p-fluid flex flex-column lg:flex-row">
                 <ul className="w-3 flex-shrink-0 list-none m-0 p-0 flex flex-row lg:flex-column justify-content-evenly md:justify-content-between lg:justify-content-start mb-5 lg:pr-8 lg:mb-0">
                     <li>
                         <a onClick={() => handleTabClick('CreditProfile')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
-                            <Ripple />
                             <i className="pi pi-credit-card md:mr-2"></i>
                             <span className="font-medium hidden md:block">Credit Profile</span>
+                            <Ripple />
                         </a>
                     </li>
                     <li>
@@ -289,7 +289,10 @@ const PreferencesCard = ( {setAlert} ) => {
                             </div>
                             
                             <div>
-                            <Button onClick={() => sendPreferences()} label="Save" className="p-ripple w-auto"></Button>
+                                <Button onClick={() => {
+                                    sendPreferences()
+                                    setActiveTab('Banks')
+                                }} label="Save and Continue" className="p-ripple w-auto"></Button>
                             </div>
                         </div>
                     </div>
@@ -326,7 +329,10 @@ const PreferencesCard = ( {setAlert} ) => {
                                 <MultiSelect value={selectedAvoidBanks} onChange={(e) => setSelectedAvoidBanks(e.value)} options={banks}
                                     placeholder="Select Banks to Avoid" maxSelectedLabels={3} className="w-full md:w-20rem" /></div>
                             <div>
-                                <Button onClick={() => sendPreferences()} label="Save" className="p-ripple w-auto"></Button>
+                                <Button onClick={() => {
+                                    sendPreferences();
+                                    setActiveTab('Travel'); 
+                                    }} label="Save and Continue" className="p-ripple w-auto"></Button>
                             </div>
                         </div>
                     </div>
@@ -353,7 +359,10 @@ const PreferencesCard = ( {setAlert} ) => {
                                 <MultiSelect value={selectedAvoidAirlines} onChange={(e) => setSelectedAvoidAirlines(e.value)} options={airlines}
                                     placeholder="Select Airlines to Avoid" maxSelectedLabels={3} className="w-full md:w-20rem" /></div>
                             <div>
-                                <Button onClick={() => sendPreferences()} label="Save" className="p-ripple w-auto"></Button>
+                                <Button onClick={() => {
+                                    sendPreferences()
+                                    setActiveTab('Shopping&Dining');     
+                                }} label="Save and Continue" className="p-ripple w-auto"></Button>
                             </div>
                         </div>
                     </div>
@@ -378,7 +387,12 @@ const PreferencesCard = ( {setAlert} ) => {
                                 <MultiSelect value={selectedShopping} onChange={(e) => setSelectedShopping(e.value)} options={shopping}
                                     placeholder="Select your favorite stores" maxSelectedLabels={3} className="w-full md:w-20rem" /></div>
                             <div>
-                                <Button onClick={() => sendPreferences()} label="Save" className="p-ripple w-auto"></Button>
+                                <Button onClick={() => {
+                                    sendPreferences()
+                                    setActiveTab('Business');
+                                }} label="Save and Continue" className="p-ripple w-auto">
+                                        <Ripple />
+                                </Button>
                             </div>  
                         </div>
                     </div>
@@ -403,7 +417,7 @@ const PreferencesCard = ( {setAlert} ) => {
                                 <MultiSelect value={selectedIndustries} onChange={(e) => setSelectedIndustries(e.value)} options={industries}
                                     placeholder="Select all applicable industries" maxSelectedLabels={3} className="w-full md:w-20rem" /></div>
                             <div>
-                                <Button onClick={() => sendPreferences()} label="Save" className="p-ripple w-auto"></Button>
+                                <Button onClick={() => sendPreferences()} label="Save and Continue" className="p-ripple w-auto"></Button>
                             </div>  
                         </div>
                     </div>
