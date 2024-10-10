@@ -86,7 +86,6 @@ class TwoPassHeavyHitters:
         return {item: round(count / total_items, 2) for item, count in exact_counts.items() if count >= threshold}
 
 async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersRequest) -> HeavyHittersResponse:
-        print(request)
         teller_client = teller_utils.Teller() 
         accounts: List[Account] = await teller_client.get_list_enrollments_accounts(enrollments=user.enrollments, db=db)
 
