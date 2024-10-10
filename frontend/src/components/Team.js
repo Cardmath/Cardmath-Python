@@ -5,17 +5,41 @@ const Team = () => {
     return (
         <div className="surface-section px-4 py-8 md:px-6 lg:px-8">
             <div className="grid">
-                <div className="col-12 lg:col-4 pr-0 lg:pr-4">
+                <div className="col-12 lg:col-3 pr-0 lg:pr-4">
                     <div className="text-900 text-5xl font-bold mb-3">Meet our team</div>
-                    <p className="text-700 text-lg line-height-3">Our founding team, composed of Columbia University undergraduates, brings a dynamic interdisciplinary focus on engineering and finance. With a strong foundation in both fields, we combine technical expertise with a deep understanding of financial systems to tackle complex challenges. The integration of cutting-edge engineering solutions with strategic financial insight allows us to approach problems from multiple angles, ensuring that our innovations are not only technically sound but also economically viable. Columbia’s collaborative environment has enabled us to bridge the gap between these two critical disciplines, positioning our team to develop solutions that are both technologically advanced and financially sustainable.</p>
+                    <p className="text-700 text-lg line-height-3">
+                    Our team includes Cornell, Columbia, and Ohio State Honors students, a 2x founder, and interns from Google and Amazon, with expertise in business, algorithms, and software engineering.
+                    </p>
                 </div>
                 <div className="col-12 lg:col-8">
                     <div className="grid">
                         <div className="col-12 lg:col-6 p-3">
-                            <img src="/people/johannes.jpg" className="image-class mb-4 w-full" alt="team-1"/>
+                            <img src="/people/johannes.jpeg" className="image-class mb-4 w-full" alt="team-1"/>
                             <div className="font-medium text-xl mb-1 text-900">Johannes Losert</div>
-                            <span className="text-600 font-medium">Founder</span>
-                            <p className="line-height-3 mt-3 mb-3">Undergraduate Senior at Columbia University who has done AI Security research at NIST and Software Engineering at Google, Amazon.</p>
+                            <span className="text-600 font-medium">Founder, Engineering & Business</span>
+                            <p className="line-height-3 mt-3 mb-3">Senior @ Columbia - Google, Amazon Intern. Has done AI Security research at NIST and Software Engineering at Google, Amazon.</p>
+                            <div className="mb-2">
+                                <a tabIndex="0" className="cursor-pointer"><i className="pi pi-twitter text-600 text-xl mr-3"></i></a>
+                                <a tabIndex="0" className="cursor-pointer"><i className="pi pi-github text-600 text-xl mr-3"></i></a>
+                                <a tabIndex="0" className="cursor-pointer"><i className="pi pi-facebook text-600 text-xl"></i></a>
+                            </div>
+                        </div>
+                        <div className="col-12 lg:col-6 p-3">
+                            <img src="/people/pranav.jpeg" className="image-class mb-4 w-full" alt="team-2" />
+                            <div className="font-medium text-xl mb-1 text-900">Pranav Nair</div>
+                            <span className="text-600 font-medium">Co-Founder, Business</span>
+                            <p className="line-height-3 mt-3 mb-3">Junior @ Cornell - 2x Founder, likes building things.</p>
+                            <div className="mb-2">
+                                <a tabIndex="0" className="cursor-pointer"><i className="pi pi-twitter text-600 text-xl mr-3"></i></a>
+                                <a tabIndex="0" className="cursor-pointer"><i className="pi pi-github text-600 text-xl mr-3"></i></a>
+                                <a tabIndex="0" className="cursor-pointer"><i className="pi pi-facebook text-600 text-xl"></i></a>
+                            </div>
+                        </div>
+                        <div className="col-12 lg:col-6 p-3">
+                            <img src="/people/trey.jpeg" className="image-class mb-4 w-full" alt="team-2" />
+                            <div className="font-medium text-xl mb-1 text-900">Maitreya Dixit</div>
+                            <span className="text-600 font-medium">Co-Founder, Engineering</span>
+                            <p className="line-height-3 mt-3 mb-3">Senior @ tOSU Honors, 3x Google Intern. Aspiring software engineer with ambitions in the fields of high performance computing and machine learning.</p>
                             <div className="mb-2">
                                 <a tabIndex="0" className="cursor-pointer"><i className="pi pi-twitter text-600 text-xl mr-3"></i></a>
                                 <a tabIndex="0" className="cursor-pointer"><i className="pi pi-github text-600 text-xl mr-3"></i></a>
