@@ -25,17 +25,6 @@ const Team = () => {
                             </div>
                         </div>
                         <div className="col-12 lg:col-6 p-3">
-                            <img src="/people/pranav.jpeg" className="image-class mb-4 w-full" alt="team-2" />
-                            <div className="font-medium text-xl mb-1 text-900">Pranav Nair</div>
-                            <span className="text-600 font-medium">Co-Founder, Business</span>
-                            <p className="line-height-3 mt-3 mb-3">Junior @ Cornell - 2x Founder, likes building things.</p>
-                            <div className="mb-2">
-                                <a tabIndex="0" className="cursor-pointer"><i className="pi pi-twitter text-600 text-xl mr-3"></i></a>
-                                <a tabIndex="0" className="cursor-pointer"><i className="pi pi-github text-600 text-xl mr-3"></i></a>
-                                <a tabIndex="0" className="cursor-pointer"><i className="pi pi-facebook text-600 text-xl"></i></a>
-                            </div>
-                        </div>
-                        <div className="col-12 lg:col-6 p-3">
                             <img src="/people/trey.jpeg" className="image-class mb-4 w-full" alt="team-2" />
                             <div className="font-medium text-xl mb-1 text-900">Maitreya Dixit</div>
                             <span className="text-600 font-medium">Co-Founder, Engineering</span>
