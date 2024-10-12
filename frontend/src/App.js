@@ -15,14 +15,14 @@ const App = () => {
     return (
         <Router>
             <Routes>
-                <Route path="/dashboard" element={ <DashboardPage /> } />
-                <Route path="/preferences" element={<PreferencesPage />} />
-                <Route path="/team" element={<TeamPage />} />
                 <Route path="/" element={<LandingPageComponent />}/>
-                <Route path="/login" element={<AuthPage userHasAccount={true} />} />
-                <Route path="/register" element={<AuthPage userHasAccount={false} />} />
                 <Route path="/connect" element={<TellerConnectComponent />} />
+                <Route path="/dashboard" element={ <DashboardPage /> } />
+                <Route path="/login" element={<AuthPage userHasAccount={true} />} />
+                <Route path="/preferences" element={<PreferencesPage />} />
                 <Route path="/questions" element={<QuestionsPage />} />
+                <Route path="/register" element={<AuthPage userHasAccount={false} />} />
+                <Route path="/team" element={<TeamPage />} />
             </Routes>
         </Router>
     );

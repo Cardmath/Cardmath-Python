@@ -3,7 +3,6 @@ import SimpleSection from '../components/SimpleSection';
 import PreferencesCard from '../components/PreferencesCard';
 import Footer from '../components/Footer';
 import Alert  from '../components/Alert';
-import ConnectBanks from '../components/calltoaction/ConnectBanks';
 
 
 const PreferencesPage = () => {
@@ -11,9 +10,10 @@ const PreferencesPage = () => {
     return (
         <div>
             <Alert visible={alert.visible} message={alert.message} type={alert.type} heading={alert.heading} setVisible={(visible) => setAlert({ ...alert, visible })}/>
-            <SimpleSection sectionTitle="Preferences"/>
+            <SimpleSection sectionTitle="Preferences"
+            tellerConnectButtonLabel={"Connect Banks with: "} tellerConnectButtonOnClick={() => window.location.href = '/connect'}
+            dasboardButtonLabel="To Dashboard" dasboardButtonOnClick={() => window.location.href = '/dashboard'}/>
             <PreferencesCard setAlert={setAlert}/>
-            <ConnectBanks />
             <Footer />
         </div>
     );

@@ -249,7 +249,7 @@ const PreferencesCard = ( {setAlert} ) => {
                         </a>
                     </li>
                 </ul>
-                {activeTab == 'CreditProfile' && (<div className="sm:w-7 surface-card flex sm:flex-column p-5 shadow-2 border-round">
+                {activeTab == 'CreditProfile' && (<div className="sm:w-7 fadein animation-duration-100 surface-card flex sm:flex-column p-5 shadow-2 border-round">
                     <div className="text-900 font-medium text-xl mt-3">Credit Profile</div>
                     <Divider></Divider>
                     <div className="flex-auto block gap-5 flex-column-reverse font-light text-lg text-500 md:flex-row">
@@ -297,7 +297,7 @@ const PreferencesCard = ( {setAlert} ) => {
                         </div>
                     </div>
                 </div>)}
-                {activeTab == 'Banks' && (<div className="sm:w-7 surface-card p-5 shadow-2 border-round">
+                {activeTab == 'Banks' && (<div className="sm:w-7 fadein animation-duration-100 surface-card p-5 shadow-2 border-round">
                     <div className="text-900 font-medium text-xl mt-3">Favorite Banks</div>
                     <Divider></Divider>
                     <div className="font-light text-lg text-500 mb-3">Tell us your preferred banks (and ones to avoid) for tailored credit card recommendations!  
@@ -337,7 +337,7 @@ const PreferencesCard = ( {setAlert} ) => {
                         </div>
                     </div>
                 </div>)}
-                {activeTab == 'Travel' && (<div className="sm:w-7 surface-card p-5 shadow-2 border-round">
+                {activeTab == 'Travel' && (<div className="sm:w-7 fadein animation-duration-100 surface-card p-5 shadow-2 border-round">
                     <div className="text-900 font-medium text-xl mt-3">Travel Preferences</div>
                     <Divider></Divider>
                     <div className="font-light text-lg text-500 mb-3">Share your travel preferences, and we'll match you with the perfect card to get you there!</div>
@@ -367,7 +367,7 @@ const PreferencesCard = ( {setAlert} ) => {
                         </div>
                     </div>
                 </div>)}
-                {activeTab == 'Shopping&Dining' && (<div className="sm:w-7 surface-card p-5 shadow-2 border-round">
+                {activeTab == 'Shopping&Dining' && (<div className="sm:w-7 fadein animation-duration-100 surface-card p-5 shadow-2 border-round">
                     <div className="text-900 font-medium text-xl mt-3">Shopping & Dining Preferences</div>
                     <Divider></Divider>
                     <div className="font-light text-lg text-500 mb-3">Share your dining and shopping preferences, and we’ll find the right card to match your taste!</div>
@@ -397,7 +397,7 @@ const PreferencesCard = ( {setAlert} ) => {
                         </div>
                     </div>
                 </div>)}
-                {activeTab == 'Business' && (<div className="sm:w-7 surface-card p-5 shadow-2 border-round">
+                {activeTab == 'Business' && (<div className="sm:w-7 fadein animation-duration-100 surface-card p-5 shadow-2 border-round">
                     <div className="text-900 font-medium text-xl mt-3">Business Needs</div>
                     <Divider></Divider>
                     <div className="font-light text-lg text-500 mb-3">Tell us your business needs, and we’ll find the card that works as hard as you do!</div>

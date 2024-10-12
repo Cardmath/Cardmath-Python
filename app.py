@@ -18,7 +18,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from insights.heavyhitters import read_heavy_hitters
-from insights.schemas import HeavyHittersRequest, HeavyHittersResponse
+from insights.moving_averages import compute_categories_moving_averages
+from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, CategoriesMovingAveragesRequest, CategoriesMovingAveragesResponse
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
@@ -48,7 +49,7 @@ async def lifespan(app: FastAPI):
     try :
         extract(request=ExtractRequest(file_path=SAFE_LOCAL_DOWNLOAD_SPOT,
                 return_json = False,
-                max_items_to_extract = 10,
+                max_items_to_extract = 0,
                 save_to_db=True),
                 db=db)
     except Exception as e:
@@ -178,4 +179,9 @@ def parse_endpoint(request: ParseRequest, db: Session = Depends(get_db)) -> Pars
 @app.post("/read_heavy_hitters") 
 async def heavy_hitters_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
                    request: HeavyHittersRequest, db: Session = Depends(get_db)) -> HeavyHittersResponse:
-    return await read_heavy_hitters(db, current_user, request)
+    return await read_heavy_hitters(db=db, user=current_user, request=request)
+
+@app.post("/compute_categories_moving_averages")
+async def compute_categories_moving_averages_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
+                   request: CategoriesMovingAveragesRequest, db: Session = Depends(get_db)) -> CategoriesMovingAveragesResponse:
+    return await compute_categories_moving_averages(db=db, user=current_user, request=request)

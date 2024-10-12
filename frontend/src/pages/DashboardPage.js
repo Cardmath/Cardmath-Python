@@ -5,41 +5,38 @@ import { fetchWithAuth } from './AuthPage';
 import HeavyHitterPieChart from '../components/HeavyHitterPieChart';
 import ChartSlider from "../components/LineChart/LineChartWrapper";
 import { StyleClass } from 'primereact/styleclass';
+import ConnectBanks from '../components/calltoaction/ConnectBanks';
 
 
 const DashboardPage = () => {
+    const [dates, setDates] = useState([])
+    const [categories, setCategories] = useState([])
+    const [isMovingAveragesReady, setIsMovingAveragesReady] = useState(false) // isMovingAveragesReady 
 
-    let res = [
-        { x: "2013-04-28", y: 135.98 },
-        { x: "2013-04-29", y: 147.49 },
-        { x: "2013-04-30", y: 146.93 },
-        { x: "2013-05-01", y: 139.89 },
-        { x: "2013-05-02", y: 125.6 },
-        { x: "2013-05-03", y: 108.13 },
-        { x: "2013-05-04", y: 115 },
-        { x: "2013-05-05", y: 118.8 },
-        { x: "2013-05-06", y: 124.66 },
-        { x: "2013-05-07", y: 113.44 },
-        { x: "2013-05-08", y: 115.78 },
-        { x: "2013-05-11", y: 118.68 },
-        { x: "2013-05-12", y: 117.45 },
-        { x: "2013-05-13", y: 118.7 },
-        { x: "2013-05-14", y: 119.8 },
-        { x: "2013-05-15", y: 115.81 },
-        { x: "2013-05-16", y: 118.76 },
-        { x: "2013-05-17", y: 125.3 },
-        { x: "2013-05-18", y: 125.25 },
-        { x: "2013-05-19", y: 124.5 },
-        { x: "2014-05-09", y: 113.46 },
-        { x: "2014-05-10", y: 122 },
-        { x: "2014-05-11", y: 118.68 },
-        { x: "2014-05-12", y: 117.45 },
-        { x: "2014-05-13", y: 118.7 },
-        { x: "2014-05-14", y: 119.8 },
-        { x: "2014-05-15", y: 115.81 },
-        { x: "2014-05-16", y: 118.76 },
-        { x: "2014-05-17", y: 125.3 }
-    ];
+    useEffect(() => {
+        fetchWithAuth('http://localhost:8000/compute_categories_moving_averages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                account_ids: "all",
+                date_range: null,
+                window_size: 14,
+                top_n: 10
+            })
+        }).then(response => {
+            if (response.status === 200) {
+                return response.json()        
+            } 
+            throw new Error(response.statusText);
+        }).then(data => {
+            setDates(data.dates);
+            if (!Array.isArray(data.categories) || typeof data.categories[0] !== 'object') {
+                throw new Error("Categories must be a list of lists");
+            }
+            setCategories(data.categories);
+            setIsMovingAveragesReady(true);
+        })
+    }, []);
 
     const [heavyHittersCategories, setHeavyHittersCategories] = useState([]);
 
@@ -218,205 +215,17 @@ const DashboardPage = () => {
             </div>
             <div className="p-5 flex flex-column flex-auto">
                 <div className="grid">
-                    <div className="col-12">
-                        <div className="grid">
-                            <div className="col-12 md:col-6 lg:col-3 p-3">
-                                <div className="p-3 text-center bg-blue-500 border-round">
-                                    <span className="inline-flex justify-content-center align-items-center bg-blue-600 border-circle mb-3" style={{ width: '49px', height: '49px' }}>
-                                        <i className="pi pi-inbox text-xl text-white"></i>
-                                    </span>
-                                    <div className="text-2xl font-medium text-white mb-2">123K</div>
-                                    <span className="text-blue-100 font-medium">Messages</span>
-                                </div>
-                            </div>
-                            <div className="col-12 md:col-6 lg:col-3 p-3">
-                                <div className="p-3 text-center bg-purple-500 border-round">
-                                    <span className="inline-flex justify-content-center align-items-center bg-purple-600 border-circle mb-3" style={{ width: '49px', height: '49px' }}>
-                                        <i className="pi pi-map-marker text-xl text-white"></i>
-                                    </span>
-                                    <div className="text-2xl font-medium text-white mb-2">23K</div>
-                                    <span className="text-purple-100 font-medium">Check-ins</span>
-                                </div>
-                            </div>
-                            <div className="col-12 md:col-6 lg:col-3 p-3">
-                                <div className="p-3 text-center bg-indigo-500 border-round">
-                                    <span className="inline-flex justify-content-center align-items-center bg-indigo-600 border-circle mb-3" style={{ width: '49px', height: '49px' }}>
-                                        <i className="pi pi-file text-xl text-white"></i>
-                                    </span>
-                                    <div className="text-2xl font-medium text-white mb-2">23K</div>
-                                    <span className="text-indigo-100 font-medium">Files</span>
-                                </div>
-                            </div>
-                            <div className="col-12 md:col-6 lg:col-3 p-3">
-                                <div className="p-3 text-center bg-orange-500 border-round">
-                                    <span className="inline-flex justify-content-center align-items-center bg-orange-600 border-circle mb-3" style={{ width: '49px', height: '49px' }}>
-                                        <i className="pi pi-users text-xl text-white"></i>
-                                    </span>
-                                    <div className="text-2xl font-medium text-white mb-2">40K</div>
-                                    <span className="text-orange-100 font-medium">Users</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     <div className="col-12 lg:col-6">
                         <div className="shadow-2 surface-card border-round p-3">
                             {heavyHittersCategories && heavyHittersCategories.length > 0 && <HeavyHitterPieChart heavyHitters={heavyHittersCategories} />}
                         </div>
                     </div>
                     <div className="col-12 lg:col-6">
-                        <ChartSlider data={res} />
+                    <ChartSlider x={dates} y_list={categories} ready={isMovingAveragesReady} />
                     </div>
                     <div className="col-12">
-                        <div className="surface-ground">
-                            <div className="grid">
-                                <div className="col-12 lg:col-4 p-2">
-                                    <div className="shadow-2 surface-card border-round p-4 h-full">
-                                        <div className="flex align-items-start mb-5">
-                                            <img src="/demo/images/blocks/avatars/circle-big/avatar-m-1.png" alt="avatar-m-1" width="56" height="56" />
-                                            <div className="ml-3">
-                                                <span className="block text-900 mb-1 text-xl font-medium">Cameron Williamson</span>
-                                                <p className="text-600 mt-0 mb-0">Marketing Coordinator</p>
-                                            </div>
-                                        </div>
-                                        <ul className="list-none p-0 m-0">
-                                            <li className="mb-5">
-                                                <div className="flex justify-content-between align-items-center">
-                                                    <span className="text-900 inline-flex justify-content-between align-items-center">
-                                                        <i className="pi pi-twitter mr-2"></i>
-                                                        <span className="font-medium text-900">Twitter</span>
-                                                    </span>
-                                                    <span className="text-cyan-500 font-medium">34.00%</span>
-                                                </div>
-                                                <div className="surface-300 w-full mt-2" style={{ height: '7px', borderRadius: '4px' }}>
-                                                    <div className="bg-cyan-500 h-full" style={{ width: '34%', borderRadius: '4px' }}></div>
-                                                </div>
-                                            </li>
-                                            <li className="mb-5">
-                                                <div className="flex justify-content-between align-items-center">
-                                                    <span className="text-900 inline-flex justify-content-between align-items-center">
-                                                        <i className="pi pi-facebook mr-2"></i>
-                                                        <span className="font-medium text-900">Facebook</span>
-                                                    </span>
-                                                    <span className="text-indigo-500 font-medium">45.86%</span>
-                                                </div>
-                                                <div className="surface-300 w-full mt-2" style={{ height: '7px', borderRadius: '4px' }}>
-                                                    <div className="bg-indigo-500 h-full" style={{ width: '45%', borderRadius: '4px' }}></div>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div className="flex justify-content-between align-items-center">
-                                                    <span className="text-900 inline-flex justify-content-between align-items-center">
-                                                        <i className="pi pi-google mr-2"></i>
-                                                        <span className="font-medium text-900">Google</span>
-                                                    </span>
-                                                    <span className="text-orange-500 font-medium">79.00%</span>
-                                                </div>
-                                                <div className="surface-300 w-full mt-2" style={{ height: '7px', borderRadius: '4px' }}>
-                                                    <div className="bg-orange-500 h-full" style={{ width: '79%', borderRadius: '4px' }}></div>
-                                                </div>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div className="col-12 lg:col-4 p-2">
-                                    <div className="shadow-2 surface-card border-round p-4 h-full">
-                                        <div className="flex align-items-start mb-5">
-                                            <img src="/demo/images/blocks/avatars/circle-big/avatar-f-2.png" alt="avatar-f-2" width="56" height="56" />
-                                            <div className="ml-3">
-                                                <span className="block text-900 mb-1 text-xl font-medium">Kathryn Murphy</span>
-                                                <p className="text-600 mt-0 mb-0">Sales Manager</p>
-                                            </div>
-                                        </div>
-                                        <ul className="list-none p-0 m-0">
-                                            <li className="mb-5">
-                                                <div className="flex justify-content-between align-items-center">
-                                                    <span className="text-900 inline-flex justify-content-between align-items-center">
-                                                        <i className="pi pi-twitter mr-2"></i>
-                                                        <span className="font-medium text-900">Twitter</span>
-                                                    </span>
-                                                    <span className="text-cyan-500 font-medium">64.47%</span>
-                                                </div>
-                                                <div className="surface-300 w-full mt-2" style={{ height: '7px', borderRadius: '4px' }}>
-                                                    <div className="bg-cyan-500 h-full" style={{ width: '64%', borderRadius: '4px' }}></div>
-                                                </div>
-                                            </li>
-                                            <li className="mb-5">
-                                                <div className="flex justify-content-between align-items-center">
-                                                    <span className="text-900 inline-flex justify-content-between align-items-center">
-                                                        <i className="pi pi-facebook mr-2"></i>
-                                                        <span className="font-medium text-900">Facebook</span>
-                                                    </span>
-                                                    <span className="text-indigo-500 font-medium">75.67%</span>
-                                                </div>
-                                                <div className="surface-300 w-full mt-2" style={{ height: '7px', borderRadius: '4px' }}>
-                                                    <div className="bg-indigo-500 h-full" style={{ width: '75%', borderRadius: '4px' }}></div>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div className="flex justify-content-between align-items-center">
-                                                    <span className="text-900 inline-flex justify-content-between align-items-center">
-                                                        <i className="pi pi-google mr-2"></i>
-                                                        <span className="font-medium text-900">Google</span>
-                                                    </span>
-                                                    <span className="text-orange-500 font-medium">45.00%</span>
-                                                </div>
-                                                <div className="surface-300 w-full mt-2" style={{ height: '7px', borderRadius: '4px' }}>
-                                                    <div className="bg-orange-500 h-full" style={{ width: '45%', borderRadius: '4px' }}></div>
-                                                </div>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div className="col-12 lg:col-4 p-2">
-                                    <div className="shadow-2 surface-card border-round p-4 h-full">
-                                        <div className="flex align-items-start mb-5">
-                                            <img src="/demo/images/blocks/avatars/circle-big/avatar-m-3.png" alt="avatar-m-3" width="56" height="56" />
-                                            <div className="ml-3">
-                                                <span className="block text-900 mb-1 text-xl font-medium">Darrell Steward</span>
-                                                <p className="text-600 mt-0 mb-0">Web Designer</p>
-                                            </div>
-                                        </div>
-                                        <ul className="list-none p-0 m-0">
-                                            <li className="mb-5">
-                                                <div className="flex justify-content-between align-items-center">
-                                                    <span className="text-900 inline-flex justify-content-between align-items-center">
-                                                        <i className="pi pi-twitter mr-2"></i>
-                                                        <span className="font-medium text-900">Twitter</span>
-                                                    </span>
-                                                    <span className="text-cyan-500 font-medium">23.55%</span>
-                                                </div>
-                                                <div className="surface-300 w-full mt-2" style={{ height: '7px', borderRadius: '4px' }}>
-                                                    <div className="bg-cyan-500 h-full" style={{ width: '34%', borderRadius: '4px' }}></div>
-                                                </div>
-                                            </li>
-                                            <li className="mb-5">
-                                                <div className="flex justify-content-between align-items-center">
-                                                    <span className="text-900 inline-flex justify-content-between align-items-center">
-                                                        <i className="pi pi-facebook mr-2"></i>
-                                                        <span className="font-medium text-900">Facebook</span>
-                                                    </span>
-                                                    <span className="text-indigo-500 font-medium">78.65%</span>
-                                                </div>
-                                                <div className="surface-300 w-full mt-2" style={{ height: '7px', borderRadius: '4px' }}>
-                                                    <div className="bg-indigo-500 h-full" style={{ width: '45%', borderRadius: '4px' }}></div>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div className="flex justify-content-between align-items-center">
-                                                    <span className="text-900 inline-flex justify-content-between align-items-center">
-                                                        <i className="pi pi-google mr-2"></i>
-                                                        <span className="font-medium text-900">Google</span>
-                                                    </span>
-                                                    <span className="text-orange-500 font-medium">86.54%</span>
-                                                </div>
-                                                <div className="surface-300 w-full mt-2" style={{ height: '7px', borderRadius: '4px' }}>
-                                                    <div className="bg-orange-500 h-full" style={{ width: '79%', borderRadius: '4px' }}></div>
-                                                </div>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="surface-ground">                            
+                            <ConnectBanks />
                         </div>
                     </div>
                 </div>

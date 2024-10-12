@@ -6,7 +6,7 @@ const ConnectBanks = () => {
         <div className='surface-ground flex align-items-center justify-content-center bg-surface-ground p-4 md:px-6 lg:px-8'>
             <div className="w-6 half border-round flex shadow-2">
                 <div className="bg-blue-50 flex align-items-center justify-content-center py-3 px-5">
-                    <img src="/teller-icon-filled-256.webp" alt="Image" className="bg-auto mx-auto block mb-4 w-full" />
+                    <img src="/teller.svg" alt="Image" className="bg-auto mx-auto block mb-4 w-full" />
                 </div>
                 <div className="py-3 px-5 flex flex-column align-items-start">
                     <div className="text-900 font-medium mb-2 text-xl">Connect Your Bank Account</div>
