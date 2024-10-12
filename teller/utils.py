@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from teller.schemas import TransactionSchema, AccountSchema
 from typing import List, Union
 from typing import Optional
+from pathlib import Path
+from dotenv import load_dotenv
 
 import database.teller.crud as teller_crud 
 
@@ -67,16 +69,24 @@ async def get_account_credit_cards(account: Account, db: Session) -> List[Credit
 async def read_enrollment_transactions(enrollment: Enrollment, db: Session) -> List[Transaction]:
     return db.query(Transaction).filter(Transaction.enrollment_id == enrollment.enrollment_id).all()
 
-class Teller(BaseModel):
-    cert: str = os.getenv("TELLER_CERT")
-    cert_key: str = os.getenv("TELLER_CERT_KEY")
-    
+class Teller:
+    def __init__(self):
+        env_path = Path('/home/johannes/Cardmath/Cardmath-Python/.env')
+        if env_path.exists():
+            overriden = load_dotenv(dotenv_path=env_path, override=True)
+            if overriden: print("[INFO] Loaded .env file.")
+        else:
+            print("[WARNING] .env file does not exist. Using environment variables.")
+        self.cert = os.getenv("TELLER_CERT")
+        self.cert_key = os.getenv("TELLER_CERT_KEY")
+        if not self.cert or not self.cert_key:
+            raise RuntimeError("could not find TLS certificate")
+
     async def fetch(self, uri, access_token):
         response = requests.get(uri, auth=(access_token, ""), cert=(self.cert, self.cert_key))
         if response.status_code != 200:
             print(f"[ERROR] Failed to fetch {uri} from Teller API")
         return response
-    
     async def fetch_enrollment_accounts(self, enrollment : Enrollment) -> List[AccountSchema]:
         response = await self.fetch(TELLER_ACCOUNTS, enrollment.access_token)
         response = response.json()
