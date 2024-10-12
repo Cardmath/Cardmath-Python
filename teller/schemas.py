@@ -1,6 +1,6 @@
 from database.auth.user import Account
 from datetime import date
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator, Field
 from typing import Optional, List
 
 import creditcard.enums as enums
@@ -76,13 +76,12 @@ class TransactionSchema(BaseModel):
     account_id: str
     amount: float
     status: str
-    id : str
+    txn_id : str = Field(None, alias='id')
     type : str
-    running_balance: Optional[str] = None 
+    running_balance: Optional[float] = None 
     details: TransactionDetailsSchema
 
     model_config = ConfigDict(from_attributes=True)
-
 class CreditProfileSchema(BaseModel):
     credit_score : Optional[int] = None
     salary : Optional[int] = None

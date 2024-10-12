@@ -20,7 +20,7 @@ def create_transaction(db: Session, account: Account, transaction: schemas.Trans
      
     db_txn = Transaction(
         account=account,
-        txn_id = transaction.id,
+        txn_id = transaction.txn_id,
         amount = transaction.amount,
         date = transaction.date,
         description = transaction.description,
