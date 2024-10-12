@@ -1,5 +1,4 @@
 from creditcard.enums import PurchaseCategory, RewardUnit, Benefit
-from dotenv import load_dotenv
 from openai import OpenAI
 import json
 import os
@@ -9,7 +8,6 @@ separator = "\n - "
 
 def prompt_gpt4_for_json(prompt):    
 
-    load_dotenv()
     client = OpenAI(
         api_key=os.getenv('OPENAI_API_KEY', "your_openai_api_key")
     )
