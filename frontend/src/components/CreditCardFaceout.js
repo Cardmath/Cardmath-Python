@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from 'primereact/card';
+import { DataView } from 'primereact/dataview';
+import { Dropdown } from 'primereact/dropdown';
         
 
 export default function CreditCardFaceouts() {
@@ -19,27 +21,29 @@ export default function CreditCardFaceouts() {
     }, []);
 
     return (
-        <div className="flex justify-content-center flex-wrap gap-3">   
-             {creditCards ? creditCards.map(e => {
-                console.log(JSON.stringify(e.reward_category_map))
-                return (
-                <Card className="md:w-20rem" 
-                title={e.name}
-                subtitle={e.issuer}>
-                    <p className="m-0">Benefits: {e.benefits.join(', ')} </p>
-                    <p className="m-0">Credit Needed: {e.credit_needed.join(', ')} </p>
-                    <p className="m-0"><b>APR:</b> {e.apr} </p>
-                    <p className="m-0"> 
-                        <b>Reward Summary:</b>
-                        <ul className="m-0">
-                            {e.reward_category_map.map(reward => (
-                                <li key={reward.category}>{reward.category}: {reward.reward.reward_unit} {reward.reward.amount}</li>
-                            ))}
-                        </ul>
-                    </p>
-                </Card>
-                 )
-             }) : null}
+        <div className="w-full">   
+            <DataView className='gap-2'  
+                value={creditCards}
+                layout="grid"
+                itemTemplate={(e) => (
+                    <Card title={e.name} subTitle={e.issuer} footer={() => <div> <b> Credit Needed:</b> {e.credit_needed.join(', ')} </div>} className="col-12 sm:col-6 lg:col-12 xl:col-4 p-2" key={e.id}>
+                        <div className="p-4 border-3 surface-border surface-card border-round">
+                            <p className="m-0"><b>Benefits:</b> {e.benefits.join(', ')} </p>
+                            <p className="m-0"><b>APR:</b> {e.apr} </p>
+                            <p className="m-0"> 
+                                <b>Reward Summary:</b>
+                                <ul className="m-0">
+                                    {e.reward_category_map.map(reward => (
+                                        <li key={reward.category}>{reward.category}: {reward.reward.reward_unit} {reward.reward.amount}</li>
+                                    ))}
+                                </ul>
+                            </p>
+                        </div>
+                    </Card>
+                    )}
+                paginator
+                rows={8}
+            />
         </div>
     );
 }
