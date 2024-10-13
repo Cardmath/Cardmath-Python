@@ -6,12 +6,10 @@ import os
 separator = "\n - "
 
 
-def prompt_gpt4_for_json(prompt):    
-
+async def prompt_gpt4_for_json(prompt):    
     client = OpenAI(
         api_key=os.getenv('OPENAI_API_KEY', "your_openai_api_key")
     )
-
     chat_completion = client.chat.completions.create(
         messages=[
             {
@@ -25,12 +23,12 @@ def prompt_gpt4_for_json(prompt):
     )
     return chat_completion.choices[0].message.content
 
-def retry_openai_until_json_valid(prompt, card_attr_list_joined):
+async def retry_openai_until_json_valid(prompt, card_attr_list_joined):
     attempt = 0
     reward_category_map = {}
     while True:
         attempt += 1
-        openai_response = prompt_gpt4_for_json(prompt(card_attr_list_joined))    
+        openai_response = await prompt_gpt4_for_json(prompt(card_attr_list_joined))    
         try:
             reward_category_map = json.loads(openai_response)
         except ValueError:
@@ -63,8 +61,9 @@ def purchase_category_map_prompt(card_attributes) :
 
     EXAMPLE OUTPUT ELEMENT: 
     "Groceries" : ("Hilton Honors Points", 3)
-    "Gas" : ("Hilton Honors Points", 1)
-    "Gas" : ("Hilton Honors Points", 1)
+    "Travel" : ("United MileagePlus", 3)
+    "Entertainment" : ("U.S. Bank Altitude Points", 1)
+    "Dining" : ("Delta SkyMiles", 1)
 
     EXAMPLE OUTPUT EXPLANATION:
     each dollar spent on food and drink groceries transactions earns you 3 Hilton Honors Points

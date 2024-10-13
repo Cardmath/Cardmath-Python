@@ -23,5 +23,5 @@ def get_all_credit_cards(db: Session) -> List[CreditCard]:
     return db.query(CreditCard).all()
 
 # get the first n credit cards
-def get_cardratings_scrapes(db: Session, n : int) -> List[CardratingsScrape]:
+def read_cardratings_scrapes(db: Session, n : int) -> List[CardratingsScrape]:
     return db.query(CardratingsScrape).limit(n).all()

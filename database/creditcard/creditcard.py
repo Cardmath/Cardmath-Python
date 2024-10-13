@@ -16,9 +16,3 @@ class CreditCard(Base):
     credit_needed = Column(JSON) # CreditNeeded enum in json array 
     apr = Column(Float)
     users = relationship("User", secondary=user_credit_card_association, back_populates="credit_cards")
-    
-    def __str__(self):
-        return (f"CreditCard(name={self.name}, issuer={self.issuer}, "
-                f"rewards={self.reward_category_map}, "
-                f"benefits={[benefit.value for benefit in self.benefits]}, "
-                f"credit_needed={self.credit_needed})")

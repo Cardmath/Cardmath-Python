@@ -5,7 +5,7 @@ from database.creditcard import crud
 from database.scrapes.cardratings import CardratingsScrape
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 import json
 
@@ -16,50 +16,55 @@ class ParseRequest(BaseModel):
     save_to_db: bool = False
     
 class ParseResponse(BaseModel):
-    raw_json_out: List[str] = None
+    raw_json_out: Optional[List[str]] = None
     db_log : List[bool]
 
-def parse(request : ParseRequest, db : Session) -> ParseResponse:    
-    parsed_ccs = []
+async def parse(request : ParseRequest, db : Session) -> ParseResponse:    
+    extracted_ccs : List[CardRatingsScrapeSchema] = []
     if request.raw_json_in is not None and len(request.raw_json_in) > 0:
         json_in = json.loads(request.raw_json_in)
-        parsed_ccs = [CardRatingsScrapeSchema.model_construct(cc) for cc in json_in]
+        extracted_ccs = [CardRatingsScrapeSchema.model_construct(cc) for cc in json_in]
     else :
-        cc_scrapes : List[CardratingsScrape] = crud.get_cardratings_scrapes(db, n=request.max_items_to_parse)
-        cc_scrapes : List[CardRatingsScrapeSchema] = [CardRatingsScrapeSchema(name=cc.name, 
-                                                                              description_used=cc.description_used,
-                                                                              unparsed_issuer=cc.unparsed_issuer,
-                                                                              unparsed_credit_needed=cc.unparsed_credit_needed,
-                                                                              unparsed_card_attributes = cc.unparsed_card_attributes) for cc in parsed_ccs]
-        parsed_ccs : List[CreditCardSchema] = [cc.credit_card_schema() for cc in cc_scrapes]
-        
-    out_parsed_cards : list = []
-    db_log = []  # Add db_log field
-    for parsed_cc in parsed_ccs:
+        cc_scrapes : List[CardratingsScrape] = crud.read_cardratings_scrapes(db, n=request.max_items_to_parse)
+        extracted_ccs = [CardRatingsScrapeSchema.model_validate(cc) for cc in cc_scrapes]
 
+    parsed_ccs : List[CreditCardSchema] = []
+    parsed_cc = None
+    total_attempts = 0
+    cc_schema_error_count = 0
+    cc_orm_error_count = 0
+    for extracted_cc in extracted_ccs:
+        total_attempts += 1
+        try:
+            parsed_cc = await extracted_cc.credit_card_schema()
+        except Exception as e:
+            print("Error parsing: ", e)
+            cc_schema_error_count += 1
+            continue
+        
+        try :
+            parsed_cc = parsed_cc.credit_card()
+        except Exception as e:
+            print("Error turning into credit card: ", e, parsed_cc)
+            cc_orm_error_count += 1
+            continue
+
+        parsed_ccs.append(parsed_cc)
+        
+
+    db_log = []  # Add db_log field
+    raw_json_out = None
+    for parsed_cc in parsed_ccs:
         if request.save_to_db:
-            db_result = crud.create_credit_card(db, parsed_cc.credit_card())
+            db_result = crud.create_credit_card(db, parsed_cc)
+            print(f"Inserted: {db_result}")
             db_log.append(db_result)
 
         if request.return_json:
-            out_parsed_cards.append(parsed_cc.model_dump_json())
+            if raw_json_out is None:
+                raw_json_out = []
+            raw_json_out.append(parsed_cc.model_dump_json())
 
-    # START create a mock card
-    
-    mock_create = CreditCardSchema(
-                name="Platinum Card",
-                issuer=Issuer.CHASE,
-                credit_needed=[CreditNeeded.EXCELLENT],
-                reward_category_map= [RewardCategoryRelation(category=PurchaseCategory.TRAVEL, reward=RewardAmount(reward_unit=RewardUnit.CITI_THANKYOU_POINTS, amount=3))],
-                benefits=[Benefit.AIRPORT_LOUNGE_ACCESS],
-                apr = 0.5) 
-
-    if request.return_json:
-        out_parsed_cards.append(mock_create.model_dump_json())
-    if request.save_to_db:
-        db_result = crud.create_credit_card(db, mock_create.credit_card())
-    
-    # END create a mock card
-
-    return ParseResponse(raw_json_out=out_parsed_cards, db_log=db_log)
+    print(f"Total attempts: {total_attempts}, cc_schema_error_count: {cc_schema_error_count}, cc_orm_error_count: {cc_orm_error_count}")
+    return ParseResponse(raw_json_out=raw_json_out, db_log=[0,1])
           

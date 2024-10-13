@@ -37,27 +37,17 @@ const Navbar = () => {
                                 </div>
                                 <div className="w-full lg:w-6">
                                     <div className="flex flex-wrap border-bottom-1 border-gray-700 pb-3 mb-3">
-                                        <div className="px-0 lg:px-3 py-3">
-                                            <span className="text-white">Shodan</span>
+                                        <div className="px-0 lg:px-3 py-3" onClick={() => {window.location.href="http://localhost:3000/creditcards"}}>
+                                            <span className="text-white">All</span>
                                             <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Porta lorem mollis aliquam ut porttitor leo a diam.</p>
                                         </div>
                                         <div className="px-0 lg:px-3 py-3">
-                                            <span className="text-white">Bastion</span>
+                                            <span className="text-white">Travel</span>
                                             <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Amet purus gravida quis blandit.</p>
                                         </div>
                                         <div className="px-0 lg:px-3 py-3">
-                                            <span className="text-white">Hodly</span>
+                                            <span className="text-white">Student</span>
                                             <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Aenean vel elit scelerisque mauris.</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-wrap">
-                                        <div className="px-0 lg:px-3 py-3">
-                                            <span className="text-white">Peak</span>
-                                            <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Feugiat pretium nibh ipsum consequat.</p>
-                                        </div>
-                                        <div className="px-0 lg:px-3 py-3">
-                                            <span className="text-white">Franki</span>
-                                            <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Tristique nulla aliquet enim tortor.</p>
                                         </div>
                                     </div>
                                 </div>

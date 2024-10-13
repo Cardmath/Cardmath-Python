@@ -1,6 +1,6 @@
 from creditcard.enums import *
 from creditcard.utils.openai import prompt_gpt4_for_json, benefits_prompt, purchase_category_map_prompt, retry_openai_until_json_valid
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, model_validator
 from typing import List
 
 RIGHTS_RESERVED = '\u00AE'
@@ -9,10 +9,25 @@ class RewardAmount(BaseModel):
     reward_unit : RewardUnit
     amount : float
 
+    model_config = ConfigDict(from_attributes=True)
+
 class RewardCategoryRelation(BaseModel):
     category : PurchaseCategory
     reward: RewardAmount
 
+    model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode='before')
+    @classmethod
+    def validate_openai_tuple(cls, v):
+        if isinstance(v, tuple) and len(v) == 2 and isinstance(v[0], str) and len(v[1]) > 0:
+            return RewardCategoryRelation(category=v[0], reward=RewardAmount(reward_unit=v[1][0], amount=v[1][1]))
+        
+        if not isinstance(v, dict):
+            return RewardCategoryRelation(category=PurchaseCategory.OTHER, reward=RewardAmount(reward_unit=RewardUnit.US_BANK_ALTITUDE_POINTS, amount=1))
+
+        return v 
+    
 def get_issuer(card_name : str): 
     best_issuer = single_nearest(card_name, Issuer)
     if (isinstance(best_issuer, str)): 
@@ -22,13 +37,13 @@ def get_issuer(card_name : str):
 def get_credit_needed(credit_needed_html_text : str): 
     return multiple_nearest(credit_needed_html_text, CreditNeeded)
     
-def get_benefits(card_description : str):
-    openai_response = prompt_gpt4_for_json(benefits_prompt(card_description))
+async def get_benefits(card_description : str):
+    openai_response = await prompt_gpt4_for_json(benefits_prompt(card_description))
     return multiple_nearest(openai_response, Benefit) 
     
-def get_reward_category_map(card_description : str) -> List[RewardCategoryRelation]:
+async def get_reward_category_map(card_description : str) -> List[RewardCategoryRelation]:
     out_rewards = []
-    reward_category_map = retry_openai_until_json_valid(purchase_category_map_prompt, card_description)
+    reward_category_map = await retry_openai_until_json_valid(purchase_category_map_prompt, card_description)
     
     for category, reward in reward_category_map.items():
         if isinstance(reward, (tuple, list)) and len(reward) == 2:

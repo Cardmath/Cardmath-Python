@@ -10,6 +10,7 @@ import TellerConnectComponent from './pages/TellerConnect';
 import TeamPage from './pages/TeamPage';
 import PreferencesPage from './pages/PreferencesPage';
 import DashboardPage from './pages/DashboardPage';
+import CreditCardDatabase from './pages/CreditCardDatabase';
 
 const App = () => {
     return (
@@ -23,6 +24,7 @@ const App = () => {
                 <Route path="/questions" element={<QuestionsPage />} />
                 <Route path="/register" element={<AuthPage userHasAccount={false} />} />
                 <Route path="/team" element={<TeamPage />} />
+                <Route path='/creditcards' element={<CreditCardDatabase />} />
             </Routes>
         </Router>
     );

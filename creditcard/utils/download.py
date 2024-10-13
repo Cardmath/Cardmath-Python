@@ -6,7 +6,7 @@ def download_html(user_agent : str, url : str, file_path : str) -> str:
     headers = {
         'User-Agent': user_agent
     }
-    response = requests.get(url, headers=headers, timeout=3)
+    response = requests.get(url, headers=headers, timeout=10)
     with open(file_path, 'wb') as file:
         file.write(response.content)
     

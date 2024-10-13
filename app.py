@@ -7,6 +7,8 @@ from creditcard.endpoints.extract import extract
 from creditcard.endpoints.extract import ExtractRequest, ExtractResponse
 from creditcard.endpoints.parse import parse
 from creditcard.endpoints.parse import ParseRequest, ParseResponse
+from creditcard.endpoints.read_database import CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
+from creditcard.endpoints.read_database import read_credit_cards_database
 from creditcard.schemas import *
 from database.creditcard import creditcard
 from database.sql_alchemy_db import engine, get_db, print_sql_schema
@@ -23,14 +25,13 @@ from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, Categori
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
-
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
 import teller.endpoints as teller_endpoints
 
 import logging
 
-SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/CreditCards/cardratings/cardratings.html"
+SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/Cardmath/Cardmath-Python/server_download_location/cardratings.html"
 
 creditcard.Base.metadata.create_all(bind=engine)
 #print_sql_schema() Only for debugging
@@ -49,22 +50,20 @@ async def lifespan(app: FastAPI):
     try :
         extract(request=ExtractRequest(file_path=SAFE_LOCAL_DOWNLOAD_SPOT,
                 return_json = False,
-                max_items_to_extract = 0,
+                max_items_to_extract = 50,
                 save_to_db=True),
                 db=db)
     except Exception as e:
         print(e, "Error extracting cards!")
     
-    try :
-        parse(request=ParseRequest(return_json = False,
-            max_items_to_parse = 0,
-            save_to_db=True),
-            db = db)
-    except Exception as e:
-        print(e, "Error parsing cards - Probably an issue with OpenAI API connection")
-    finally:
-        db.close()
+    await parse(request=ParseRequest(return_json = False,
+        max_items_to_parse = 50,
+        save_to_db=True),
+        db = db)
     
+
+    db.close()
+
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -185,3 +184,7 @@ async def heavy_hitters_endpoint(current_user: Annotated[User, Depends(auth_util
 async def compute_categories_moving_averages_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
                    request: CategoriesMovingAveragesRequest, db: Session = Depends(get_db)) -> CategoriesMovingAveragesResponse:
     return await compute_categories_moving_averages(db=db, user=current_user, request=request)
+
+@app.post("/read_credit_cards_database")
+async def read_credit_cards_database_endpoint( request: CreditCardsDatabaseRequest, db: Session = Depends(get_db)) -> CreditCardsDatabaseResponse:
+    return await read_credit_cards_database(db=db, request=request)

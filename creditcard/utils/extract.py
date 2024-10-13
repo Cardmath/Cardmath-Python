@@ -2,15 +2,9 @@ from bs4 import BeautifulSoup
 from creditcard.schemas import CardRatingsScrapeSchema
 from typing import List
 
-cardratings_scraped_path = '/home/johannes/CreditCards/cardratings/cardratings.html'
-
 LONG_DESCRIPTION_USED = 0
 MEDIUM_DESCRIPTION_USED = 1
 
-
-# Produces a dictionary of form:
-# (issuer, card name) --> [card attr_0, card_attr_1, ...] 
-# where card attr is a plain text string
 def extract_cardratings(raw_html, max_items_to_extract=100) -> List[CardRatingsScrapeSchema]:  
     out_card_list = []
     soup = BeautifulSoup(raw_html, 'html.parser')
@@ -39,7 +33,17 @@ def extract_cardratings(raw_html, max_items_to_extract=100) -> List[CardRatingsS
         processed_card_attributes : str = "" 
         if card_attributes is not None and isinstance(card_attributes, list):
             processed_card_attributes = "\n - ".join([card_attribute.get_text(strip=True).replace("\n", "") for card_attribute in card_attributes])
+        elif card_attributes is not None:
+            processed_card_attributes = card_attributes.get_text(strip=True)
+        else :
+            raise ValueError(f"Found no card attributes for {card_title.get_text(strip=True)}")
             
+        if processed_card_attributes == "":
+            print(f"Found no card attributes for {card_title.get_text(strip=True)}")
+
+        if issuer.get_text(strip=True) is None:
+            print(f"Found no issuer for {card_title.get_text(strip=True)}")
+
         card = CardRatingsScrapeSchema(name = card_title.get_text(strip=True),
                 description_used= description_used,
                 unparsed_issuer = issuer.get_text(strip=True),
