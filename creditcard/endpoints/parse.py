@@ -5,7 +5,7 @@ from database.creditcard import crud
 from database.scrapes.cardratings import CardratingsScrape
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Any
 
 import json
 
@@ -17,11 +17,12 @@ class ParseRequest(BaseModel):
     
 class ParseResponse(BaseModel):
     raw_json_out: Optional[List[str]] = None
-    db_log : List[bool]
+    db_log : List[Any]
 
 async def parse(request : ParseRequest, db : Session) -> ParseResponse:    
     extracted_ccs : List[CardRatingsScrapeSchema] = []
     if request.raw_json_in is not None and len(request.raw_json_in) > 0:
+        print("[INFO] Parsing raw json")
         json_in = json.loads(request.raw_json_in)
         extracted_ccs = [CardRatingsScrapeSchema.model_construct(cc) for cc in json_in]
     else :

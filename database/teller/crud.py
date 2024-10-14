@@ -47,6 +47,7 @@ def create_transaction(db: Session, account: Account, transaction: schemas.Trans
                 name=transaction.details.counterparty.name)
             else :
                 db_counterparty = counterparty_in_db
+                no_add = True
         
     db_txn.details = db_txn_details
     
@@ -57,11 +58,12 @@ def create_transaction(db: Session, account: Account, transaction: schemas.Trans
     
     db_counterparty.transaction_details.append(db_txn_details)
     
-    db.add(db_txn)
-    db.add(db_counterparty)
-    db.add(db_txn_details)
-    db.commit()
-    db.refresh(db_txn)
+    if not no_add:
+        db.add(db_txn)
+        db.add(db_counterparty)
+        db.add(db_txn_details)
+        db.commit()
+        db.refresh(db_txn)
     return db_txn
 
 async def create_account(db : Session, account : schemas.AccountSchema) -> Account: 

@@ -26,6 +26,19 @@ async def prompt_gpt4_for_json(prompt):
 async def retry_openai_until_json_valid(prompt, card_attr_list_joined):
     attempt = 0
     reward_category_map = {}
+    card_attr_list_joined = f"""
+    Reward Program Name	Travel	Dining	Groceries	Gas and Transportation	Entertainment	Retail Shopping	Utilities and Services	Health and Wellness	Electronics and Technology	Charitable Donations	Online Shopping
+TravelMax Rewards	3	1	2	1	2	2	1	2	1	3	1
+DiningDelight Program	2	3	1	1	1	2	2	1	2	1	3
+GrocerySaver Points	1	2	3	2	1	1	1	2	3	2	2
+FuelSaver Rewards	1	1	2	3	2	1	2	3	1	2	1
+EntertainmentElite	2	1	1	2	3	3	1	2	2	1	2
+ShopSmart Rewards	1	2	2	1	1	3	3	1	3	2	1
+HealthPlus Points	3	1	1	2	1	2	1	3	2	1	2
+TechSavvy Rewards	1	2	2	3	1	1	2	1	3	2	3
+CharityChamp Program	2	3	1	1	1	1	2	2	1	3	1
+OnlineShopping Advantage	1	2	3	2	2	1	1	1	2	2	3"""
+
     while True:
         attempt += 1
         openai_response = await prompt_gpt4_for_json(prompt(card_attr_list_joined))    
@@ -35,6 +48,7 @@ async def retry_openai_until_json_valid(prompt, card_attr_list_joined):
             continue
         break
     
+    print(reward_category_map)
     print(f"OpenAI succeeded with attempt {attempt}")    
     return reward_category_map
 
