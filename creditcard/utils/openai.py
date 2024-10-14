@@ -5,7 +5,6 @@ import os
 
 separator = "\n - "
 
-
 async def prompt_gpt4_for_json(prompt):    
     client = OpenAI(
         api_key=os.getenv('OPENAI_API_KEY', "your_openai_api_key")
