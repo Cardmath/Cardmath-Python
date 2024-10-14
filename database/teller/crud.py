@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 import teller.schemas as schemas
 
 def create_transaction(db: Session, transaction: schemas.TransactionSchema) -> Transaction:
+    no_add = False
     db_txn = Transaction(
         txn_id = transaction.id,
         account_id = transaction.account_id,
@@ -35,6 +36,7 @@ def create_transaction(db: Session, transaction: schemas.TransactionSchema) -> T
                 name=transaction.details.counterparty.name)
             else :
                 db_counterparty = counterparty_in_db
+                no_add = True
         
     db_txn.details = db_txn_details
     
@@ -45,11 +47,12 @@ def create_transaction(db: Session, transaction: schemas.TransactionSchema) -> T
     
     db_counterparty.transaction_details.append(db_txn_details)
     
-    db.add(db_txn)
-    db.add(db_counterparty)
-    db.add(db_txn_details)
-    db.commit()
-    db.refresh(db_txn)
+    if not no_add:
+        db.add(db_txn)
+        db.add(db_counterparty)
+        db.add(db_txn_details)
+        db.commit()
+        db.refresh(db_txn)
     return db_txn
 
 def create_account(db : Session, account : schemas.AccountSchema, schema=True) -> Account: 
