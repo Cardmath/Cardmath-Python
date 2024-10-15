@@ -20,6 +20,7 @@ class HeavyHitterSchema(BaseModel):
     name: Optional[str] = None
     category: str
     percent: float = None
+    amount: float = None
 
     @field_validator("type")
     @classmethod

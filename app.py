@@ -28,6 +28,7 @@ from typing import Annotated
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
 import teller.endpoints as teller_endpoints
+from insights.optimal_cards import compute_optimal_held_cards_allocation, OptimalHeldCardsAllocationRequest, OptimalHeldCardsAllocationResponse
 
 import logging
 
@@ -50,14 +51,14 @@ async def lifespan(app: FastAPI):
     try :
         extract(request=ExtractRequest(file_path=SAFE_LOCAL_DOWNLOAD_SPOT,
                 return_json = False,
-                max_items_to_extract = 50,
+                max_items_to_extract = 0,
                 save_to_db=True),
                 db=db)
     except Exception as e:
         print(e, "Error extracting cards!")
     
     await parse(request=ParseRequest(return_json = False,
-        max_items_to_parse = 50,
+        max_items_to_parse = 3,
         save_to_db=True),
         db = db)
     
@@ -186,5 +187,10 @@ async def compute_categories_moving_averages_endpoint(current_user: Annotated[Us
     return await compute_categories_moving_averages(db=db, user=current_user, request=request)
 
 @app.post("/read_credit_cards_database")
-async def read_credit_cards_database_endpoint( request: CreditCardsDatabaseRequest, db: Session = Depends(get_db)) -> CreditCardsDatabaseResponse:
+async def read_credit_cards_database_endpoint(request: CreditCardsDatabaseRequest, db: Session = Depends(get_db)) -> CreditCardsDatabaseResponse:
     return await read_credit_cards_database(db=db, request=request)
+
+@app.post("/compute_optimal_held_cards_allocation")
+async def compute_optimal_held_cards_allocation_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
+                   request: OptimalHeldCardsAllocationRequest, db: Session = Depends(get_db)) -> OptimalHeldCardsAllocationResponse:
+    return await compute_optimal_held_cards_allocation(db=db, user=current_user, request=request)

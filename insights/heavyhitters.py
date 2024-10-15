@@ -83,7 +83,7 @@ class TwoPassHeavyHitters:
         
         # Return elements whose frequency is above the threshold
         threshold = total_items / self.k
-        return {item: round(count / total_items, 2) for item, count in exact_counts.items() if count >= threshold}
+        return {item: (round(count / total_items, 2), count) for item, count in exact_counts.items() if count >= threshold}
 
 async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersRequest) -> HeavyHittersResponse:
         teller_client = teller_utils.Teller() 
@@ -113,11 +113,11 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
             
             all_transactions.extend(transactions)
 
-        hh_categories_two_pass = TwoPassHeavyHitters(k=25, key=get_transaction_category)
-        hh_categories: dict[str, float] = hh_categories_two_pass.heavy_hitters(all_transactions, len(all_transactions))
+        hh_categories_two_pass = TwoPassHeavyHitters(k=250, key=get_transaction_category)
+        hh_categories: dict[str, tuple] = hh_categories_two_pass.heavy_hitters(all_transactions, len(all_transactions))
         del hh_categories_two_pass  # Free memory
-        hh_counterparties_two_pass = TwoPassHeavyHitters(k=100, key=get_transaction_counterparty_id)
-        hh_counterparties_ids: dict[int, float] = hh_counterparties_two_pass.heavy_hitters(all_transactions, len(all_transactions))
+        hh_counterparties_two_pass = TwoPassHeavyHitters(k=250, key=get_transaction_counterparty_id)
+        hh_counterparties_ids: dict[int, tuple] = hh_counterparties_two_pass.heavy_hitters(all_transactions, len(all_transactions))
         del hh_counterparties_two_pass  # Free memory
 
         # find the vendor categories and names with the id
@@ -125,16 +125,16 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
         hh_vendors_category_dict: dict = {vendor.id: (vendor.name, vendor.transaction_details[0].category) for vendor in hh_vendors}
 
         out_vendors = []
-        for hh_counterparty_id, percent in hh_counterparties_ids.items():
+        for hh_counterparty_id, (percent, amount) in hh_counterparties_ids.items():
             name, category = hh_vendors_category_dict[hh_counterparty_id]
             if category is not None:
-                out_vendors.append(HeavyHitterSchema(type=VENDOR_CONST, name=name, category=category, percent=percent))
+                out_vendors.append(HeavyHitterSchema(type=VENDOR_CONST, name=name, category=category, percent=percent, amount=amount))
             else:
-                out_vendors.append(HeavyHitterSchema(type=VENDOR_CONST, name=name, category=None, percent=percent))
+                out_vendors.append(HeavyHitterSchema(type=VENDOR_CONST, name=name, category=None, percent=percent, amount=amount))
 
         out_categories = []
-        for hh_category, percent in hh_categories.items():
-            out_categories.append(HeavyHitterSchema(type=CATEGORY_CONST, category=hh_category, percent=percent))
+        for hh_category, (percent, amount) in hh_categories.items():
+            out_categories.append(HeavyHitterSchema(type=CATEGORY_CONST, category=hh_category, percent=percent, amount=amount))
 
         return HeavyHittersResponse(vendors=out_vendors, categories=out_categories)
 
