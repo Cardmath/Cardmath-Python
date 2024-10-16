@@ -43,6 +43,7 @@ const HeavyHitterPieChart = ({ heavyHitters, type }) => {
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           legend: {
             position: 'top',
@@ -62,7 +63,7 @@ const HeavyHitterPieChart = ({ heavyHitters, type }) => {
 
   return (
     <div>
-      <canvas ref={canvasRef}></canvas> {/* Canvas is rendered */}
+      <canvas className="min-h-30rem" ref={canvasRef}></canvas> {/* Canvas is rendered */}
     </div>
   );
 };

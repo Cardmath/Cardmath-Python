@@ -6,6 +6,7 @@ import HeavyHitterPieChart from '../components/HeavyHitterPieChart';
 import ChartSlider from "../components/LineChart/LineChartWrapper";
 import { StyleClass } from 'primereact/styleclass';
 import ConnectBanks from '../components/calltoaction/ConnectBanks';
+import OptimalAllocationSavingsCard from '../components/OptimalAllocationSavingsCard';
 
 
 const DashboardPage = () => {
@@ -163,25 +164,18 @@ const DashboardPage = () => {
             </div>
         </div>
         <div className="min-h-screen flex flex-column relative flex-auto">
-            <div className="p-5 flex flex-column flex-auto">
-                <div className="grid">
-                    <div className="col-4 lg:col-4">
-                        <div className="shadow-2 surface-card border-round p-3">
-                            {heavyHittersCategories && heavyHittersCategories.length > 0 && <HeavyHitterPieChart heavyHitters={heavyHittersCategories} />}
-                        </div>
+                <div className="flex align-content-end py-3">
+                    <div className="flex-column flex-none shadow-2 surface-card border-round">
+                        {heavyHittersCategories && heavyHittersCategories.length > 0 && <HeavyHitterPieChart className="w-full h-full" heavyHitters={heavyHittersCategories} />}
                     </div>
-                    <div className="col-8 lg:col-8">
-                        <div className="shadow-2 surface-card border-round p-3">
-                            <ChartSlider x={dates} y_list={categories} ready={isMovingAveragesReady} />
-                        </div>
-                    </div>
-                    <div className="col-12">
-                        <div className="surface-ground">                            
-                            <ConnectBanks />
-                        </div>
+                    <div className="flex-column flex-grow-1 shadow-2 surface-card border-round px-3 h-full">
+                        <ChartSlider x={dates} y_list={categories} ready={isMovingAveragesReady}/>
                     </div>
                 </div>
-            </div>
+                <div className="grid p-3 gap-3 surface-surface-ground">                                                 
+                            <ConnectBanks className="col-6"/>
+                            <OptimalAllocationSavingsCard className="col-2" />
+                </div>
         </div>
     </div>
 };

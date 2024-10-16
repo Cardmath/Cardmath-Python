@@ -17,6 +17,11 @@ async def read_user_enrollments(user: User, db: Session) -> List[Enrollment]:
 def create_transaction(db: Session, account: Account, transaction: schemas.TransactionSchema) -> Transaction:
     if transaction.account_id != account.id:
         print("[CRITIAL ERROR] Transaction account id does not match account id")
+
+    txn_with_id = db.query(Transaction).filter(Transaction.txn_id == transaction.txn_id).first()
+    if txn_with_id:
+        print("[INFO] Transaction already exists, skipping insertion")
+        return
      
     db_txn = Transaction(
         account=account,
@@ -47,10 +52,8 @@ def create_transaction(db: Session, account: Account, transaction: schemas.Trans
                 name=transaction.details.counterparty.name)
             else :
                 db_counterparty = counterparty_in_db
-                no_add = True
         
     db_txn.details = db_txn_details
-    
     db_txn_details.transaction = db_txn
     
     if db_txn_details.counterparty:
@@ -58,12 +61,11 @@ def create_transaction(db: Session, account: Account, transaction: schemas.Trans
     
     db_counterparty.transaction_details.append(db_txn_details)
     
-    if not no_add:
-        db.add(db_txn)
-        db.add(db_counterparty)
-        db.add(db_txn_details)
-        db.commit()
-        db.refresh(db_txn)
+    db.add(db_txn)
+    db.add(db_counterparty)
+    db.add(db_txn_details)
+    db.commit()
+    db.refresh(db_txn)
     return db_txn
 
 async def create_account(db : Session, account : schemas.AccountSchema) -> Account: 

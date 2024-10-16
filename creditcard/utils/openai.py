@@ -2,25 +2,31 @@ from creditcard.enums import PurchaseCategory, RewardUnit, Benefit
 from openai import OpenAI
 import json
 import os
+import traceback
 
 separator = "\n - "
+
 
 async def prompt_gpt4_for_json(prompt):    
     client = OpenAI(
         api_key=os.getenv('OPENAI_API_KEY', "your_openai_api_key")
     )
-    chat_completion = client.chat.completions.create(
-        messages=[
-            {
-                "role": "system",
-                "content": prompt,
-                "max_tokens" : 2000,
-                "temperature" : 0.0
-            }
-        ],
-        model="gpt-3.5-turbo-0125",
-    )
-    return chat_completion.choices[0].message.content
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": prompt,
+                    "max_tokens" : 2000,
+                    "temperature" : 0.0
+                }
+            ],
+            model="gpt-3.5-turbo-0125",
+        )
+        return chat_completion.choices[0].message.content
+    except Exception as e:
+        error_details = traceback.format_exc()
+        raise ConnectionError(f"Connection to OpenAI failed: {e}\nDetails: {error_details}")
 
 async def retry_openai_until_json_valid(prompt, card_attr_list_joined):
     attempt = 0

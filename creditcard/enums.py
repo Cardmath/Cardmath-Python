@@ -61,7 +61,7 @@ class RewardUnit(str, Enum):
     ALASKA_MILEAGE_PLAN_MILES = "Alaska Mileage Plan Miles"
     RADISSON_REWARDS_POINTS = "Radisson Rewards Points"
     
-    def get_value(reward_unit):
+    def get_value(reward_unit) -> float:
         _values = {
             RewardUnit.CHASE_ULTIMATE_REWARDS: 0.0125, #  average from 1 to 1.5 cents.
             RewardUnit.AMEX_MEMBERSHIP_REWARDS: 0.006, # redeem for statement credits
@@ -116,18 +116,34 @@ class CreditNeeded(str, Enum):
     POOR = "Bad" # 0-629 
     
 class PurchaseCategory(str, Enum):
-    OTHER = "Other"
-    TRAVEL = "Travel"
-    DINING = "Dining"
-    GROCERIES = "Groceries"
-    GAS_AND_TRANSPORTATION = "Gas and Transportation"
-    ENTERTAINMENT = "Entertainment"
-    RETAIL_SHOPPING = "Retail Shopping"
-    UTILITIES_AND_SERVICES = "Utilities and Services"
-    HEALTH_AND_WELLNESS = "Health and Wellness"
-    ELECTRONICS_AND_TECHNOLOGY = "Electronics and Technology"
-    CHARITABLE_DONATIONS = "Charitable Donations"
-    ONLINE_SHOPPING = "Online Shopping"
+    ACCOMMODATION = "accommodation"
+    ADVERTISING = "advertising"
+    BAR = "bar"
+    CHARITY = "charity"
+    CLOTHING = "clothing"
+    DINING = "dining"
+    EDUCATION = "education"
+    ELECTRONICS = "electronics"
+    ENTERTAINMENT = "entertainment"
+    FUEL = "fuel"
+    GENERAL = "general"
+    GROCERIES = "groceries"
+    HEALTH = "health"
+    HOME = "home"
+    INCOME = "income"
+    INSURANCE = "insurance"
+    INVESTMENT = "investment"
+    LOAN = "loan"
+    OFFICE = "office"
+    PHONE = "phone"
+    SERVICE = "service"
+    SHOPPING = "shopping"
+    SOFTWARE = "software"
+    SPORT = "sport"
+    TAX = "tax"
+    TRANSPORT = "transport"
+    TRANSPORTATION = "transportation"
+    UTILITIES = "utilities"
 
 class IndustryType(str, Enum):
     OTHER = "Other"

@@ -9,8 +9,8 @@ const SliderComponent = ({ data = [], handleChart }) => {
 
   const handleChange = (newValue) => {
     let [left, right] = newValue.value;
-    left = isNaN(left) ? value[0] : left;
-    right = isNaN(right) ? value[1] : right;
+    left = isNaN(left) ? (isNaN(value[0]) ? 0 : value[0]) : left;
+    right = isNaN(right) ? (isNaN(value[1]) ? data.length - 1 : value[1]) : right;
 
     if (right - left < minDistance) {
       if (left === value[0]) {

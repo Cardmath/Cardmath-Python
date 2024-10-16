@@ -1,89 +1,65 @@
-from sqlalchemy.orm import Session
+from collections import defaultdict
 from database.auth.user import Account
+from database.auth.user import User
 from database.teller.transactions import Transaction, Counterparty
 from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema, VENDOR_CONST, CATEGORY_CONST
-from teller.schemas import AccountSchema
+from sqlalchemy.orm import Session
 from typing import List
-from database.auth.user import User
 import teller.utils as teller_utils
-from collections import defaultdict
-
 
 class TwoPassHeavyHitters:
     def __init__(self, k, key=None, value=None):
-        """
-        Initializes the Two-Pass Heavy Hitters algorithm using Misra-Gries in the first pass.
-        
-        Parameters:
-            k (int): Number of heavy hitters to track in the first pass. This corresponds to 
-                     the reciprocal of the desired frequency threshold.
-                     For example, for 0.25% heavy hitters, k should be set to 400.
-        """
         self.k = k
         self.key = key if key is not None else lambda x: x  # Use identity function if key is not provided
+        self.value = value if value is not None else lambda x: 1
         self.counters = {}  # Used for Misra-Gries in the first pass
         self.candidates = set()  # Candidate heavy hitters identified in the first pass
 
     def first_pass(self, stream):
-        """
-        First pass: Use Misra-Gries to find candidate heavy hitters.
-        
-        Parameters:
-            stream (iterable): The input data stream to process.
-        """
         for item in stream:
             key = self.key(item)  # Extract key from item
+            value = self.value(item)  # Extract value from item
             if key in self.counters:
-                self.counters[key] += 1
+                self.counters[key] += value  # Increment by the item's value
             elif len(self.counters) < self.k - 1:
-                self.counters[key] = 1
+                self.counters[key] = value  # Initialize counter with the item's value
             else:
-                # Decrease count of all current counters
-                for dict_key in list(self.counters.keys()):
-                    self.counters[dict_key] -= 1
-                    if self.counters[dict_key] == 0:
-                        del self.counters[dict_key]
+                # Decrease all counters by the current item's value
+                to_remove = []
+                for dict_key in self.counters:
+                    self.counters[dict_key] -= value
+                    if self.counters[dict_key] <= 0:
+                        to_remove.append(dict_key)  # Mark for deletion
+
+                # Remove keys with zero or negative counts
+                for dict_key in to_remove:
+                    del self.counters[dict_key]
         
         # Identify candidate heavy hitters after the first pass
         self.candidates = set(self.counters.keys())
 
     def second_pass(self, stream):
-        """
-        Second pass: Count the exact frequencies of the candidate heavy hitters.
-        
-        Parameters:
-            stream (iterable): The input data stream to process again.
-        
-        Returns:
-            dict: Exact frequencies of the candidate heavy hitters.
-        """
         exact_counts = defaultdict(int)
         for item in stream:
             key = self.key(item)  # Extract key from item
+            value = self.value(item)   # Extract value from item
             if key in self.candidates:
-                exact_counts[key] += 1
+                exact_counts[key] += value  # Accumulate the exact count for candidates
         return exact_counts
 
-    def heavy_hitters(self, stream, total_items):
-        """
-        Finds heavy hitters with exact counts in two passes over the data.
-        
-        Parameters:
-            stream (iterable): The input data stream to process.
-            total_items (int): Total number of items in the data stream.
-        
-        Returns:
-            dict: A dictionary with heavy hitters and their exact frequencies.
-        """
+    def heavy_hitters(self, stream):
         # First pass: Identify candidate heavy hitters
         self.first_pass(stream)
         
         # Second pass: Get exact frequencies of candidates
-        exact_counts = self.second_pass(stream)
+        exact_amounts = self.second_pass(stream)
+        
+        # Calculate the total number of items in the stream (based on the values)
+        total = sum(self.value(item) for item in stream)
         
         # Return elements whose frequency is above the threshold
-        threshold = total_items / self.k
-        return {item: (round(count / total_items, 2), count) for item, count in exact_counts.items() if count >= threshold}
+        threshold = total / self.k
+        return {item: (round(amount / total, 2), amount) for item, amount in exact_amounts.items() if amount >= threshold}
 
 async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersRequest) -> HeavyHittersResponse:
         teller_client = teller_utils.Teller() 
@@ -101,7 +77,6 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
                 continue
             
             if request.account_ids == "all":
-                print(account)
                 transactions: List[Transaction] = account.transactions.all()       
             elif account.id in request.account_ids :
                 transactions: List[Transaction] = account.transactions.all()
@@ -113,11 +88,11 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
             
             all_transactions.extend(transactions)
 
-        hh_categories_two_pass = TwoPassHeavyHitters(k=250, key=get_transaction_category)
-        hh_categories: dict[str, tuple] = hh_categories_two_pass.heavy_hitters(all_transactions, len(all_transactions))
+        hh_categories_two_pass = TwoPassHeavyHitters(k=30, key=get_transaction_category)
+        hh_categories: dict[str, tuple] = hh_categories_two_pass.heavy_hitters(all_transactions)
         del hh_categories_two_pass  # Free memory
-        hh_counterparties_two_pass = TwoPassHeavyHitters(k=250, key=get_transaction_counterparty_id)
-        hh_counterparties_ids: dict[int, tuple] = hh_counterparties_two_pass.heavy_hitters(all_transactions, len(all_transactions))
+        hh_counterparties_two_pass = TwoPassHeavyHitters(k=30, key=get_transaction_counterparty_id)
+        hh_counterparties_ids: dict[int, tuple] = hh_counterparties_two_pass.heavy_hitters(all_transactions)
         del hh_counterparties_two_pass  # Free memory
 
         # find the vendor categories and names with the id

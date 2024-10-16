@@ -2,6 +2,7 @@ from creditcard.enums import *
 from creditcard.schemas import CardRatingsScrapeSchema, CreditCardSchema
 from creditcard.utils.parse import RewardCategoryRelation, RewardAmount
 from database.creditcard import crud
+from database.creditcard.creditcard import CreditCard
 from database.scrapes.cardratings import CardratingsScrape
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -29,8 +30,7 @@ async def parse(request : ParseRequest, db : Session) -> ParseResponse:
         cc_scrapes : List[CardratingsScrape] = crud.read_cardratings_scrapes(db, n=request.max_items_to_parse)
         extracted_ccs = [CardRatingsScrapeSchema.model_validate(cc) for cc in cc_scrapes]
 
-    parsed_ccs : List[CreditCardSchema] = []
-    parsed_cc = None
+    raw_json_out = None
     total_attempts = 0
     cc_schema_error_count = 0
     cc_orm_error_count = 0
@@ -39,33 +39,26 @@ async def parse(request : ParseRequest, db : Session) -> ParseResponse:
         try:
             parsed_cc = await extracted_cc.credit_card_schema()
         except Exception as e:
-            print("Error parsing: ", e)
+            print(f"[ERROR] Error parsing credit card from scrape: {e}.")
             cc_schema_error_count += 1
             continue
         
         try :
             parsed_cc = parsed_cc.credit_card()
         except Exception as e:
-            print("Error turning into credit card: ", e, parsed_cc)
+            print("Error turning into credit card: ", e)
             cc_orm_error_count += 1
             continue
 
-        parsed_ccs.append(parsed_cc)
-        
-
-    db_log = []  # Add db_log field
-    raw_json_out = None
-    for parsed_cc in parsed_ccs:
         if request.save_to_db:
             db_result = crud.create_credit_card(db, parsed_cc)
             print(f"Inserted: {db_result}")
-            db_log.append(db_result)
 
         if request.return_json:
             if raw_json_out is None:
                 raw_json_out = []
             raw_json_out.append(parsed_cc.model_dump_json())
-
+        
     print(f"Total attempts: {total_attempts}, cc_schema_error_count: {cc_schema_error_count}, cc_orm_error_count: {cc_orm_error_count}")
     return ParseResponse(raw_json_out=raw_json_out, db_log=[0,1])
           

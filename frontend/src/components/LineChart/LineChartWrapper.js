@@ -68,8 +68,6 @@ const LineChartWrapper = ({ x, y_list, ready }) => {
             },
             y: {
               beginAtZero: false,  // Allow y-axis to automatically scale
-              suggestedMin: 200,  // Adjust min to avoid squishing
-              suggestedMax: 200,  // Adjust max for padding
               ticks: {
                 stepSize: 1 // Customize step size for better scale
               }

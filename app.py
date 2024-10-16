@@ -21,6 +21,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from insights.heavyhitters import read_heavy_hitters
 from insights.moving_averages import compute_categories_moving_averages
+from insights.optimal_cards import compute_optimal_cards_allocation, OptimalCardsAllocationRequest, OptimalCardsAllocationResponse
 from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, CategoriesMovingAveragesRequest, CategoriesMovingAveragesResponse
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema, PreferencesSchema
@@ -28,7 +29,6 @@ from typing import Annotated
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
 import teller.endpoints as teller_endpoints
-from insights.optimal_cards import compute_optimal_held_cards_allocation, OptimalHeldCardsAllocationRequest, OptimalHeldCardsAllocationResponse
 
 import logging
 
@@ -58,11 +58,10 @@ async def lifespan(app: FastAPI):
         print(e, "Error extracting cards!")
     
     await parse(request=ParseRequest(return_json = False,
-        max_items_to_parse = 3,
+        max_items_to_parse = 0,
         save_to_db=True),
         db = db)
     
-
     db.close()
 
     yield
@@ -98,7 +97,7 @@ async def login_for_access_token(
     Raises:
         HTTPException: If the username or password is incorrect.
     """
-    
+
     user = auth_utils.authenticate_user(db=db, username=form_data.username, password=form_data.password)
     if not user:
         raise HTTPException(
@@ -150,7 +149,6 @@ async def register_for_access_token(
 async def process_new_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                            db: Session = Depends(get_db)):
     return await teller_endpoints.process_new_enrollment(current_user, db)
-    
 
 @app.post("/receive_teller_enrollment")
 async def receive_teller_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
@@ -192,5 +190,5 @@ async def read_credit_cards_database_endpoint(request: CreditCardsDatabaseReques
 
 @app.post("/compute_optimal_held_cards_allocation")
 async def compute_optimal_held_cards_allocation_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
-                   request: OptimalHeldCardsAllocationRequest, db: Session = Depends(get_db)) -> OptimalHeldCardsAllocationResponse:
-    return await compute_optimal_held_cards_allocation(db=db, user=current_user, request=request)
+                   request: OptimalCardsAllocationRequest, db: Session = Depends(get_db)) -> OptimalCardsAllocationResponse:
+    return await compute_optimal_cards_allocation(db=db, user=current_user, request=request)
