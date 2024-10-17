@@ -144,6 +144,7 @@ class PurchaseCategory(str, Enum):
     TRANSPORT = "transport"
     TRANSPORTATION = "transportation"
     UTILITIES = "utilities"
+    UNKNOWN = "unknown"
 
 class IndustryType(str, Enum):
     OTHER = "Other"

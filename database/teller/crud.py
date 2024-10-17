@@ -22,7 +22,7 @@ def create_transaction(db: Session, account: Account, transaction: schemas.Trans
     if txn_with_id:
         print("[INFO] Transaction already exists, skipping insertion")
         return
-     
+         
     db_txn = Transaction(
         account=account,
         txn_id = transaction.txn_id,
