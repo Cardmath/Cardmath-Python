@@ -7,6 +7,7 @@ from insights.heavyhitters import read_heavy_hitters, HeavyHittersRequest, Heavy
 from pydantic import BaseModel, model_validator
 from sqlalchemy.orm import Session
 from typing import Optional, List
+
 import numpy as np
 
 class OptimalCardsAllocationRequest(BaseModel):
@@ -42,8 +43,6 @@ async def compute_optimal_cards_allocation(db: Session, user: User, request: Opt
     R = W.T @ H
     r = round(float(np.sum(np.max(R, axis=1))), 2)
     r_idx = list(np.argmax(R, axis=1))
-
-    print(R)
 
     return OptimalCardsAllocationResponse(total_reward_usd=r, total_reward_allocation=r_idx, summary=None)
 

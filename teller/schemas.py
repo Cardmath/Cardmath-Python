@@ -58,6 +58,7 @@ class AccessTokenSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class CounterPartySchema(BaseModel):
+    id: int
     type: Optional[str] = None
     name: Optional[str] = None
 
@@ -65,10 +66,18 @@ class CounterPartySchema(BaseModel):
 
 class TransactionDetailsSchema(BaseModel):
     processing_status: str
-    category: Optional[str] = None
+    category: Optional[str] = "unknown"
     counterparty: Optional[CounterPartySchema] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    # TODO LOG THIS
+    @field_validator('category', mode="before")
+    @classmethod
+    def category_is_valid(cls, v):
+        if v not in enums.PurchaseCategory:
+            v = "unknown"
+        return v
 
 class TransactionSchema(BaseModel):
     description: str

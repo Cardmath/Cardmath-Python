@@ -2,6 +2,9 @@ from datetime import date
 from pydantic import BaseModel, field_validator, model_validator
 from typing import List, Union, Optional, Tuple
 
+import creditcard.enums as enums
+import re
+
 class HeavyHittersRequest(BaseModel):
     account_ids: Union[str, List[str]]
     top_n: int = None # if none then all     
@@ -19,8 +22,8 @@ class HeavyHitterSchema(BaseModel):
     type: str # VENDOR or CATEGORY
     name: Optional[str] = None
     category: str
-    percent: float = None
-    amount: float = None
+    percent: str 
+    amount: float
 
     @field_validator("type")
     @classmethod
@@ -31,9 +34,20 @@ class HeavyHitterSchema(BaseModel):
     
     @field_validator("percent")
     @classmethod
-    def percent_must_be_between_0_and_100(cls, v):
-        if v is not None and (v < 0 or v > 100):
-            raise ValueError('must be between 0 and 100')
+    def validate_percentage(cls, percentage_str):
+        # Regular expression for a percentage (e.g., "85%", "85.00%", "100%", "0%", "0.5%")
+        pattern = r"^(100(\.0{1,2})?|[0-9]{1,2}(\.[0-9]{1,2})?)%$"
+        
+        if re.match(pattern, percentage_str):
+            return percentage_str
+        else:
+            raise ValueError('must be a percentage')
+        
+    @field_validator("category", mode="before")
+    @classmethod
+    def category_is_valid(cls, v):
+        if v not in enums.PurchaseCategory:
+            v = "unknown"
         return v
 
 class HeavyHittersResponse(BaseModel):
