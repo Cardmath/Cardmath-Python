@@ -11,6 +11,7 @@ import { Galleria } from 'primereact/galleria';
 import classNames from 'classnames';
 import CreditCardFaceouts from '../components/CreditCardFaceout';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 
 const CreditCardDatabase = () => {
@@ -75,20 +76,20 @@ const CreditCardDatabase = () => {
     return (
         <div> 
             <Navbar />
-            <div className="surface-section px-4 py-8 md:px-6 lg:px-8">
+            <div className="bg-gray-900 px-4 py-8 md:px-6 lg:px-8">
                 
-                <div className="text-900 font-bold text-3xl text-center">Open Source Credit Cards Database</div>
-                <p className="text-600 font-normal text-xl text-center">The world's first open-source credit card database. Welcome to the open finance revolution.</p>
+                <div className="text-900 text-white font-bold text-3xl text-center">Open Source Credit Cards Database</div>
+                <p className="text-600 text-white font-normal text-xl text-center">The world's first open-source credit card database. Welcome to the open finance revolution.</p>
                 <Divider className="w-full" />
                 <div className="flex flex-wrap lg:flex-nowrap">
                     <div className="col-fixed lg:col-2 mr-4 flex p-0 flex-column w-full lg:w-3">
-                        <div className="flex flex-column p-0">
-                            <a tabIndex="0" className="cursor-pointer text-900 font-medium mb-3 hover:text-primary transition-duration-150">All Credit Cards</a>
-                            <a tabIndex="0" className="cursor-pointer text-900 font-medium mb-3 hover:text-primary transition-duration-150">Dining, Food, Grocery</a>
-                            <a tabIndex="0" className="cursor-pointer text-900 font-medium mb-3 hover:text-primary transition-duration-150">Travel</a>
-                            <a tabIndex="0" className="cursor-pointer text-900 font-medium mb-3 hover:text-primary transition-duration-150">Small Business</a>
-                            <a tabIndex="0" className="cursor-pointer text-900 font-medium mb-3 hover:text-primary transition-duration-150">Vendor-specific</a>
-                            <a tabIndex="0" className="cursor-pointer text-900 font-medium mb-3 hover:text-primary transition-duration-150">Students</a>
+                        <div className="bg-gray-700 p-3 flex flex-column p-0">
+                            <a tabIndex="0" className="cursor-pointer text-900 font-medium mb-3 hover:text-white transition-duration-150">All Credit Cards</a>
+                            <a tabIndex="0" className="cursor-pointer text-900 font-medium mb-3 hover:text-white transition-duration-150">Dining, Food, Grocery</a>
+                            <a tabIndex="0" className="cursor-pointer text-900 font-medium mb-3 hover:text-white transition-duration-150">Travel</a>
+                            <a tabIndex="0" className="cursor-pointer text-900 font-medium mb-3 hover:text-white transition-duration-150">Small Business</a>
+                            <a tabIndex="0" className="cursor-pointer text-900 font-medium mb-3 hover:text-white transition-duration-150">Vendor-specific</a>
+                            <a tabIndex="0" className="cursor-pointer text-900 font-medium mb-3 hover:text-white transition-duration-150">Students</a>
                         </div>
                         <Divider className="w-full m-0 p-0" />
 
@@ -141,7 +142,7 @@ const CreditCardDatabase = () => {
                                     </div>
                                 </div>
                             </AccordionTab>
-                            <AccordionTab selected header={`Color (${selectedColors.length})`}>
+                            <AccordionTab selected header={`Benefits (${selectedColors.length})`}>
                                 <div className="transition-all transition-duration-400 transition-ease-in-out">
                                     <div className="grid mb-3">
                                         <div className="col-4 flex flex-column align-items-center">
@@ -190,6 +191,7 @@ const CreditCardDatabase = () => {
                     </div>
                 </div>
             </div>
+        <Footer/>
         </div>
     );
 };

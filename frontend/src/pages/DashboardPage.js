@@ -66,8 +66,8 @@ const DashboardPage = () => {
     return <div className="min-h-screen flex relative lg:static surface-ground">
         <div id="app-sidebar-9" className="h-full lg:h-auto surface-section hidden lg:block flex-shrink-0 absolute lg:static left-0 top-0 z-1 border-right-1 surface-border w-18rem lg:w-7rem select-none">
             <div className="flex flex-column h-full">
-                <div className="flex align-items-center justify-content-center flex-shrink-0" style={{ height: '60px' }}>
-                    <img src="/logo512.png" alt="Image" height="30" />
+                <div className="flex align-items-center justify-content-center" style={{ height: '60px' }}>
+                    <img src="/logos/svg/Black logo - no background.svg" alt="Image" height="20" />
                 </div>
                 <div className="mt-3">
                     <ul className="list-none p-0 m-0">
@@ -87,79 +87,19 @@ const DashboardPage = () => {
                         </li>
                         <li>
                             <a className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-left-2 border-transparent hover:border-300 transition-duration-150 transition-colors">
-                                <i className="pi pi-users mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
-                                <span className="font-medium inline text-base lg:text-xs lg:block">Team</span>
-                                <Ripple />
-                            </a>
-                        </li>
-                        <li className="relative">
-                            <StyleClass nodeRef={btnRef10} selector="@next" enterClassName="hidden" leaveToClassName="hidden" hideOnOutsideClick>
-                                <a ref={btnRef10} className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-left-2 border-transparent hover:border-300 transition-duration-150 transition-colors" >
-                                    <i className="pi pi-chart-line mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl p-overlay-badge"><Badge severity="danger">3</Badge></i>
-                                    <span className="font-medium inline text-base lg:text-xs lg:block">Reports</span>
-                                    <i className="pi pi-chevron-down ml-auto lg:hidden"></i>
-                                    <Ripple />
-                                </a>
-                            </StyleClass>
-                            <ul className="list-none pl-3 pr-0 py-0 lg:p-3 m-0 hidden overflow-y-hidden transition-all transition-duration-400 transition-ease-in-out static border-round-right lg:absolute left-100 top-0 z-1 surface-overlay shadow-none lg:shadow-2 w-full lg:w-15rem">
-                                <li>
-                                    <StyleClass nodeRef={btnRef11} selector="@next" toggleClassName="hidden">
-                                        <a ref={btnRef11} className="p-ripple flex align-items-center cursor-pointer p-3 hover:surface-100 hover:text-900 border-round text-600 hover:text-700 transition-duration-150 transition-colors">
-                                            <i className="pi pi-chart-line mr-2"></i>
-                                            <span className="font-medium">Revenue</span>
-                                            <i className="pi pi-chevron-down ml-auto"></i>
-                                    <Ripple />
-                                        </a>
-                                    </StyleClass>
-                                    <ul className="list-none py-0 pl-3 pr-0 m-0 hidden overflow-y-hidden transition-all transition-duration-400 transition-ease-in-out">
-                                        <li>
-                                            <a className="p-ripple flex align-items-center cursor-pointer p-3 hover:surface-100 hover:text-900 border-round text-600 hover:text-700 transition-duration-150 transition-colors">
-                                                <i className="pi pi-table mr-2"></i>
-                                                <span className="font-medium">View</span>
-                                    <Ripple />
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a className="p-ripple flex align-items-center cursor-pointer p-3 hover:surface-100 hover:text-900 border-round text-600 hover:text-700 transition-duration-150 transition-colors">
-                                                <i className="pi pi-search mr-2"></i>
-                                                <span className="font-medium">Search</span>
-                                    <Ripple />
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li>
-                                    <a className="p-ripple flex align-items-center cursor-pointer p-3 hover:surface-100 hover:text-900 border-round text-600 hover:text-700 transition-duration-150 transition-colors">
-                                        <i className="pi pi-chart-line mr-2"></i>
-                                        <span className="font-medium">Expenses</span>
-                                    <Ripple />
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-left-2 border-transparent hover:border-300 transition-duration-150 transition-colors">
-                                <i className="pi pi-calendar mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
-                                <span className="font-medium inline text-base lg:text-xs lg:block">Events</span>
+                                <i className="pi pi-heart-fill mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
+                                <span className="font-medium inline text-base lg:text-xs lg:block">Preferences</span>
                                 <Ripple />
                             </a>
                         </li>
                         <li>
                             <a className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-left-2 border-transparent hover:border-300 transition-duration-150 transition-colors">
                                 <i className="pi pi-cog mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
-                                <span className="font-medium inline text-base lg:text-xs lg:block">Preferences</span>
+                                <span className="font-medium inline text-base lg:text-xs lg:block">Settings</span>
                                 <Ripple />
                             </a>
                         </li>
                     </ul>
-                </div>
-                <div className="mt-auto">
-                    <hr className="mb-3 mx-3 border-top-1 border-none surface-border" />
-                    <a className="p-ripple m-3 flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center hover:surface-200 border-round text-600 transition-duration-150 transition-colors">
-                        <img src="/demo/images/blocks/avatars/circle/avatar-f-1.png" alt="avatar-f-1" className="mr-2 lg:mr-0" style={{ width: '32px', height: '32px' }} />
-                        <span className="font-medium inline lg:hidden">Amy Elsner</span>
-                        <Ripple />
-                    </a>
                 </div>
             </div>
         </div>
@@ -168,7 +108,7 @@ const DashboardPage = () => {
                     <div className="flex-column flex-none shadow-2 surface-card border-round">
                         {heavyHittersCategories && heavyHittersCategories.length > 0 && <HeavyHitterPieChart className="w-full h-full" heavyHitters={heavyHittersCategories} />}
                     </div>
-                    <div className="flex-column flex-grow-1 shadow-2 surface-card border-round px-3 h-full">
+                    <div className="flex-column flex-grow-1 shadow-2 surface-card border-round p-4 h-full">
                         <ChartSlider x={dates} y_list={categories} ready={isMovingAveragesReady}/>
                     </div>
                 </div>

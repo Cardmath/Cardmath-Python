@@ -36,7 +36,7 @@ const HeavyHitterPieChart = ({ heavyHitters, type }) => {
         labels: heavyHitters.map(element => element.category),
         datasets: [
           {
-            data: heavyHitters.map(element => element.percent),
+            data: heavyHitters.map(element => element.amount),
             backgroundColor: colors,
           }
         ]

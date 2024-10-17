@@ -25,7 +25,7 @@ export default function CreditCardFaceouts() {
             value={creditCards}
             layout="grid"
             itemTemplate={(e) => (
-                <Card title={e.name} subTitle={e.issuer} footer={() => <div> <b> Credit Needed:</b> {e.credit_needed.join(', ')} </div>} className="col-12 sm:col-6 lg:col-12 xl:col-4" key={e.id}>
+                <Card title={e.name} subTitle={e.issuer} footer={() => <div> <b> Credit Needed:</b> {e.credit_needed.join(', ')} </div>} className="bg-gray-300 col-12 sm:col-6 lg:col-12 xl:col-4" key={e.id}>
                     <div className="border-3 surface-border surface-card border-round">
                         {e.benefits.length === 0 ? <Chip className="bg-yellow-100" key="no_benefits" label="No benefits found" /> : <p className="m-0"><b>Benefits:</b> {e.benefits.map(benefit => <Chip className="bg-green-100" key={benefit} label={benefit} />)} </p>}
                         <p className="m-0"><b>APR:</b> {e.apr} </p>

@@ -210,46 +210,48 @@ const PreferencesCard = ( {setAlert} ) => {
         
 
     return (        
-        <div className="surface-ground px-4 md:px-6 lg:px-8">
-            <div className="p-fluid flex flex-column lg:flex-row">
-                <ul className="w-3 flex-shrink-0 list-none m-0 p-0 flex flex-row lg:flex-column justify-content-evenly md:justify-content-between lg:justify-content-start mb-5 lg:pr-8 lg:mb-0">
-                    <li>
-                        <a onClick={() => handleTabClick('CreditProfile')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
-                            <i className="pi pi-credit-card md:mr-2"></i>
-                            <span className="font-medium hidden md:block">Credit Profile</span>
-                            <Ripple />
-                        </a>
-                    </li>
-                    <li>
-                        <a onClick={() => handleTabClick('Banks')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
-                            <i className="pi pi-building-columns md:mr-2"></i>
-                            <span className="font-medium hidden md:block">Banks</span>
-                            <Ripple />
-                        </a>
-                    </li>
-                    <li>
-                        <a onClick={() => handleTabClick('Travel')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
-                            <i className="pi pi-map md:mr-2"></i>
-                            <span className="font-medium hidden md:block">Travel</span>
-                            <Ripple />
-                        </a>
-                    </li>
-                    <li>
-                        <a onClick={() => handleTabClick('Shopping&Dining')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
-                            <i className="pi pi-shop md:mr-2"></i>
-                            <span className="font-medium hidden md:block">Shopping & Dining</span>
-                            <Ripple />
-                        </a>
-                    </li>
-                    <li>
-                        <a onClick={() => handleTabClick('Business')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
-                            <i className="pi pi-briefcase  md:mr-2"></i>
-                            <span className="font-medium hidden md:block">Business Needs</span>
-                            <Ripple />
-                        </a>
-                    </li>
-                </ul>
-                {activeTab == 'CreditProfile' && (<div className="sm:w-7 fadein animation-duration-100 surface-card flex sm:flex-column p-5 shadow-2 border-round">
+        <div className="px-4 md:px-6 lg:px-8 pb-8">
+            <div className="grid align-items-start">
+                <div className="col-2">
+                    <ul className="border-round bg-gray-300 opacity-70 h-auto list-none p-0 text-lg">
+                        <li>
+                            <a onClick={() => handleTabClick('CreditProfile')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
+                                <i className="pi pi-credit-card md:mr-2"></i>
+                                <span className="font-medium hidden md:block">Credit Profile</span>
+                                <Ripple />
+                            </a>
+                        </li>
+                        <li>
+                            <a onClick={() => handleTabClick('Banks')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
+                                <i className="pi pi-building-columns md:mr-2"></i>
+                                <span className="font-medium hidden md:block">Banks</span>
+                                <Ripple />
+                            </a>
+                        </li>
+                        <li>
+                            <a onClick={() => handleTabClick('Travel')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
+                                <i className="pi pi-map md:mr-2"></i>
+                                <span className="font-medium hidden md:block">Travel</span>
+                                <Ripple />
+                            </a>
+                        </li>
+                        <li>
+                            <a onClick={() => handleTabClick('Shopping&Dining')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
+                                <i className="pi pi-shop md:mr-2"></i>
+                                <span className="font-medium hidden md:block">Shopping & Dining</span>
+                                <Ripple />
+                            </a>
+                        </li>
+                        <li>
+                            <a onClick={() => handleTabClick('Business')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
+                                <i className="pi pi-briefcase  md:mr-2"></i>
+                                <span className="font-medium hidden md:block">Business Needs</span>
+                                <Ripple />
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {activeTab == 'CreditProfile' && (<div className="bg-gray-300 col-8 fadein animation-duration-100 flex sm:flex-column p-5 shadow-2 border-round">
                     <div className="text-900 font-medium text-xl mt-3">Credit Profile</div>
                     <Divider></Divider>
                     <div className="flex-auto block gap-5 flex-column-reverse font-light text-lg text-500 md:flex-row">
@@ -297,7 +299,7 @@ const PreferencesCard = ( {setAlert} ) => {
                         </div>
                     </div>
                 </div>)}
-                {activeTab == 'Banks' && (<div className="sm:w-7 fadein animation-duration-100 surface-card p-5 shadow-2 border-round">
+                {activeTab == 'Banks' && (<div className="bg-gray-300 sm:w-7 fadein animation-duration-100 p-5 shadow-2 border-round">
                     <div className="text-900 font-medium text-xl mt-3">Favorite Banks</div>
                     <Divider></Divider>
                     <div className="font-light text-lg text-500 mb-3">Tell us your preferred banks (and ones to avoid) for tailored credit card recommendations!  
@@ -337,7 +339,7 @@ const PreferencesCard = ( {setAlert} ) => {
                         </div>
                     </div>
                 </div>)}
-                {activeTab == 'Travel' && (<div className="sm:w-7 fadein animation-duration-100 surface-card p-5 shadow-2 border-round">
+                {activeTab == 'Travel' && (<div className="bg-gray-300 sm:w-7 fadein animation-duration-100 p-5 shadow-2 border-round">
                     <div className="text-900 font-medium text-xl mt-3">Travel Preferences</div>
                     <Divider></Divider>
                     <div className="font-light text-lg text-500 mb-3">Share your travel preferences, and we'll match you with the perfect card to get you there!</div>
@@ -367,7 +369,7 @@ const PreferencesCard = ( {setAlert} ) => {
                         </div>
                     </div>
                 </div>)}
-                {activeTab == 'Shopping&Dining' && (<div className="sm:w-7 fadein animation-duration-100 surface-card p-5 shadow-2 border-round">
+                {activeTab == 'Shopping&Dining' && (<div className="bg-gray-300 sm:w-7 fadein animation-duration-100 p-5 shadow-2 border-round">
                     <div className="text-900 font-medium text-xl mt-3">Shopping & Dining Preferences</div>
                     <Divider></Divider>
                     <div className="font-light text-lg text-500 mb-3">Share your dining and shopping preferences, and we’ll find the right card to match your taste!</div>
@@ -397,7 +399,7 @@ const PreferencesCard = ( {setAlert} ) => {
                         </div>
                     </div>
                 </div>)}
-                {activeTab == 'Business' && (<div className="sm:w-7 fadein animation-duration-100 surface-card p-5 shadow-2 border-round">
+                {activeTab == 'Business' && (<div className="bg-gray-300 sm:w-7 fadein animation-duration-100 p-5 shadow-2 border-round">
                     <div className="text-900 font-medium text-xl mt-3">Business Needs</div>
                     <Divider></Divider>
                     <div className="font-light text-lg text-500 mb-3">Tell us your business needs, and we’ll find the card that works as hard as you do!</div>

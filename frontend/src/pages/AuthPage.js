@@ -116,16 +116,16 @@ const AuthPage = ({ userHasAccount }) => {
     return (
         <div> 
             <Alert visible={alert.visible} message={alert.message} type={alert.type} heading={alert.heading} setVisible={(visible) => setAlert({ ...alert, visible })}/>
-            <div style={{ background: 'url("signin-2.jpg") no-repeat', backgroundSize: 'cover' }} className="px-4 py-8 md:px-6 lg:px-8">
+            <div style={{ background: 'url("hero-2.jpg") no-repeat', backgroundSize: 'cover' }} className="px-4 py-8 md:px-6 lg:px-8">
                 <div className="flex flex-wrap">
                     <div className="w-full lg:w-6 p-4 lg:p-7" style={{ backgroundColor: 'rgba(255,255,255,.7)' }}>
-                        <img src="hero-2.jpg" alt="Image" height="50" className="mb-6" />
+                        <img src="logos/svg/Black logo - no background.svg" alt="Image" height="50" className="mb-6" />
                         <div className="text-xl text-black-alpha-90 font-500 mb-3">Welcome to Cardmath</div>
                         <p className="text-black-alpha-50 line-height-3 mt-0 mb-6">Choose your credit card more intelligently by matching it to your spending habits and lifestyle needs.</p>
                         <ul className="list-none p-0 m-0">
                             <li className="flex align-items-start mb-4">
                                 <div>
-                                    <span className="flex align-items-center justify-content-center bg-purple-400" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
+                                    <span className="flex align-items-center justify-content-center bg-green-500 shadow-2" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
                                         <i className="text-xl text-white pi pi-credit-card"></i>
                                     </span>
                                 </div>
@@ -135,8 +135,8 @@ const AuthPage = ({ userHasAccount }) => {
                                 </div>
                             </li>
                             <li className="flex align-items-start mb-4">
-                                <div>
-                                    <span className="flex align-items-center justify-content-center bg-purple-400" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
+                                <div>   
+                                    <span className="flex align-items-center justify-content-center bg-green-500 shadow-2" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
                                         <i className="text-xl text-white pi pi-calculator"></i>
                                     </span>
                                 </div>
@@ -147,7 +147,7 @@ const AuthPage = ({ userHasAccount }) => {
                             </li>   
                             <li className="flex align-items-start">
                                 <div>
-                                    <span className="flex align-items-center justify-content-center bg-purple-400" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
+                                    <span className="flex align-items-center justify-content-center bg-green-500 shadow-2" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
                                         <i className="text-xl text-white pi pi-shield"></i>
                                     </span>
                                 </div>
@@ -158,7 +158,7 @@ const AuthPage = ({ userHasAccount }) => {
                             </li>
                         </ul>
                     </div>
-                    <div className="w-full lg:w-6 p-4 lg:p-7 surface-card">
+                    <div className="w-full lg:w-6 p-4 lg:p-7 bg-gray-200">
                         <div className="text-900 text-2xl font-medium mb-6">{userHasAccount ? "Login" : "Register"}</div>
 
                         <label htmlFor="email" className="block text-900 font-medium mb-2">Email</label>
@@ -175,10 +175,10 @@ const AuthPage = ({ userHasAccount }) => {
                             <a className="font-medium no-underline ml-2 text-blue-500 text-right cursor-pointer">Forgot password?</a>
                         </div>
 
-                        <Button label={userHasAccount ? "Login" : "Register"} icon="pi pi-user" className="w-full" onClick={handleAuth}/>
+                        <Button label={userHasAccount ? "Login" : "Register"} icon="pi pi-user" className="bg-blue-500 text-white w-full" onClick={handleAuth}/>
 
                         <Divider align="center" className="my-6">
-                            <span className="text-600 font-normal text-sm">OR</span>
+                            <span className="text-600 text-sm">OR</span>
                         </Divider>
 
                         <Button label="Sign In with Google" icon="pi pi-google" className="w-full p-button-secondary" onClick={handleAuth}/>

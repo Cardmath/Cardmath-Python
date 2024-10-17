@@ -10,8 +10,10 @@ const Navbar = () => {
 
 
     return (    
-        <div className="navbar-container bg-gray-900 py-3 px-6 shadow-2 flex align-items-center justify-content-between relative">
-            <img src="hyper-light.svg" height="50" />
+        <div className="navbar-container bg-gray-900 py-3 px-4 shadow-2 flex align-items-center justify-content-between relative">
+            <div className="flex align-items-center cursor-pointer" onClick={() => window.location.href="http://localhost:3000/"}>
+                <img src="logos/svg/Color logo - no background.svg" alt="Image" height="50"/>
+            </div>
             <StyleClass nodeRef={rootBtnRef6} selector="@next" enterClassName="hidden" leaveToClassName="hidden" hideOnOutsideClick>
                 <a ref={rootBtnRef6} className="p-ripple cursor-pointer block lg:hidden text-gray-400">
                     <i className="pi pi-bars text-4xl"></i>
@@ -37,7 +39,7 @@ const Navbar = () => {
                                 </div>
                                 <div className="w-full lg:w-6">
                                     <div className="flex flex-wrap border-bottom-1 border-gray-700 pb-3 mb-3">
-                                        <div className="px-0 lg:px-3 py-3" onClick={() => {window.location.href="http://localhost:3000/creditcards"}}>
+                                        <div className="px-0 lg:px-3 py-3 cursor-pointer" onClick={() => {window.location.href="http://localhost:3000/creditcards"}}>
                                             <span className="text-white">All</span>
                                             <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Porta lorem mollis aliquam ut porttitor leo a diam.</p>
                                         </div>
@@ -80,7 +82,7 @@ const Navbar = () => {
                     </li>
                 </ul>
                 <div className="flex justify-content-between lg:block border-top-1 lg:border-top-none border-gray-800 py-3 lg:py-0 mt-3 lg:mt-0">
-                    <Button label="Login" className="p-button-text font-bold" onClick={()=>window.location.href ='/login'} />;
+                    <Button label="Login" className="hover:bg-green-400 p-button-text text-white font-bold" onClick={()=>window.location.href ='/login'} />
                     <Button label="Register" className="ml-3 font-bold" onClick={()=>window.location.href ='/register'}/>
                 </div>
             </div>
