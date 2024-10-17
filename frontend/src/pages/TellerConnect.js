@@ -107,7 +107,7 @@ const TellerConnectComponent = () => {
                 var tellerConnect = window.TellerConnect.setup({
                     applicationId: "app_p3oodma27qfrj3hs8a000",
                     selectAccount: "disabled",
-                    environment: 'sandbox',
+                    environment: 'development',
                     onInit: function() {
                         console.log("Teller Connect has initialized");
                     },
