@@ -1,8 +1,6 @@
 from creditcard.enums import *
-from creditcard.schemas import CardRatingsScrapeSchema, CreditCardSchema
-from creditcard.utils.parse import RewardCategoryRelation, RewardAmount
+from creditcard.schemas import CardRatingsScrapeSchema
 from database.creditcard import crud
-from database.creditcard.creditcard import CreditCard
 from database.scrapes.cardratings import CardratingsScrape
 from pydantic import BaseModel
 from sqlalchemy.orm import Session

@@ -56,7 +56,7 @@ def create_cards_matrix(cards : List[CreditCardSchema], heavy_hitters: HeavyHitt
         for i, category in enumerate(categories):
             for reward_category_relation in card.reward_category_map:
                 if category.category == reward_category_relation.category.value:
-                    cards_matrix[i][j] = RewardUnit.get_value(reward_category_relation.reward.reward_unit) * reward_category_relation.reward.amount
+                    cards_matrix[i][j] = RewardUnit.get_value(reward_category_relation.reward_unit) * reward_category_relation.amount
     
     return cards_matrix
 
@@ -77,14 +77,3 @@ def create_heavy_hitter_matrix(heavy_hitters: HeavyHittersResponse) -> np.array:
         heavy_hitter_matrix[i][i] = category.amount
 
     return heavy_hitter_matrix
-
-
-    
-
-
-
-
-
-
-
-        

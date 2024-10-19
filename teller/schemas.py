@@ -58,7 +58,7 @@ class AccessTokenSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class CounterPartySchema(BaseModel):
-    id: int
+    id: Optional[int] = None
     type: Optional[str] = None
     name: Optional[str] = None
 

@@ -16,7 +16,7 @@ const CreditCardDBCallToAction = () => {
                     </div>
                     <div className="text-gray-300 line-height-3 mb-4">We maintain a complete database of Credit Cards, and we pay you if you upload your Credit Card agreements!</div>
                     <div className="flex flex-wrap lg:flex-nowrap">
-                        <Button className="px-5 py-3 font-bold mr-3 white-space-nowrap mb-3 lg:mb-0 w-full lg:w-auto" label="Explore the Database" />
+                        <Button onClick={() => window.location.href="http://localhost:3000/creditcards" } className="px-5 py-3 font-bold mr-3 white-space-nowrap mb-3 lg:mb-0 w-full lg:w-auto" label="Explore the Database" />
                         <Button className="px-5 py-3 font-bold mr-3 p-button-text white-space-nowrap w-full lg:w-auto" label="Our Information Vetting Process" />
                     </div>
                 </div>

@@ -39,17 +39,17 @@ const Navbar = () => {
                                 </div>
                                 <div className="w-full lg:w-6">
                                     <div className="flex flex-wrap border-bottom-1 border-gray-700 pb-3 mb-3">
-                                        <div className="px-0 lg:px-3 py-3 cursor-pointer" onClick={() => {window.location.href="http://localhost:3000/creditcards"}}>
+                                        <div className="px-0 lg:px-3 py-3 cursor-pointer  hover:bg-gray-700 transition-duration-150" onClick={() => {window.location.href="http://localhost:3000/creditcards"}}>
                                             <span className="text-white">All</span>
-                                            <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Porta lorem mollis aliquam ut porttitor leo a diam.</p>
+                                            <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Every single credit card we could find.</p>
                                         </div>
-                                        <div className="px-0 lg:px-3 py-3">
+                                        <div className="px-0 lg:px-3 py-3 hover:bg-gray-700 transition-duration-150">
                                             <span className="text-white">Travel</span>
-                                            <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Amet purus gravida quis blandit.</p>
+                                            <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Best credit cards for travel points</p>
                                         </div>
-                                        <div className="px-0 lg:px-3 py-3">
+                                        <div className="px-0 lg:px-3 py-3 hover:bg-gray-700 transition-duration-150">
                                             <span className="text-white">Student</span>
-                                            <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Aenean vel elit scelerisque mauris.</p>
+                                            <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Best credit cards for college students</p>
                                         </div>
                                     </div>
                                 </div>

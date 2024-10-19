@@ -93,7 +93,7 @@ const CreditCardDatabase = () => {
                         </div>
                         <Divider className="w-full m-0 p-0" />
 
-                        <Accordion multiple className="-mb-1 mt-3">
+                        <Accordion multiple className="mb-1 mt-3">
                             <AccordionTab selected header={`Issuer (${selectedBrand_1.length})`}>
                                 <div className="transition-all transition-duration-400 transition-ease-in-out">
                                     <div className="mb-3">
@@ -186,7 +186,7 @@ const CreditCardDatabase = () => {
                             </AccordionTab>
                         </Accordion>
                     </div>
-                    <div className="flex w-full border-2 border-dashed border-round surface-border surface-section mt-3 lg:mt-0" style={{ minHeight: '25rem' }}>
+                    <div className="flex w-full" style={{ minHeight: '25rem' }}>
                         <CreditCardFaceouts />
                     </div>
                 </div>

@@ -63,7 +63,7 @@ class TwoPassHeavyHitters:
         
         # Return elements whose frequency is above the threshold
         threshold = total / self.k
-        return {item: ("{:.2f}%".format(round(amount / total, 2) * 100), amount) for item, amount in exact_amounts.items() if amount >= threshold}
+        return {item: ("{:.2f}%".format(round(amount / total, 4) * 100), amount) for item, amount in exact_amounts.items() if amount >= threshold}
 
 async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersRequest) -> HeavyHittersResponse:
         teller_client = teller_utils.Teller() 
@@ -82,7 +82,7 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
             
             transactions: List[Transaction] = []
             if (request.account_ids == "all") or (account.id in request.account_ids) :
-                transactions = account.transactions.filter(Transaction.type.notin_(["ach", "transfer", "withdrawal", "atm"])).all()
+                transactions = account.transactions.filter(Transaction.type.notin_(["ach", "transfer", "withdrawal", "atm", "deposit", "wire", "interest" ])).all()
             
             if len(transactions) == 0:
                 print(f"[WARNING] No transactions found for account {account.id}")

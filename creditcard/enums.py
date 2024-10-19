@@ -60,6 +60,7 @@ class RewardUnit(str, Enum):
     JETBLUE_TRUEBLUE_POINTS = "JetBlue TrueBlue Points"
     ALASKA_MILEAGE_PLAN_MILES = "Alaska Mileage Plan Miles"
     RADISSON_REWARDS_POINTS = "Radisson Rewards Points"
+    UNKNOWN = "Unknown"
     
     def get_value(reward_unit) -> float:
         _values = {

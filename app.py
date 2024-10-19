@@ -51,14 +51,14 @@ async def lifespan(app: FastAPI):
     try :
         extract(request=ExtractRequest(file_path=SAFE_LOCAL_DOWNLOAD_SPOT,
                 return_json = False,
-                max_items_to_extract = 0,
+                max_items_to_extract = 10,
                 save_to_db=True),
                 db=db)
     except Exception as e:
         print(e, "Error extracting cards!")
     
     await parse(request=ParseRequest(return_json = False,
-        max_items_to_parse = 0,
+        max_items_to_parse = 5,
         save_to_db=True),
         db = db)
     

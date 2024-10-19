@@ -1,18 +1,22 @@
 from creditcard.enums import PurchaseCategory, RewardUnit, Benefit
 from openai import OpenAI
+from pydantic import BaseModel, TypeAdapter
+from typing import Union
 import json
 import os
 import traceback
 
 separator = "\n - "
+MODEL = "gpt-4o-2024-08-06"
 
 
-async def prompt_gpt4_for_json(prompt):    
+async def prompt_openai_for_json(prompt, response_format):    
     client = OpenAI(
         api_key=os.getenv('OPENAI_API_KEY', "your_openai_api_key")
     )
     try:
         chat_completion = client.chat.completions.create(
+            model=MODEL,
             messages=[
                 {
                     "role": "system",
@@ -21,62 +25,92 @@ async def prompt_gpt4_for_json(prompt):
                     "temperature" : 0.0
                 }
             ],
-            model="gpt-3.5-turbo-0125",
+            response_format=response_format
         )
-        return chat_completion.choices[0].message.content
+        response= chat_completion.choices[0].message.content
+        return response
+    
     except Exception as e:
         error_details = traceback.format_exc()
         raise ConnectionError(f"Connection to OpenAI failed: {e}\nDetails: {error_details}")
 
-async def retry_openai_until_json_valid(prompt, card_attr_list_joined):
+async def structure_with_openai(prompt: str, response_format: dict, schema: Union[BaseModel, TypeAdapter]):
     attempt = 0
-    reward_category_map = {}
-
     while True:
+        if attempt >= 3:
+            print("OpenAI failed 3 times. Aborting.")
+            return
+
         attempt += 1
-        openai_response = await prompt_gpt4_for_json(prompt(card_attr_list_joined))    
+        openai_response = await prompt_openai_for_json(prompt=prompt, response_format=response_format)  
+        validated_schema = None  
         try:
-            reward_category_map = json.loads(openai_response)
-        except ValueError:
+            if isinstance(schema, TypeAdapter):
+                validated_schema = schema.validate_json(openai_response)
+            else :
+                validated_schema = schema.model_validate_json(openai_response)
+
+        except Exception as e:
+            print(f"OpenAI failed with attempt {attempt}: {e}")
             continue
-        break
-    
-    print(f"OpenAI succeeded with attempt {attempt}")    
-    return reward_category_map
+
+        print(f"OpenAI succeeded with attempt {attempt}")
+        return validated_schema
 
 def purchase_category_map_prompt(card_attributes) : 
     return f"""
-    You are operating in a data understanding pipeline. 
-    Please analyze the provided text that describes credit card benefits and map it to the following transaction types and reward units.
-    Return the mapped transaction types and reward units as JSON objects. 
+    Your goal is to analyze the provided text that describes credit card benefits and map it to the following transaction types and reward units.
 
-    TRANSACTION TYPES / PURCHASE CATEGORIES:
+    valid values for the "category" json field:
     {separator.join([purchase_category.value for purchase_category in PurchaseCategory])}
 
-    REWARD UNITS / POINTS SYSTEMS:
+    valid values for the "reward_unit" json field:
     {separator.join([reward_unit.value for reward_unit in RewardUnit])}
 
-    CREDIT CARD BENEFITS RAW TEXT:
+    valid values for the "amount" json field:
+    A small positive number that represents the number of points awarded to the transaction.
+
+    Here is the text you should analyze:
     "{card_attributes}"
 
-    OUTPUT:
-    I want you to respond in correct Javascript as if answering an API call. 
-    You should not use ```javascript to indicate you are writing javascript. 
-    The returned JSON dictionary should represent the amount of 'reward unit' when spending $1 on a purchase belonging to a specific category. 
-    It is reasonable to assume that the lowest value is 1 for all reward units.
-
-    EXAMPLE OUTPUT ELEMENT: 
-    "Groceries" : ("Hilton Honors Points", 3)
-    "Travel" : ("United MileagePlus", 3)
-    "Entertainment" : ("U.S. Bank Altitude Points", 1)
-    "Dining" : ("Delta SkyMiles", 1)
-
-    EXAMPLE OUTPUT EXPLANATION:
-    each dollar spent on food and drink groceries transactions earns you 3 Hilton Honors Points
     """
 
+import json
 
-def benefits_prompt(card_dict_attr_list) : 
+def reward_category_map_response_format():
+    enum_category = json.dumps([purhcase_category.value for purhcase_category in PurchaseCategory], ensure_ascii=False)
+    enum_reward_unit = json.dumps([reward_unit.value for reward_unit in RewardUnit], ensure_ascii=False)
+
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "reward_category_map_response",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "reward_category_map": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "category": {"type": "string", "enum": json.loads(enum_category)},
+                                "reward_unit": {"type": "string", "enum": json.loads(enum_reward_unit)},
+                                "amount": {"type": "number"}
+                            },
+                            "required": ["category", "reward_unit", "amount"],
+                            "additionalProperties": False
+                        }
+                    }
+                },
+                "required": ["reward_category_map"],
+                "additionalProperties": False
+            }
+        }
+    }
+
+
+
+def benefits_prompt(card_attributes) : 
     return f""" 
     You are operating in a data understanding pipeline. 
     You are being given a string that descrbes a credit card and its benefits in plain english.
@@ -93,6 +127,23 @@ def benefits_prompt(card_dict_attr_list) :
     
     Now I will start with the text that you should analyze:
     
-    "{card_dict_attr_list}"
+    "{card_attributes}"
     
     """  
+
+def benefits_response_format():
+    enum_benefits = json.dumps([benefit.value for benefit in Benefit], ensure_ascii=False)
+    return { "type": "json_schema",
+            "json_schema": {
+                "name": "benefits_response",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "benefits_list": {"type": "array", "items": {"type": "string", "enum": json.loads(enum_benefits)}},
+                    },
+                    "required": ["benefits_list"],
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+    }

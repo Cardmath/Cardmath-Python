@@ -1,33 +1,21 @@
 from creditcard.enums import *
-from creditcard.utils.openai import prompt_gpt4_for_json, benefits_prompt, purchase_category_map_prompt, retry_openai_until_json_valid
-from pydantic import BaseModel, ConfigDict, model_validator
+from creditcard.utils.openai import prompt_openai_for_json, benefits_prompt, purchase_category_map_prompt, structure_with_openai, reward_category_map_response_format, benefits_response_format
+from pydantic import BaseModel, ConfigDict
 from typing import List
 
 RIGHTS_RESERVED = '\u00AE'
 
-class RewardAmount(BaseModel):
+class RewardCategoryRelation(BaseModel):
+    category : PurchaseCategory
     reward_unit : RewardUnit
     amount : float
 
     model_config = ConfigDict(from_attributes=True)
 
-class RewardCategoryRelation(BaseModel):
-    category : PurchaseCategory
-    reward: RewardAmount
+# THIS SHOULD ONLY BE CALLED FOR STRUCTURING
+class RewardCategoryMap(BaseModel):
+    reward_category_map : List[RewardCategoryRelation]
 
-    model_config = ConfigDict(from_attributes=True)
-
-    @model_validator(mode='before')
-    @classmethod
-    def validate_openai_tuple(cls, v):
-        if isinstance(v, tuple) and len(v) == 2 and isinstance(v[0], str) and len(v[1]) > 0:
-            return RewardCategoryRelation(category=v[0], reward=RewardAmount(reward_unit=v[1][0], amount=v[1][1]))
-        
-        if not isinstance(v, dict):
-            return RewardCategoryRelation(category=PurchaseCategory.OTHER, reward=RewardAmount(reward_unit=RewardUnit.US_BANK_ALTITUDE_POINTS, amount=1))
-
-        return v 
-    
 def get_issuer(card_name : str): 
     best_issuer = single_nearest(card_name, Issuer)
     if (isinstance(best_issuer, str)): 
@@ -38,33 +26,13 @@ def get_credit_needed(credit_needed_html_text : str):
     return multiple_nearest(credit_needed_html_text, CreditNeeded)
     
 async def get_benefits(card_description : str):
-    openai_response = await prompt_gpt4_for_json(benefits_prompt(card_description))
+    openai_response = await prompt_openai_for_json(benefits_prompt(card_description), response_format=benefits_response_format())
     return multiple_nearest(openai_response, Benefit) 
     
 async def get_reward_category_map(card_description : str) -> List[RewardCategoryRelation]:
-    out_rewards = []
-    reward_category_map = await retry_openai_until_json_valid(purchase_category_map_prompt, card_description)
-    
-    for category, reward in reward_category_map.items():
-        if isinstance(reward, (tuple, list)) and len(reward) == 2:
-            reward_type, reward_amt = reward
-        elif isinstance(reward, dict) and len(reward) == 1:
-            reward_type, reward_amt = list(reward.items())[0]
-        else :
-            reward_type = None
-            reward_amt = 0
-            print(f"Unexpected reward format: {category, reward} ")
-
-        reward_type = single_nearest(reward_type, RewardUnit)
-        try :
-            reward_amt = float(reward_amt)
-        except Exception:
-            reward_amt = 0
-            print(f"Unexpected reward amount: {category, reward_amt} ")
-        
-        out_rewards.append((single_nearest(category, PurchaseCategory), (reward_type, reward_amt)))
-    
-    return out_rewards
+    prompt = purchase_category_map_prompt(card_description)
+    reward_category_map : RewardCategoryMap= await structure_with_openai(prompt=prompt, response_format=reward_category_map_response_format(), schema=RewardCategoryMap)
+    return reward_category_map.reward_category_map
 
 def get_apr(card_description):
     return 0; 
