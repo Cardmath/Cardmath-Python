@@ -51,7 +51,7 @@ const SliderComponent = ({ data = [], handleChart }) => {
 
   return (
     <div>
-      <Slider
+      <Slider className="mr-7"
         value={value}
         min={0}
         max={data.length - 1}
