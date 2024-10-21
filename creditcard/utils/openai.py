@@ -104,7 +104,8 @@ def reward_category_map_response_format():
                 },
                 "required": ["reward_category_map"],
                 "additionalProperties": False
-            }
+            },
+            "strict": True
         }
     }
 

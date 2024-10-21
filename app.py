@@ -11,8 +11,7 @@ from creditcard.endpoints.read_database import CreditCardsDatabaseRequest, Credi
 from creditcard.endpoints.read_database import read_credit_cards_database
 from creditcard.schemas import *
 from database.creditcard import creditcard
-from database.sql_alchemy_db import engine, get_db, print_sql_schema
-from database.sql_alchemy_db import SessionLocal
+from database.sql_alchemy_db import sync_engine, async_engine, get_async_db, get_sync_db, print_sql_schema
 from datetime import timedelta
 from fastapi import Request, Depends, FastAPI, HTTPException, status
 from fastapi.exceptions import RequestValidationError
@@ -24,6 +23,7 @@ from insights.moving_averages import compute_categories_moving_averages
 from insights.optimal_cards import compute_optimal_cards_allocation, OptimalCardsAllocationRequest, OptimalCardsAllocationResponse
 from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, CategoriesMovingAveragesRequest, CategoriesMovingAveragesResponse
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
 import auth.utils as auth_utils
@@ -34,36 +34,32 @@ import logging
 
 SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/Cardmath/Cardmath-Python/server_download_location/cardratings.html"
 
-creditcard.Base.metadata.create_all(bind=engine)
-#print_sql_schema() Only for debugging
+creditcard.Base.metadata.create_all(bind=sync_engine)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    db : Session = SessionLocal()
-    try :
-        download(request=DownloadRequest(url = "https://www.cardratings.com/credit-card-list.html",
-                file_path = SAFE_LOCAL_DOWNLOAD_SPOT,
-                force_download = False,
-                user_agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0"))
-    except Exception as e:
-        print(e, "Error downloading cards!")
-    
-    try :
-        extract(request=ExtractRequest(file_path=SAFE_LOCAL_DOWNLOAD_SPOT,
-                return_json = False,
-                max_items_to_extract = 10,
-                save_to_db=True),
-                db=db)
-    except Exception as e:
-        print(e, "Error extracting cards!")
-    
-    await parse(request=ParseRequest(return_json = False,
-        max_items_to_parse = 5,
-        save_to_db=True),
-        db = db)
-    
-    db.close()
-
+    for db in get_sync_db():
+        try :
+            download(request=DownloadRequest(url = "https://www.cardratings.com/credit-card-list.html",
+                    file_path = SAFE_LOCAL_DOWNLOAD_SPOT,
+                    force_download = False,
+                    user_agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0"))
+        except Exception as e:
+            print(e, "Error downloading cards!")
+        
+        try :
+            extract(request=ExtractRequest(file_path=SAFE_LOCAL_DOWNLOAD_SPOT,
+                    return_json = False,
+                    max_items_to_extract = 0,
+                    save_to_db=True),
+                    db=db)
+        except Exception as e:
+            print(e, "Error extracting cards!")
+        
+        await parse(request=ParseRequest(return_json = False,
+            max_items_to_parse = 0,
+            save_to_db=True),
+            db = db)
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -85,19 +81,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.post("/token")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_db)
 ) -> Token:
-    """
-    Authenticates a user and generates an access token.
-    Parameters:
-        form_data (OAuth2PasswordRequestForm): The form data containing the username and password.
-        db (Session, optional): The database session. Defaults to Depends(get_db).
-    Returns:
-        Token: The generated access token.
-    Raises:
-        HTTPException: If the username or password is incorrect.
-    """
-
     user = auth_utils.authenticate_user(db=db, username=form_data.username, password=form_data.password)
     if not user:
         raise HTTPException(
@@ -114,19 +99,8 @@ async def login_for_access_token(
 @app.post("/register")
 async def register_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_sync_db)
 ) -> Token:
-    """
-    Register a user and generate an access token.
-    Args:
-        form_data (OAuth2PasswordRequestForm): The form data containing the user's credentials.
-        db (Session, optional): The database session. Defaults to Depends(get_db).
-    Returns:
-        Token: The generated access token.
-    Raises:
-        HTTPException: If the username is already taken.
-    """
-
     if auth_crud.get_user_by_username(db, form_data.username) is not None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,           
@@ -147,19 +121,19 @@ async def register_for_access_token(
 
 @app.post("/process_new_enrollment")
 async def process_new_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
-                           db: Session = Depends(get_db)):
+                           db: Session = Depends(get_sync_db)):
     return await teller_endpoints.process_new_enrollment(current_user, db)
 
 @app.post("/receive_teller_enrollment")
 async def receive_teller_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                  access_token: AccessTokenSchema,
-                 db: Session = Depends(get_db)):
+                 db: Session = Depends(get_sync_db)):
     return await teller_endpoints.receive_teller_enrollment(db=db, access_token=access_token, user=current_user) 
 
 @app.post("/ingest_user_preferences")
 async def ingest_user_preferences(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                  preferences: PreferencesSchema,
-                 db: Session = Depends(get_db)):
+                 db: Session = Depends(get_sync_db)):
     return await teller_endpoints.ingest_user_preferences(preferences=preferences, db=db, user=current_user)
 
 @app.post("/download")
@@ -167,28 +141,28 @@ def download_endpoint(request: DownloadRequest) -> DownloadResponse:
     return download(request)
     
 @app.post("/extract")
-def extract_endpoint(request: ExtractRequest, db: Session = Depends(get_db)) -> ExtractResponse:
+def extract_endpoint(request: ExtractRequest, db: Session = Depends(get_sync_db)) -> ExtractResponse:
     return extract(request, db)
 
 @app.post("/parse") 
-def parse_endpoint(request: ParseRequest, db: Session = Depends(get_db)) -> ParseResponse:
+def parse_endpoint(request: ParseRequest, db: Session = Depends(get_sync_db)) -> ParseResponse:
     return parse(request, db)
 
 @app.post("/read_heavy_hitters") 
 async def heavy_hitters_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
-                   request: HeavyHittersRequest, db: Session = Depends(get_db)) -> HeavyHittersResponse:
+                   request: HeavyHittersRequest, db: Session = Depends(get_sync_db)) -> HeavyHittersResponse:
     return await read_heavy_hitters(db=db, user=current_user, request=request)
 
 @app.post("/compute_categories_moving_averages")
 async def compute_categories_moving_averages_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
-                   request: CategoriesMovingAveragesRequest, db: Session = Depends(get_db)) -> CategoriesMovingAveragesResponse:
+                   request: CategoriesMovingAveragesRequest, db: Session = Depends(get_sync_db)) -> CategoriesMovingAveragesResponse:
     return await compute_categories_moving_averages(db=db, user=current_user, request=request)
 
 @app.post("/read_credit_cards_database")
-async def read_credit_cards_database_endpoint(request: CreditCardsDatabaseRequest, db: Session = Depends(get_db)) -> CreditCardsDatabaseResponse:
+async def read_credit_cards_database_endpoint(request: CreditCardsDatabaseRequest, db: Session = Depends(get_sync_db)) -> CreditCardsDatabaseResponse:
     return await read_credit_cards_database(db=db, request=request)
 
 @app.post("/compute_optimal_held_cards_allocation")
 async def compute_optimal_held_cards_allocation_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
-                   request: OptimalCardsAllocationRequest, db: Session = Depends(get_db)) -> OptimalCardsAllocationResponse:
+                   request: OptimalCardsAllocationRequest, db: Session = Depends(get_sync_db)) -> OptimalCardsAllocationResponse:
     return await compute_optimal_cards_allocation(db=db, user=current_user, request=request)

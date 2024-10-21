@@ -14,7 +14,7 @@ async def process_new_enrollment(user: User, db: Session):
     '''
     teller_client = Teller()
     new_enrollments : List[Enrollment] = await read_user_new_enrollment(user=user, db=db)
-    transactions : List[Transaction] = await teller_client.fetch_enrollment_transactions(db=db, enrollment=new_enrollments) 
+    transactions : List[Transaction] = await teller_client.fetch_enrollment_transactions(db=db, enrollment=new_enrollments, should_categorize=True) 
     await update_user_credit_cards(user=user, db=db)
     
 async def receive_teller_enrollment(user: User, access_token: AccessTokenSchema, db: Session):

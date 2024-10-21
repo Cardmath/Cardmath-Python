@@ -82,7 +82,7 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
             
             transactions: List[Transaction] = []
             if (request.account_ids == "all") or (account.id in request.account_ids) :
-                transactions = account.transactions.filter(Transaction.type.notin_(["ach", "transfer", "withdrawal", "atm", "deposit", "wire", "interest" ])).all()
+                transactions = account.transactions.filter(Transaction.type.notin_(["ach", "transfer", "withdrawal", "atm", "deposit", "wire", "interest", "digital_payment" ])).all()
             
             if len(transactions) == 0:
                 print(f"[WARNING] No transactions found for account {account.id}")

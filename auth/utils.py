@@ -1,6 +1,6 @@
 from auth.schemas import User, TokenData
 from database.auth.crud import get_user_by_username 
-from database.sql_alchemy_db import get_db
+from database.sql_alchemy_db import get_sync_db
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -37,7 +37,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def authenticate_user(username: str, password: str, db: Session = Depends(get_db)):
+def authenticate_user(username: str, password: str, db: Session = Depends(get_sync_db)):
     user = get_user_by_username(db, username)
     if not user:
         return False
@@ -48,7 +48,7 @@ def authenticate_user(username: str, password: str, db: Session = Depends(get_db
     return user
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], 
-    db: Session = Depends(get_db)):
+    db: Session = Depends(get_sync_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

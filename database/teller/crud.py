@@ -20,7 +20,6 @@ def create_transaction(db: Session, account: Account, transaction: schemas.Trans
 
     txn_with_id = db.query(Transaction).filter(Transaction.txn_id == transaction.txn_id).first()
     if txn_with_id:
-        print("[INFO] Transaction already exists, skipping insertion")
         return
          
     db_txn = Transaction(

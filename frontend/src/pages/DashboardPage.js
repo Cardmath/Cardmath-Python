@@ -103,12 +103,12 @@ const DashboardPage = () => {
                 </div>
             </div>
         </div>
-        <div className="min-h-screen flex flex-column relative flex-auto">
-                <div className="flex align-content-end py-3">
-                    <div className="flex-column flex-none shadow-2 surface-card border-round">
+        <div className="flex-auto">
+                <div className="grid align-content-end py-3 h-22rem">
+                    <div className="col-5 shadow-2 surface-card border-round">
                         {heavyHittersCategories && heavyHittersCategories.length > 0 && <HeavyHitterPieChart className="w-full h-full" heavyHitters={heavyHittersCategories} />}
                     </div>
-                    <div className="flex-column flex-grow-1 shadow-2 surface-card border-round p-4 h-full">
+                    <div className="col-7 shadow-2 surface-card border-round">
                         <ChartSlider x={dates} y_list={categories} ready={isMovingAveragesReady}/>
                     </div>
                 </div>

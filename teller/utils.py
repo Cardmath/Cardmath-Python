@@ -5,13 +5,14 @@ from database.creditcard.creditcard import CreditCard
 from database.teller import crud as teller_crud
 from database.teller.transactions import Transaction
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+from insights.categorize import run_categorize_transactions_in_new_thread
+from pathlib import Path
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from teller.schemas import TransactionSchema, AccountSchema
 from typing import List, Union
 from typing import Optional
-from pathlib import Path
-from dotenv import load_dotenv
 
 import database.teller.crud as teller_crud 
 
@@ -127,7 +128,7 @@ class Teller:
                 fetched_transactions.extend(transactions_temp)
         return fetched_transactions     
         
-    async def fetch_enrollment_transactions(self, enrollment: Optional[Enrollment], db: Session) -> List[Transaction]:
+    async def fetch_enrollment_transactions(self, enrollment: Optional[Enrollment], db: Session, should_categorize: bool = False) -> List[Transaction]:
         if enrollment is None:
             print("[WARNING] Enrollment is None")
             return []
@@ -138,18 +139,18 @@ class Teller:
         for account_schema in user_accounts:
             fetched_transactions = await self.fetch_transactions_from_account(account=account_schema, 
                                             access_token=enrollment.access_token,
-                                            db=db)
+                                            db=db, should_categorize=should_categorize)
             out_transactions.extend(fetched_transactions)
         return out_transactions
-            
-    async def fetch_transactions_from_account(self, account : Union[Account, AccountSchema], access_token : str, db : Session) -> List[TransactionSchema]:
+
+    async def fetch_transactions_from_account(self, account: Union[Account, AccountSchema], access_token: str, db: Session, should_categorize: bool = False) -> List[TransactionSchema]:
         acc_id = None
         if isinstance(account, Account):
             acc_id = account.id
         elif isinstance(account, AccountSchema):
             acc_id = account.id
             account = db.query(Account).filter(Account.id == acc_id).first()
-        else :
+        else:
             raise TypeError("Invalid account type")
         
         uri = f"{TELLER_ACCOUNTS}/{acc_id}/{TRANSACTIONS}"
@@ -157,14 +158,21 @@ class Teller:
         if response.status_code != 200:
             raise Exception(response, "Failed to fetch transactions")
 
-        transactions : dict = response.json()
-        out_transactions = []
+        transactions: dict = response.json()
+        unknown_transactions = []
         for transaction in transactions:
-            parsed_transaction : TransactionSchema = TransactionSchema.model_validate(transaction)
-            teller_crud.create_transaction(db, account= account, transaction=parsed_transaction)
-            out_transactions.append(parsed_transaction)
-        return out_transactions
-    
+            parsed_transaction: TransactionSchema = TransactionSchema.model_validate(transaction)
+            
+            if parsed_transaction.details.category in ["unknown", "general"] and should_categorize:
+                unknown_transactions.append(parsed_transaction.txn_id)
+            
+            teller_crud.create_transaction(db, account=account, transaction=parsed_transaction)
+
+        # Run categorize_transactions in a separate thread in the background
+        run_categorize_transactions_in_new_thread(unknown_transactions, 100)
+
+        return unknown_transactions
+
     async def fetch_transactions_from_list_account(self, accounts : List[Account], access_token : str, db : Session):
         out_transactions : List[Transaction] = []
         for account in accounts:

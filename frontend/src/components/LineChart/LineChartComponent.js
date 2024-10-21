@@ -43,8 +43,8 @@ const LineChartComponent = (props) => {
 
   return (
     <div>
-      <div style={{ height: "500px", width: "100%" }}>
-        <canvas ref={canvasRef}></canvas>
+      <div class="chart-container" style={{position: "relative", height:"40vh", width:"50vw" }} >
+        <canvas id="chart" ref={canvasRef}></canvas>
       </div>
       {chartData && chartData.length > 0 && (
         <SliderComponent data={chartData} handleChart={handleChart} />

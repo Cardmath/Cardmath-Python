@@ -1,6 +1,6 @@
 from database.auth.user import Account
 from datetime import date
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator, Field
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator, Field, AliasChoices
 from typing import Optional, List
 
 import creditcard.enums as enums
@@ -85,7 +85,7 @@ class TransactionSchema(BaseModel):
     account_id: str
     amount: float
     status: str
-    txn_id : str = Field(None, alias='id')
+    txn_id : str = Field(None, alias=AliasChoices('txn_id', 'id'))
     type : str
     running_balance: Optional[float] = None 
     details: TransactionDetailsSchema
