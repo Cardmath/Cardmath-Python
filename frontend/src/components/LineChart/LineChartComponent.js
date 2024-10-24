@@ -43,7 +43,7 @@ const LineChartComponent = (props) => {
 
   return (
     <div>
-      <div class="chart-container" style={{position: "relative", height:"40vh", width:"50vw" }} >
+      <div class="chart-container" style={{position: "relative", height:"40vh", width:"53vw" }} >
         <canvas id="chart" ref={canvasRef}></canvas>
       </div>
       {chartData && chartData.length > 0 && (

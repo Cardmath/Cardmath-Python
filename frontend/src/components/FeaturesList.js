@@ -2,7 +2,7 @@ import React from 'react';
 
 const FeaturesList = ({ features }) => {
     return (
-        <div className="bg-gray-900 px-4 py-8 md:px-6 lg:px-8">
+        <div className="bg-gray-900 px-4 py-4 md:px-6 lg:px-8">
             <div className="grid">
                 <div className="col-12 md:col-6">
                     <div className="pr-0 md:pr-8">

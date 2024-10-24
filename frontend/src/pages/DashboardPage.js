@@ -86,7 +86,7 @@ const DashboardPage = () => {
                             </a>
                         </li>
                         <li>
-                            <a className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-left-2 border-transparent hover:border-300 transition-duration-150 transition-colors">
+                            <a onClick = {() => window.location.href="http://localhost:3000/preferences"} className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-left-2 border-transparent hover:border-300 transition-duration-150 transition-colors">
                                 <i className="pi pi-heart-fill mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
                                 <span className="font-medium inline text-base lg:text-xs lg:block">Preferences</span>
                                 <Ripple />
@@ -99,22 +99,31 @@ const DashboardPage = () => {
                                 <Ripple />
                             </a>
                         </li>
+                        <li>
+                            <a onClick = {() => window.location.href="http://localhost:3000/connect"} className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-left-2 border-transparent hover:border-300 transition-duration-150 transition-colors">
+                                <i className="pi pi-link mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
+                                <span className="font-medium inline text-base lg:text-xs lg:block">Connect Bank Accounts</span>
+                                <Ripple />
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
         </div>
-        <div className="flex-auto">
-                <div className="grid align-content-end py-3 h-22rem">
+        <div className="grid">
+                <div className="grid surface-surface-ground">                                                 
+                        <OptimalAllocationSavingsCard className="h-12rem w-full" />
+                </div>
+                <div className="grid align-content-end py-2">
                     <div className="col-5 shadow-2 surface-card border-round">
-                        {heavyHittersCategories && heavyHittersCategories.length > 0 && <HeavyHitterPieChart className="w-full h-full" heavyHitters={heavyHittersCategories} />}
+                        {heavyHittersCategories && heavyHittersCategories.length > 0 && <HeavyHitterPieChart heavyHitters={heavyHittersCategories} />}
                     </div>
                     <div className="col-7 shadow-2 surface-card border-round">
                         <ChartSlider x={dates} y_list={categories} ready={isMovingAveragesReady}/>
                     </div>
                 </div>
                 <div className="grid p-3 gap-3 surface-surface-ground">                                                 
-                            <ConnectBanks className="col-6"/>
-                            <OptimalAllocationSavingsCard className="col-2" />
+                        <ConnectBanks className="col-6" />
                 </div>
         </div>
     </div>
