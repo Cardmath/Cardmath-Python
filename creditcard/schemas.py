@@ -23,12 +23,14 @@ class CardRatingsScrapeSchema(BaseModel):
         benefits = await get_benefits(self.unparsed_card_attributes)
         credit_needed = get_credit_needed(self.unparsed_credit_needed)
         reward_category_map = await get_reward_category_map(self.unparsed_card_attributes)
-        apr = get_apr(self.unparsed_card_attributes)
+        apr = await get_apr(self.unparsed_card_attributes)
+        sign_on_bonus = await get_sign_on_bonus(self.unparsed_card_attributes)
         return CreditCardSchema(name=name, 
                           issuer=issuer,
                           benefits=benefits,
                           credit_needed=credit_needed,
                           reward_category_map=reward_category_map,
+                          sign_on_bonus=sign_on_bonus,
                           apr=apr)
         
     def cardratings_scrape(self):
@@ -46,7 +48,8 @@ class CreditCardSchema(BaseModel):
     reward_category_map : List[RewardCategoryRelation]
     benefits : List[Benefit]
     credit_needed : List[CreditNeeded]
-    apr : float
+    apr : List[APR]
+    sign_on_bonus : Optional[List[ConditionalSignOnBonus]] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -92,9 +95,11 @@ class CreditCardSchema(BaseModel):
                           benefits=TypeAdapter(List[Benefit]).dump_python(self.benefits),
                           credit_needed=TypeAdapter(List[CreditNeeded]).dump_python(self.credit_needed),
                           reward_category_map=TypeAdapter(List[RewardCategoryRelation]).dump_python(self.reward_category_map),
-                          apr=self.apr)
+                          sign_on_bonus=TypeAdapter(List[ConditionalSignOnBonus]).dump_python(self.sign_on_bonus),
+                          apr=TypeAdapter(List[APR]).dump_python(self.apr))
 
 class CreditCardsFilter(BaseModel):
+    id_in_db : Optional[List[int]]
     issuer : Optional[List[Issuer]]
     credit_needed : Optional[List[CreditNeeded]]
     benefits : Optional[List[Benefit]]
@@ -102,6 +107,7 @@ class CreditCardsFilter(BaseModel):
 
 class CreditCardsDatabaseRequest(BaseModel):
     card_details: Union[str, CreditCardsFilter] = "all"
+    max_num : Optional[int] = None
 
     @field_validator('card_details')
     @classmethod

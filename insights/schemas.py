@@ -1,13 +1,46 @@
 from datetime import date
+from datetime import date
+from pydantic import BaseModel
 from pydantic import BaseModel, field_validator, model_validator
 from typing import List, Union, Optional, Tuple
 
 import creditcard.enums as enums
+
 import re
+
+class MonthlyTimeframe(BaseModel):
+    start_month: date
+    end_month: date
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_timeframe(cls, values):
+
+        start_month = values.get('start_month')
+        end_month = values.get('end_month')
+
+        if isinstance(start_month, str) and isinstance(end_month, str):
+            values['start_month'] = date.fromisoformat(start_month).replace(day=1)
+            start_month = values['start_month']
+
+            values['end_month'] = date.fromisoformat(end_month).replace(day=1)
+            end_month = values['end_month']
+
+        if start_month and end_month:
+            if end_month < start_month:
+                raise ValueError("End month must be after start month")
+            if start_month > date.today():
+                raise ValueError("Start month must be in the past")
+            if end_month > date.today():
+                raise ValueError("End month can't be in the future")
+
+        return values
+
 
 class HeavyHittersRequest(BaseModel):
     account_ids: Union[str, List[str]]
-    top_n: int = None # if none then all     
+    top_n: int = None # if none then all    
+    timeframe: Optional[MonthlyTimeframe] = None 
 
     @field_validator("top_n")
     @classmethod

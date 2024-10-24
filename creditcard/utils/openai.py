@@ -1,4 +1,4 @@
-from creditcard.enums import PurchaseCategory, RewardUnit, Benefit
+from creditcard.enums import PurchaseCategory, RewardUnit, Benefit, Vendors, APRType
 from openai import OpenAI
 from pydantic import BaseModel, TypeAdapter
 from typing import Union
@@ -68,7 +68,8 @@ def purchase_category_map_prompt(card_attributes) :
     {separator.join([reward_unit.value for reward_unit in RewardUnit])}
 
     valid values for the "amount" json field:
-    A small positive number that represents the number of points awarded to the transaction.
+    A small positive number that represents the number of points awarded to the transaction. 
+    This number should be between 0 and 100. We are ignoring sign-on bonuses 
 
     Here is the text you should analyze:
     "{card_attributes}"
@@ -147,4 +148,88 @@ def benefits_response_format():
                 },
                 "strict": True
             }
+    }
+def conditional_sign_on_bonus_prompt(card_attributes):
+    return f"""
+    Your task is to extract any and all conditional sign-on bonuses described in the following credit card details. Conditional sign-on bonuses are typically bonuses that require certain actions to be completed (e.g., spending a specific amount within a time frame) in order to qualify.
+    Timeframe should be a number that represents months 
+
+    Here is the text you need to analyze:
+    "{card_attributes}"
+
+    """
+
+def conditional_sign_on_bonus_response_format():
+    return {"type": "json_schema",
+            "json_schema": {
+                "name": "conditional_sign_on_bonus_response",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "conditional_sign_on_bonus": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "purchase_type": {"type": "string", "enum": [purchase_category.value for purchase_category in PurchaseCategory] + [vendor.value for vendor in Vendors]},
+                                    "condition_amount": {"type": "number"},
+                                    "timeframe": {"type": "number"},
+                                    "reward_type": {"type": "string", "enum": [reward_unit.value for reward_unit in RewardUnit]},
+                                    "reward_amount": {"type": "number"}
+                                },
+                                "required": ["purchase_type", "condition_amount", "timeframe", "reward_type", "reward_amount"],
+                                "additionalProperties": False,
+                            },
+                        },
+                    },
+                    "required": ["conditional_sign_on_bonus"],
+                    "additionalProperties": False,
+                },
+                "strict": True
+            },
+        }
+
+def apr_prompt(card_attributes):
+    return f"""
+    Your task is to extract any and all APRs described in the following credit card details.
+    Output a list of APRs that have type and amount attributes.
+
+    Here is the text you need to analyze:
+    "{card_attributes}"
+
+    """
+
+def apr_response_format():
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "apr_response",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "apr_list": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "apr": {
+                                    "type": "number",
+                                    "description": "APR must be a positive value less than 100"
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "enum": [apr_type.value for apr_type in APRType],
+                                    "description": "The type of APR"
+                                }
+                            },
+                            "required": ["apr", "type"],
+                            "additionalProperties": False,
+                        }
+                    }
+                },
+                "required": ["apr_list"],
+                "additionalProperties": False,
+            },
+            "strict": True
+        }
     }

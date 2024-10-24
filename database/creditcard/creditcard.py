@@ -14,5 +14,6 @@ class CreditCard(Base):
     reward_category_map = Column(JSON) # Store mapping as json dumps
     benefits = Column(JSON) # Benefits enum in json array
     credit_needed = Column(JSON) # CreditNeeded enum in json array 
-    apr = Column(Float)
+    sign_on_bonus = Column(JSON) # SignOnBonus enum in json array
+    apr = Column(JSON) # APR enum in json array
     users = relationship("User", secondary=user_credit_card_association, back_populates="credit_cards")

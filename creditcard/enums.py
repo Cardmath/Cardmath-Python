@@ -60,6 +60,10 @@ class RewardUnit(str, Enum):
     JETBLUE_TRUEBLUE_POINTS = "JetBlue TrueBlue Points"
     ALASKA_MILEAGE_PLAN_MILES = "Alaska Mileage Plan Miles"
     RADISSON_REWARDS_POINTS = "Radisson Rewards Points"
+    CASHBACK_USD = "Cashback USD"
+    AVIOS = "Avios"
+    AEROPLAN_POINTS = "Aeroplan Points"
+    CHOICE_PRIVILEGES_POINTS = "Choice Privileges Points"
     UNKNOWN = "Unknown"
     
     def get_value(reward_unit) -> float:
@@ -84,7 +88,11 @@ class RewardUnit(str, Enum):
             RewardUnit.IHG_ONE_REWARDS_POINTS: 0.006, 
             RewardUnit.JETBLUE_TRUEBLUE_POINTS: 0.0136,
             RewardUnit.ALASKA_MILEAGE_PLAN_MILES: 0.015, # from 1.2 cents to 1.8 cents. 
-            RewardUnit.RADISSON_REWARDS_POINTS: 0.0045 # average of 0.4 cents to 0.5 cents 
+            RewardUnit.RADISSON_REWARDS_POINTS: 0.0045, # average of 0.4 cents to 0.5 cents 
+            RewardUnit.CASHBACK_USD: 0.01,
+            RewardUnit.AVIOS: 0.0135,
+            RewardUnit.AEROPLAN_POINTS: 0.0145,
+            RewardUnit.CHOICE_PRIVILEGES_POINTS: 0.008
         }
         return _values.get(reward_unit, 0.0)
 
@@ -193,3 +201,10 @@ class Vendors(str, Enum):
     LOWES = "Lowes"
     ALDI = "Aldi"
     COSTCO = "Costco"
+
+class APRType(str, Enum):
+    PURCHASE = "Purchase"
+    CASH_ADVANCE = "Cash Advance"
+    BALANCE_TRANSFER = "Balance Transfer"
+    PROMOTIONAL = "Promotional"
+    PENALTY = "Penalty"

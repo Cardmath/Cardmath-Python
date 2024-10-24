@@ -81,9 +81,11 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
                 continue
             
             transactions: List[Transaction] = []
-            if (request.account_ids == "all") or (account.id in request.account_ids) :
-                transactions = account.transactions.filter(Transaction.type.notin_(["ach", "transfer", "withdrawal", "atm", "deposit", "wire", "interest", "digital_payment" ])).all()
-            
+            if (request.account_ids == "all") or (account.id in request.account_ids):
+                query = account.transactions.filter(Transaction.type.notin_(["ach", "transfer", "withdrawal", "atm", "deposit", "wire", "interest", "digital_payment"]))
+                if request.timeframe:
+                    query = query.filter(Transaction.date.between(request.timeframe.start_month, request.timeframe.end_month))
+                transactions = query.all()
             if len(transactions) == 0:
                 print(f"[WARNING] No transactions found for account {account.id}")
             else :

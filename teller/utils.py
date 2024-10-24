@@ -7,6 +7,7 @@ from database.teller.transactions import Transaction
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from insights.categorize import run_categorize_transactions_in_new_thread
+from creditcard.endpoints.read_database import read_credit_cards_database, CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
 from pathlib import Path
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -18,6 +19,8 @@ import database.teller.crud as teller_crud
 
 import os
 import requests
+import random
+
 
 TELLER_API_ENTRYPOINT = "https://api.teller.io/"
 TELLER_ACCOUNTS = TELLER_API_ENTRYPOINT + "accounts"
@@ -30,12 +33,24 @@ async def update_user_credit_cards(user: User, db: Session) -> List[Account]:
     '''
     Reads all of a user's accounts and determines which ones correspond to credit cards in our DB
     '''
+    environment = os.getenv('ENVIRONMENT', 'prod')  
+        
     out_cards : List[CreditCard] = []
     enrollments : List[Enrollment] = await teller_crud.read_user_enrollments(user, db)
     for enrollment in enrollments:
         accounts : List[Account] = await read_enrollment_accounts(enrollment, db)
         for account in accounts:
-            credit_cards : List[CreditCard] = await get_account_credit_cards(account, db)
+            credit_cards : List[CreditCard] = []
+            if environment == 'dev' and len(user.credit_cards) < 5: 
+                response: CreditCardsDatabaseResponse = await read_credit_cards_database(request=CreditCardsDatabaseRequest(max_num=50), db=db)
+                if response.credit_card:
+                    random_card = random.choice(response.credit_card).credit_card()
+                    credit_cards = [random_card]
+                    print(f"[DEVELOPMENT][INFO] assigned {random_card.name} to {account.name}")
+
+            if environment == 'prod':
+                credit_cards = await get_account_credit_cards(account, db)
+            
             out_cards.extend(credit_cards)
     
     await user_crud.update_user_with_credit_cards(db, out_cards, user.id)

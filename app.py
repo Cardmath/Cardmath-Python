@@ -20,10 +20,9 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from insights.heavyhitters import read_heavy_hitters
 from insights.moving_averages import compute_categories_moving_averages
-from insights.optimal_cards import compute_optimal_cards_allocation, OptimalCardsAllocationRequest, OptimalCardsAllocationResponse
+from insights.optimal_cards import optimize_credit_card_selection_milp, OptimalCardsAllocationRequest, OptimalCardsAllocationResponse
 from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, CategoriesMovingAveragesRequest, CategoriesMovingAveragesResponse
 from sqlalchemy.orm import Session
-from sqlalchemy.ext.asyncio import AsyncSession
 from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
 import auth.utils as auth_utils
@@ -35,6 +34,7 @@ import logging
 SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/Cardmath/Cardmath-Python/server_download_location/cardratings.html"
 
 creditcard.Base.metadata.create_all(bind=sync_engine)
+print_sql_schema(out_name='schema.sql')
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -50,7 +50,7 @@ async def lifespan(app: FastAPI):
         try :
             extract(request=ExtractRequest(file_path=SAFE_LOCAL_DOWNLOAD_SPOT,
                     return_json = False,
-                    max_items_to_extract = 0,
+                    max_items_to_extract = 50,
                     save_to_db=True),
                     db=db)
         except Exception as e:
@@ -162,7 +162,14 @@ async def compute_categories_moving_averages_endpoint(current_user: Annotated[Us
 async def read_credit_cards_database_endpoint(request: CreditCardsDatabaseRequest, db: Session = Depends(get_sync_db)) -> CreditCardsDatabaseResponse:
     return await read_credit_cards_database(db=db, request=request)
 
-@app.post("/compute_optimal_held_cards_allocation")
-async def compute_optimal_held_cards_allocation_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
+@app.post("/compute_optimal_allocation")
+async def compute_optimal_allocation_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
                    request: OptimalCardsAllocationRequest, db: Session = Depends(get_sync_db)) -> OptimalCardsAllocationResponse:
-    return await compute_optimal_cards_allocation(db=db, user=current_user, request=request)
+    print(request)
+    return await optimize_credit_card_selection_milp(db=db, user=current_user, request=request)
+
+@app.post("/read_user_held_cards")
+async def read_user_held_cards_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)]) -> CreditCardsDatabaseResponse:
+    user_cards = current_user.credit_cards
+    user_cards_schemas = [CreditCardSchema.model_validate(cc) for cc in user_cards]
+    return CreditCardsDatabaseResponse(credit_card=user_cards_schemas) 
