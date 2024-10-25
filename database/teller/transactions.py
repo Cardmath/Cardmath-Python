@@ -10,7 +10,7 @@ class Transaction(Base):
     account_id = Column(String, ForeignKey("accounts.id"), nullable=False, index=True) # account_id from teller
     account = relationship("Account", back_populates="transactions")
     amount = Column(Float, nullable=False)
-    date = Column(Date, nullable=False)
+    date = Column(Date, nullable=False, index=True)
     description = Column(String, nullable=False)
     
     details = relationship("TransactionDetails", back_populates="transaction", uselist=False)

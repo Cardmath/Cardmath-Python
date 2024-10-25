@@ -67,9 +67,14 @@ class RMatrixDetails(BaseModel):
     add_size: int
     ccs_added: List[CreditCardSchema]
     ccs_used: List[CreditCardSchema]
+    timeframe: MonthlyTimeframe
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+def calculate_timeframe_years(timeframe: MonthlyTimeframe) -> int:
+    start_date = timeframe.start_month
+    end_date = timeframe.end_month
+    return max(1, (end_date.year - start_date.year + 1))
 
 async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocationRequest) -> RMatrixDetails:
     heavy_hitters_response: HeavyHittersResponse = await read_heavy_hitters(
@@ -98,7 +103,7 @@ async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocat
     R = W.T @ H
 
     # Return both held and added cards in RMatrixDetails
-    return RMatrixDetails(R=R, wallet_size=wallet_size, add_size=add_size, ccs_added=ccs_added, ccs_used=ccs_used)
+    return RMatrixDetails(R=R, wallet_size=wallet_size, add_size=add_size, ccs_added=ccs_added, ccs_used=ccs_used, timeframe=heavy_hitters_response.timeframe) 
 
 async def optimize_credit_card_selection_milp(db: Session, user: User, request: OptimalCardsAllocationRequest) -> OptimalCardsAllocationResponse:
     rmatrix: RMatrixDetails = await compute_r_matrix(db=db, user=user, request=request)
@@ -106,6 +111,7 @@ async def optimize_credit_card_selection_milp(db: Session, user: User, request: 
     R = rmatrix.R
     wallet_size = rmatrix.wallet_size
     add_size = rmatrix.add_size
+    timeframe_years = calculate_timeframe_years(rmatrix.timeframe)
 
     print(f"[INFO] Wallet size: {wallet_size}, add size: {add_size}")
 
@@ -132,8 +138,17 @@ async def optimize_credit_card_selection_milp(db: Session, user: User, request: 
             card = rmatrix.ccs_added[idx - wallet_size] if idx >= wallet_size else rmatrix.ccs_used[idx]
             sign_on_bonus_values[idx] = await compute_user_card_sign_on_bonus_value(user, db, card)
 
+    annual_fee_values = [0] * C
+    for idx in range(C):
+        card = rmatrix.ccs_added[idx - wallet_size] if idx >= wallet_size else rmatrix.ccs_used[idx]
+        if card.annual_fee:
+            waived_years = card.annual_fee.waived_for
+            effective_years = max(0, timeframe_years - waived_years)
+            annual_fee_values[idx] = effective_years * card.annual_fee.fee_usd
+
+    # Set the objective function to maximize rewards minus annual fees
     model.setObjective(
-        quicksum(x[i] * (quicksum(R[i][j] for j in range(H)) + sign_on_bonus_values[i]) for i in range(C)),
+        quicksum(x[i] * (quicksum(R[i][j] for j in range(H)) + sign_on_bonus_values[i] - annual_fee_values[i]) for i in range(C)),
         "maximize"
     )
 

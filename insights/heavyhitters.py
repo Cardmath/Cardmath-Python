@@ -3,6 +3,7 @@ from database.auth.user import Account
 from database.auth.user import User
 from database.teller.transactions import Transaction, Counterparty
 from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema, VENDOR_CONST, CATEGORY_CONST
+from insights.schemas import MonthlyTimeframe
 from pydantic import TypeAdapter
 from sqlalchemy.orm import Session
 from teller.schemas import TransactionSchema
@@ -68,6 +69,12 @@ class TwoPassHeavyHitters:
 async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersRequest) -> HeavyHittersResponse:
         teller_client = teller_utils.Teller() 
         accounts: List[Account] = await teller_client.get_list_enrollments_accounts(enrollments=user.enrollments, db=db)
+        
+        start_date=None
+        end_date = None
+        if request.timeframe:
+            start_date = request.timeframe.start_month
+            end_date = request.timeframe.end_month
 
         if len(accounts) == 0:
             print(f"[INFO] No accounts found for user {user.id}")
@@ -85,6 +92,10 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
                 query = account.transactions.filter(Transaction.type.notin_(["ach", "transfer", "withdrawal", "atm", "deposit", "wire", "interest", "digital_payment"]))
                 if request.timeframe:
                     query = query.filter(Transaction.date.between(request.timeframe.start_month, request.timeframe.end_month))
+                if not start_date or not end_date:
+                    start_date = query.order_by(Transaction.date.asc()).first().date
+                    end_date = query.order_by(Transaction.date.desc()).first().date
+                    query = query.filter(Transaction.date.between(start_date, end_date))
                 transactions = query.all()
             if len(transactions) == 0:
                 print(f"[WARNING] No transactions found for account {account.id}")
@@ -117,7 +128,7 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
             if hh_category is not None:
                 out_categories.append(HeavyHitterSchema(type=CATEGORY_CONST, category=hh_category, percent=percent, amount=amount))
 
-        return HeavyHittersResponse(vendors=out_vendors, categories=out_categories)
+        return HeavyHittersResponse(vendors=out_vendors, categories=out_categories, timeframe=MonthlyTimeframe(start_month=start_date, end_month=end_date))
 
 
 def get_transaction_counterparty_id(transaction: Union[TransactionSchema, Transaction]):
