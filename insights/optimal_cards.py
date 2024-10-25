@@ -125,43 +125,38 @@ async def optimize_credit_card_selection_milp(db: Session, user: User, request: 
         print("[ERROR] R matrix is empty")
         return OptimalCardsAllocationResponse(total_reward_usd=0, total_reward_allocation=[], summary=[], cards_used=[], cards_added=[])
 
-    C = len(R)
-    H = len(R[0])
+    C = len(R)  # Number of cards
+    H = len(R[0])  # Number of categories (columns)
 
-    x = {}
-    for i in range(C):
-        x[i] = model.addVar(vtype="B", name=f"x[{i}]")
+    # Define binary variables for card-category assignment
+    y = {(i, j): model.addVar(vtype="B", name=f"y[{i},{j}]") for i in range(C) for j in range(H)}
 
-    sign_on_bonus_values = [0] * C
-    if request.use_sign_on_bonus:
-        for idx in range(C):
-            card = rmatrix.ccs_added[idx - wallet_size] if idx >= wallet_size else rmatrix.ccs_used[idx]
-            sign_on_bonus_values[idx] = await compute_user_card_sign_on_bonus_value(user, db, card)
-
-    annual_fee_values = [0] * C
-    for idx in range(C):
-        card = rmatrix.ccs_added[idx - wallet_size] if idx >= wallet_size else rmatrix.ccs_used[idx]
-        if card.annual_fee:
-            waived_years = card.annual_fee.waived_for
-            effective_years = max(0, timeframe_years - waived_years)
-            annual_fee_values[idx] = effective_years * card.annual_fee.fee_usd
-
-    # Set the objective function to maximize rewards minus annual fees
+    # Objective function to maximize rewards from assigned card-category pairs
     model.setObjective(
-        quicksum(x[i] * (quicksum(R[i][j] for j in range(H)) + sign_on_bonus_values[i] - annual_fee_values[i]) for i in range(C)),
+        quicksum(y[i, j] * R[i][j] for i in range(C) for j in range(H)),
         "maximize"
     )
 
+    # Constraint: Ensure only one card is assigned per category
+    for j in range(H):
+        model.addCons(quicksum(y[i, j] for i in range(C)) <= 1)
+
+    # Constraints for total cards used based on request
     if request.to_use > wallet_size:
         request.to_use = wallet_size
+    model.addCons(quicksum(y[i, j] for i in wallet_indices for j in range(H)) <= request.to_use)
+    model.addCons(quicksum(y[i, j] for i in eligible_indices for j in range(H)) <= request.to_add)
 
-    model.addCons(quicksum(x[i] for i in range(C)) == request.to_use + request.to_add)
-    model.addCons(quicksum(x[i] for i in wallet_indices) == request.to_use)
-    model.addCons(quicksum(x[i] for i in eligible_indices) == request.to_add)
-
+    # Solve the model
     model.optimize()
 
-    selected_cards = [i for i in range(C) if model.getVal(x[i]) > 0.5]
+    # Check feasibility
+    if model.getStatus() != "optimal" and model.getStatus() != "feasible":
+        print("[ERROR] No feasible solution found.")
+        return OptimalCardsAllocationResponse(total_reward_usd=0, total_reward_allocation=[], summary=[], cards_used=[], cards_added=[])
+
+    # Extract results if feasible
+    selected_cards = [i for i in range(C) if any(model.getVal(y[i, j]) > 0.5 for j in range(H))]
     total_reward_usd = round(model.getObjVal(), 2)
 
     cards_added = []
@@ -172,7 +167,7 @@ async def optimize_credit_card_selection_milp(db: Session, user: User, request: 
     cards_used = []
     if request.return_cards_used:
         cards_used = [CreditCardSchema.model_validate(cc) for cc in rmatrix.ccs_used]
-    
+
     return OptimalCardsAllocationResponse(
         total_reward_usd=total_reward_usd,
         total_reward_allocation=selected_cards,
