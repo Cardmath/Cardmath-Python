@@ -26,7 +26,7 @@ export default function CreditCardFaceouts() {
         <DataView
             value={creditCards}
             layout="grid"
-            itemTemplate={(e) => <CreditCardItemTemplate cardData={e} />}
+            itemTemplate={(e) => <CreditCardItemTemplate cardData={e} sizingCss="h-4 w-4" />}
             paginator
             rows={9}
         />
