@@ -233,3 +233,43 @@ def apr_response_format():
             "strict": True
         }
     }
+
+def annual_fee_prompt(card_attributes):
+    return f"""
+    Your task is to identify and extract any mentioned annual fees from the following credit card details, along with information on how long, if at all, the annual fee is waived after sign-up.
+    
+    Here is the text you need to analyze:
+    "{card_attributes}"
+
+    """
+
+def annual_fee_response_format():
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "annual_fee_response",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "annual_fee": {
+                        "type": "object",
+                        "properties": {
+                            "fee_usd": {
+                                "type": "number",
+                                "description": "amount of fee in USD"
+                            },
+                            "waived_for": {
+                                "type": "number",
+                                "description": "number of years the annual fee is waived for after sign-up, non-negative number typically 0 or 1 but may be greater than 1"
+                            }
+                        },
+                        "required": ["fee_usd", "waived_for"],
+                        "additionalProperties": False,
+                    }
+                },
+                "required": ["annual_fee"],
+                "additionalProperties": False,
+            },
+            "strict": True
+        }
+    }

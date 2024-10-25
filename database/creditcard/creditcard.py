@@ -16,4 +16,5 @@ class CreditCard(Base):
     credit_needed = Column(JSON) # CreditNeeded enum in json array 
     sign_on_bonus = Column(JSON) # SignOnBonus enum in json array
     apr = Column(JSON) # APR enum in json array
+    annual_fee = Column(JSON)
     users = relationship("User", secondary=user_credit_card_association, back_populates="credit_cards")

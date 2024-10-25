@@ -69,10 +69,10 @@ class ConditionalSignOnBonusResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-async def get_sign_on_bonus(card_description : str) -> List[ConditionalSignOnBonus]:
+async def get_sign_on_bonus(card_description : str):
     prompt = conditional_sign_on_bonus_prompt(card_description)
-    sign_on_bonus : ConditionalSignOnBonusResponse = await structure_with_openai(prompt=prompt, response_format=conditional_sign_on_bonus_response_format(), schema=ConditionalSignOnBonusResponse)
-    return sign_on_bonus.conditional_sign_on_bonus
+    response : ConditionalSignOnBonusResponse = await structure_with_openai(prompt=prompt, response_format=conditional_sign_on_bonus_response_format(), schema=ConditionalSignOnBonusResponse)
+    return response.conditional_sign_on_bonus
 
 class APR(BaseModel):
     apr : float
@@ -92,4 +92,32 @@ class APRResponse(BaseModel):
 async def get_apr(card_description):
     prompt = apr_prompt(card_description)
     apr: APRResponse = await structure_with_openai(prompt=prompt, response_format=apr_response_format(), schema=APRResponse)
-    return apr.apr_list
+    return TypeAdapter(List[APR]).dump_python(apr.apr_list)
+
+class AnnualFee(BaseModel):
+    fee_usd : float = 0
+    waived_for : int = 0
+
+    @field_validator('fee_usd')
+    def fee_usd_must_be_reasonable(cls, v):
+        if v < 0:
+            raise ValueError('Fee must be positive to be reasonable')
+        return v
+    
+    @field_validator('waived_for')
+    def waived_for_must_be_reasonable(cls, v):
+        if v < 0:
+            raise ValueError('Waived for must be positive to be reasonable')
+        return v
+
+    model_config = ConfigDict(from_attributes=True)
+
+class AnnualFeeResponse(BaseModel):
+    annual_fee: AnnualFee
+
+    model_config = ConfigDict(from_attributes=True)
+
+async def get_annual_fee(card_description):
+    prompt = annual_fee_prompt(card_description)
+    annual_fee = await structure_with_openai(prompt, response_format=annual_fee_response_format(), schema=AnnualFeeResponse)
+    return annual_fee
