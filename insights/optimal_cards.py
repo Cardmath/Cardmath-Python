@@ -2,13 +2,13 @@ from creditcard.endpoints.read_database import read_credit_cards_database, Credi
 from creditcard.enums import * 
 from creditcard.schemas import CreditCardSchema
 from database.auth.user import User
-from database.creditcard.creditcard import CreditCard
+from insights.category_spending_prediction import compute_user_card_sign_on_bonus_value
 from insights.heavyhitters import read_heavy_hitters, HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema
+from insights.schemas import MonthlyTimeframe
 from pydantic import BaseModel, ConfigDict
+from pyscipopt import Model, quicksum
 from sqlalchemy.orm import Session
 from typing import Optional, List
-from pyscipopt import Model, quicksum
-from insights.schemas import MonthlyTimeframe
 
 import numpy as np
 from datetime import date
@@ -17,6 +17,7 @@ class OptimalCardsAllocationRequest(BaseModel):
     to_use: Optional[int] = 4
     to_add: Optional[int] = 0
     timeframe: Optional[MonthlyTimeframe] = None
+    use_sign_on_bonus: bool = False
     return_cards_used: Optional[bool] = False
     return_cards_added: Optional[bool] = False
 
@@ -45,13 +46,11 @@ def create_cards_matrix(cards : List[CreditCardSchema], heavy_hitters: HeavyHitt
     
     return cards_matrix
 
-# TODO doesn't use vendors yet
 def create_wallet_matrix(user: User, heavy_hitters: HeavyHittersResponse) -> np.array:
     held_cards = user.credit_cards
     held_cards = [CreditCardSchema.model_validate(cc) for cc in held_cards] 
     return create_cards_matrix(held_cards, heavy_hitters)
 
-# TODO doesn't use vendors
 def create_heavy_hitter_matrix(heavy_hitters: HeavyHittersResponse) -> np.array:
     categories: List[HeavyHitterSchema] = heavy_hitters.categories
     vendors: List[HeavyHitterSchema] = heavy_hitters.vendors
@@ -73,27 +72,35 @@ class RMatrixDetails(BaseModel):
 
 
 async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocationRequest) -> RMatrixDetails:
-    heavy_hitters_response: HeavyHittersResponse = await read_heavy_hitters(db=db, user=user, request=HeavyHittersRequest(account_ids="all", timeframe=request.timeframe))    
-    W: np.array = create_wallet_matrix(user=user, heavy_hitters=heavy_hitters_response)
+    heavy_hitters_response: HeavyHittersResponse = await read_heavy_hitters(
+        db=db, user=user, request=HeavyHittersRequest(account_ids="all", timeframe=request.timeframe)
+    )
+    
+    # Process held (wallet) cards
+    held_cards = user.credit_cards
+    ccs_used = [CreditCardSchema.model_validate(cc) for cc in held_cards]
+    W: np.array = create_cards_matrix(ccs_used, heavy_hitters=heavy_hitters_response)
     wallet_size = W.shape[1]
+
+    # Initialize additional cards if needed
     add_size = 0
     ccs_added = []
     if request.to_add > 0:
         cc_response = await read_credit_cards_database(db=db, request=CreditCardsDatabaseRequest(card_details="all"))
-        ccs_added = cc_response.credit_card
-        
-        held_cards = user.credit_cards
-        held_cards = [CreditCardSchema.model_validate(cc) for cc in held_cards] 
-        ccs_added = [cc for cc in ccs_added if cc not in held_cards]
+        ccs_added = [CreditCardSchema.model_validate(cc) for cc in cc_response.credit_card if cc not in ccs_used]
     
         ADD: np.array = create_cards_matrix(ccs_added, heavy_hitters=heavy_hitters_response)
         add_size = ADD.shape[1]
         W = np.hstack([W, ADD])
+
+    # Calculate reward matrix R
     H: np.array = create_heavy_hitter_matrix(heavy_hitters=heavy_hitters_response)
     R = W.T @ H
-    return RMatrixDetails(R=R, wallet_size=wallet_size, add_size=add_size, ccs_added=ccs_added, ccs_used=[])
 
-async def optimize_credit_card_selection_milp(db: Session, user: User, request: OptimalCardsAllocationRequest)  -> OptimalCardsAllocationResponse:
+    # Return both held and added cards in RMatrixDetails
+    return RMatrixDetails(R=R, wallet_size=wallet_size, add_size=add_size, ccs_added=ccs_added, ccs_used=ccs_used)
+
+async def optimize_credit_card_selection_milp(db: Session, user: User, request: OptimalCardsAllocationRequest) -> OptimalCardsAllocationResponse:
     rmatrix: RMatrixDetails = await compute_r_matrix(db=db, user=user, request=request)
 
     R = rmatrix.R
@@ -109,7 +116,7 @@ async def optimize_credit_card_selection_milp(db: Session, user: User, request: 
     model = Model("credit_card_selection")
 
     if R.shape[0] == 0:
-        print("[WARNING] R matrix is empty")
+        print("[ERROR] R matrix is empty")
         return OptimalCardsAllocationResponse(total_reward_usd=0, total_reward_allocation=[], summary=[], cards_used=[], cards_added=[])
 
     C = len(R)
@@ -119,13 +126,18 @@ async def optimize_credit_card_selection_milp(db: Session, user: User, request: 
     for i in range(C):
         x[i] = model.addVar(vtype="B", name=f"x[{i}]")
 
+    sign_on_bonus_values = [0] * C
+    if request.use_sign_on_bonus:
+        for idx in range(C):
+            card = rmatrix.ccs_added[idx - wallet_size] if idx >= wallet_size else rmatrix.ccs_used[idx]
+            sign_on_bonus_values[idx] = await compute_user_card_sign_on_bonus_value(user, db, card)
+
     model.setObjective(
-        quicksum(x[i] * R[i][j] for i in range(C) for j in range(H)),
+        quicksum(x[i] * (quicksum(R[i][j] for j in range(H)) + sign_on_bonus_values[i]) for i in range(C)),
         "maximize"
     )
-    print(f"[INFO] C: {C}, H: {H}, wallet_size: {wallet_size}, add_size: {add_size}")
+
     if request.to_use > wallet_size:
-        print("[WARNING] to_use > wallet_size")
         request.to_use = wallet_size
 
     model.addCons(quicksum(x[i] for i in range(C)) == request.to_use + request.to_add)
@@ -151,4 +163,5 @@ async def optimize_credit_card_selection_milp(db: Session, user: User, request: 
         total_reward_allocation=selected_cards,
         summary=None,
         cards_used=cards_used,
-        cards_added=cards_added)
+        cards_added=cards_added
+    )

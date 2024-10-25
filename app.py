@@ -34,7 +34,6 @@ import logging
 SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/Cardmath/Cardmath-Python/server_download_location/cardratings.html"
 
 creditcard.Base.metadata.create_all(bind=sync_engine)
-print_sql_schema(out_name='schema.sql')
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

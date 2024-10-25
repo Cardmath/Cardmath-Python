@@ -63,6 +63,9 @@ class ConditionalSignOnBonus(BaseModel):
     def serialize_as_months(cls, v):
         if isinstance(v, timedelta):
             return v.days / 30
+        
+    def get_timeframe_in_months(self):
+        return self.timeframe.days / 30
 
 class ConditionalSignOnBonusResponse(BaseModel):
     conditional_sign_on_bonus : List[ConditionalSignOnBonus]

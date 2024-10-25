@@ -35,6 +35,7 @@ const OptimalAllocationSavingsCard = () => {
       body: JSON.stringify({
         to_use: cardsHeld.length,
         to_add: 0,
+        use_sign_on_bonus: false,
         save_to_db: false,
         timeframe: null
       })
@@ -63,7 +64,7 @@ const OptimalAllocationSavingsCard = () => {
       .catch(error => console.error('Error fetching savings data:', error));
   }, [cardsHeld]);
 
-  const fetchOptimalAllocation = async (toUse, toAdd) => {
+  const fetchOptimalAllocation = async (toUse, toAdd, useSignOnBonus) => {
   try {
     const response = await fetchWithAuth('http://localhost:8000/compute_optimal_allocation', {
       method: 'POST',
@@ -72,6 +73,7 @@ const OptimalAllocationSavingsCard = () => {
         to_use: toUse,
         to_add: toAdd,
         timeframe: null,
+        use_sign_on_bonus: useSignOnBonus,
         return_cards_added: true,
         save_to_db: false
       })
@@ -85,7 +87,7 @@ const OptimalAllocationSavingsCard = () => {
 };
 
 useEffect(() => {
-  fetchOptimalAllocation(toUse, toAdd);
+  fetchOptimalAllocation(toUse, toAdd, useSignOnBonus);
 }, []);
 
   useEffect(() => {
@@ -177,7 +179,7 @@ useEffect(() => {
             <span id="numRecommendations" className="p-float-label mt-2">Wallet Recommendation Tolerance</span>
             <InputNumber aria-labelledby='numRecommendations' showButtons suffix="%" inputId="integeronly" className="w-full" value={tolerance} onChange={e => setTolerance(e.value)} min={0} max={100} />
           </div>
-          <Button onClick={() => fetchOptimalAllocation(toUse,toAdd)} className='w-full mt-5' label="Compute" />
+          <Button onClick={() => fetchOptimalAllocation(toUse,toAdd,useSignOnBonus)} className='w-full mt-5' label="Compute" />
         </div>
         <div className="col-8 grid">
           <div className="col-6 grid flex justify-content-center align-items-start">
