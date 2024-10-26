@@ -237,8 +237,10 @@ def apr_response_format():
 def annual_fee_prompt(card_attributes):
     return f"""
     Your task is to identify and extract any mentioned annual fees from the following credit card details, along with information on how long, if at all, the annual fee is waived after sign-up.
-    
-    Here is the text you need to analyze:
+    For example if you see "Low $95 annual fee." that means fee_usd should be 95
+    If you see no annual fee, then fee_usd should be 0. 
+
+    Here is the text describing the credit card you need to analyze:
     "{card_attributes}"
 
     """
@@ -256,7 +258,7 @@ def annual_fee_response_format():
                         "properties": {
                             "fee_usd": {
                                 "type": "number",
-                                "description": "amount of fee in USD"
+                                "description": "amount of annual fee in USD"
                             },
                             "waived_for": {
                                 "type": "number",

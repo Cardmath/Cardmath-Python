@@ -57,11 +57,32 @@ const CreditCardItemTemplate = ({ cardData , sizingCss = "h-4 w-4"}) => {
                     {cardData.apr.length > 0 && 
                         <div>
                             <b>APR:</b>
-                            <ul>
+                            <ul className='m-0'>
                                 {cardData.apr.map(apr => (
                                     <li key={`${apr.type}_${apr.apr}`}>{apr.type}: {apr.apr}%</li>
                                 ))}
                             </ul>
+                        </div>
+                    }
+                </div>
+                <div className="m-0">
+                    {cardData.annual_fee && 
+                        <div>
+                            {cardData.annual_fee.fee_usd === 0 && cardData.annual_fee.waived_for === 0 &&
+                                <b>No Annual Fee!</b>
+                            }
+
+                            {cardData.annual_fee.fee_usd > 0 &&
+                            <div>
+                                <b>Annual Fee:</b>
+                                <div className='text-base'>${cardData.annual_fee.fee_usd}</div>
+                            </div>
+                            }
+                            
+                            {cardData.annual_fee.waived_for > 0 &&
+                                <div className='text-base'>Waived for {cardData.annual_fee.waived_for} years</div>
+                            }
+
                         </div>
                     }
                 </div>

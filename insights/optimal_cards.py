@@ -26,8 +26,13 @@ class HeldCardsUseSummary(BaseModel):
     value: float
 
 class OptimalCardsAllocationResponse(BaseModel):
+    timeframe: MonthlyTimeframe
     total_reward_usd: float
     total_reward_allocation: List[int]
+
+    total_annual_fee_held_cards_usd: float = 0
+    total_annual_fee_added_cards_usd: float = 0
+
     summary: Optional[List[HeldCardsUseSummary]] = None
     cards_used: Optional[List[CreditCardSchema]] = None
     cards_added: Optional[List[CreditCardSchema]] = None
@@ -131,9 +136,24 @@ async def optimize_credit_card_selection_milp(db: Session, user: User, request: 
     # Define binary variables for card-category assignment
     y = {(i, j): model.addVar(vtype="B", name=f"y[{i},{j}]") for i in range(C) for j in range(H)}
 
-    # Objective function to maximize rewards from assigned card-category pairs
+    # Calculate sign-on bonus and annual fee for each card
+    sign_on_bonus_values = [0] * C
+    if request.use_sign_on_bonus:
+        for idx in range(C):
+            card = rmatrix.ccs_added[idx - wallet_size] if idx >= wallet_size else rmatrix.ccs_used[idx]
+            sign_on_bonus_values[idx] = await compute_user_card_sign_on_bonus_value(user, db, card)
+
+    annual_fee_values = [0] * C
+    for idx in range(C):
+        card = rmatrix.ccs_added[idx - wallet_size] if idx >= wallet_size else rmatrix.ccs_used[idx]
+        if card.annual_fee:
+            waived_years = card.annual_fee.waived_for
+            effective_years = max(0, timeframe_years - waived_years)
+            annual_fee_values[idx] = effective_years * card.annual_fee.fee_usd
+
+    # Objective function to maximize rewards, considering sign-on bonus and annual fee
     model.setObjective(
-        quicksum(y[i, j] * R[i][j] for i in range(C) for j in range(H)),
+        quicksum(y[i, j] * (R[i][j] + sign_on_bonus_values[i] - annual_fee_values[i]) for i in range(C) for j in range(H)),
         "maximize"
     )
 
@@ -169,6 +189,7 @@ async def optimize_credit_card_selection_milp(db: Session, user: User, request: 
         cards_used = [CreditCardSchema.model_validate(cc) for cc in rmatrix.ccs_used]
 
     return OptimalCardsAllocationResponse(
+        timeframe=rmatrix.timeframe,
         total_reward_usd=total_reward_usd,
         total_reward_allocation=selected_cards,
         summary=None,

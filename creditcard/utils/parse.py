@@ -98,8 +98,8 @@ async def get_apr(card_description):
     return TypeAdapter(List[APR]).dump_python(apr.apr_list)
 
 class AnnualFee(BaseModel):
-    fee_usd : float = 0
-    waived_for : int = 0
+    fee_usd : float
+    waived_for : int
 
     @field_validator('fee_usd')
     def fee_usd_must_be_reasonable(cls, v):
@@ -122,5 +122,5 @@ class AnnualFeeResponse(BaseModel):
 
 async def get_annual_fee(card_description):
     prompt = annual_fee_prompt(card_description)
-    annual_fee = await structure_with_openai(prompt, response_format=annual_fee_response_format(), schema=AnnualFeeResponse)
-    return annual_fee
+    annual_fee: AnnualFeeResponse = await structure_with_openai(prompt, response_format=annual_fee_response_format(), schema=AnnualFeeResponse)
+    return annual_fee.annual_fee
