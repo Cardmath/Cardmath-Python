@@ -1,4 +1,5 @@
 __pycache__
+cardratings.html
 *.pyc
 .DS_Store
 # Ignore files with .db in their names
