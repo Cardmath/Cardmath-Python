@@ -114,10 +114,19 @@ const AuthPage = ({ userHasAccount }) => {
     };
 
     return (
-        <div> 
+        <div
+            style={{
+                background: 'linear-gradient(120deg, hsl(146deg 96% 28%) 0%, hsl(147deg 95% 27%) 12%, hsl(148deg 95% 26%) 18%, hsl(149deg 95% 26%) 22%, hsl(150deg 96% 25%) 26%, hsl(151deg 96% 24%) 29%, hsl(152deg 97% 23%) 33%, hsl(153deg 94% 20%) 36%, hsl(154deg 92% 18%) 39%, hsl(156deg 91% 15%) 42%, hsl(159deg 91% 13%) 44%, hsl(163deg 92% 10%) 47%, hsl(169deg 95% 8%) 50%, hsl(171deg 95% 10%) 53%, hsl(172deg 95% 12%) 56%, hsl(173deg 95% 15%) 58%, hsl(173deg 96% 18%) 61%, hsl(174deg 96% 20%) 64%, hsl(174deg 97% 23%) 67%, hsl(174deg 96% 25%) 71%, hsl(174deg 96% 28%) 74%, hsl(174deg 96% 30%) 78%, hsl(174deg 96% 33%) 82%, hsl(174deg 96% 36%) 88%, hsl(174deg 96% 38%) 100%)',
+                backgroundSize: 'cover',
+                minHeight: '100vh',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}
+            className="px-4 py-8 md:px-6 lg:px-8"
+        >
             <Alert visible={alert.visible} message={alert.message} type={alert.type} heading={alert.heading} setVisible={(visible) => setAlert({ ...alert, visible })}/>
-            <div style={{ background: 'url("hero-2.jpg") no-repeat', backgroundSize: 'cover' }} className="px-4 py-8 md:px-6 lg:px-8">
-                <div className="flex flex-wrap">
+            <div className="flex flex-wrap">
                     <div className="w-full lg:w-6 p-4 lg:p-7" style={{ backgroundColor: 'rgba(255,255,255,.7)' }}>
                         <img src="logos/svg/Black logo - no background.svg" alt="Image" height="50" className="mb-6" />
                         <div className="text-xl text-black-alpha-90 font-500 mb-3">Welcome to Cardmath</div>
@@ -187,7 +196,6 @@ const AuthPage = ({ userHasAccount }) => {
                             Don't have an account? <a href="/register" tabIndex="0" className="font-medium text-blue-500">Sign up</a>
                         </div>
                     </div>
-                </div>
             </div>
         </div>
     );

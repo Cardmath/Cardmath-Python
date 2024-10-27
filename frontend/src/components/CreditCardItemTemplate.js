@@ -49,7 +49,7 @@ const CreditCardItemTemplate = ({ cardData , sizingCss = "h-4 w-4"}) => {
                 <ScrollPanel style={{ width: '100%', height: '100px' }}>
                     <ul className="m-0">
                         {cardData.reward_category_map.map(reward => (
-                            <li key={reward.category}>{reward.category}: {reward.reward_unit} {reward.amount}</li>
+                            <li key={reward.category}>Spend one USD on {reward.category} and get {reward.amount}{reward.reward_unit === 'Cashback USD' && '%'} {reward.reward_unit}</li>
                         ))}
                     </ul>
                 </ScrollPanel>

@@ -17,7 +17,6 @@ const OptimalAllocationSavingsCard = () => {
   const [toUse, setToUse] = useState(4);
 
   const [useSignOnBonus, setUseSignOnBonus] = useState(false);
-  const [maxNumMonths, setMaxNumMonths] = useState(3);
 
   const [cardsHeld, setCardsHeld] = useState([]);
   const [recommendedCards, setRecommendedCards] = useState([]);
@@ -167,8 +166,6 @@ useEffect(() => {
             <p className='font-italic'>Include sign-on bonuses to highlight cards with high short-term value. Disabling this will give a clearer picture of long-term rewards, helping you choose a card that's more beneficial over time.</p>
             <span id="switch1" className="p-float-label mt-2">Consider Sign on Bonus in Calculation</span>
             <InputSwitch className="align-self-center" aria-labelledby='switch1' checked={useSignOnBonus} onChange={e => setUseSignOnBonus(e.value)} />  
-            <span id="monthsInput" className="p-float-label mt-2">Months to Consider for Sign On Bonus</span>
-            <InputNumber aria-labelledby='monthsInput' showButtons inputId="integeronly" className="w-full" value={maxNumMonths} onChange={e => setMaxNumMonths(e.value)} min={0} max={5} />
           </div>
           
           <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'> 

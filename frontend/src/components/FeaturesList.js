@@ -24,8 +24,17 @@ const FeaturesList = ({ features }) => {
                         </div>
                     </div>
                 </div>
-                <div className="col-12 md:col-6">
-                    <img src="credit-cards.jpg" alt="Image" className="w-full" />
+                <div className="col-12 md:col-6 relative" style={{padding: '10px', borderRadius: '8px' }}>
+                    <img 
+                        src="credit-cards.jpg" 
+                        alt="Credit Cards" 
+                        className="w-full" 
+                        style={{
+                            borderRadius: '8px', 
+                            boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.3)', 
+                            opacity: 0.60
+                        }} 
+                    />
                 </div>
             </div>
         </div>
