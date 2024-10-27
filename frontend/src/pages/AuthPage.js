@@ -123,10 +123,10 @@ const AuthPage = ({ userHasAccount }) => {
                 justifyContent: 'center',
                 alignItems: 'center'
             }}
-            className="px-4 py-8 md:px-6 lg:px-8"
+            className="flex px-4 py-8 md:px-6 lg:px-8 justify-content-center align-items-center flex-column"
         >
             <Alert visible={alert.visible} message={alert.message} type={alert.type} heading={alert.heading} setVisible={(visible) => setAlert({ ...alert, visible })}/>
-            <div className="flex flex-wrap">
+            <div className="flex flex-wrap pt-3">
                     <div className="w-full lg:w-6 p-4 lg:p-7" style={{ backgroundColor: 'rgba(255,255,255,.7)' }}>
                         <img src="logos/svg/Black logo - no background.svg" alt="Image" height="50" className="mb-6" />
                         <div className="text-xl text-black-alpha-90 font-500 mb-3">Welcome to Cardmath</div>
