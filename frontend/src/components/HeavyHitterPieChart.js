@@ -33,7 +33,13 @@ const HeavyHitterPieChart = ({ heavyHitters, type }) => {
     chartRef.current = new Chart(ctx, {
       type: 'pie',
       data: {
-        labels: heavyHitters.map(element => element.category),
+        labels: heavyHitters.map(element => {
+          if (element.name) {
+            return element.name
+          } else {
+            return element.category
+          }
+        }),
         datasets: [
           {
             data: heavyHitters.map(element => element.amount),

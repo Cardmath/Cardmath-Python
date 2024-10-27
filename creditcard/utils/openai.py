@@ -60,12 +60,7 @@ async def structure_with_openai(prompt: str, response_format: dict, schema: Unio
 def purchase_category_map_prompt(card_attributes) : 
     return f"""
     Your goal is to analyze the provided text that describes credit card benefits and map it to the following transaction types and reward units.
-
-    valid values for the "category" json field:
-    {separator.join([purchase_category.value for purchase_category in PurchaseCategory])}
-
-    valid values for the "reward_unit" json field:
-    {separator.join([reward_unit.value for reward_unit in RewardUnit])}
+    Avoid duplicating the categories or vendors associated with the rewards.
 
     valid values for the "amount" json field:
     A small positive number that represents the number of points awarded to the transaction. 
@@ -79,9 +74,6 @@ def purchase_category_map_prompt(card_attributes) :
 import json
 
 def reward_category_map_response_format():
-    enum_category = json.dumps([purhcase_category.value for purhcase_category in PurchaseCategory], ensure_ascii=False)
-    enum_reward_unit = json.dumps([reward_unit.value for reward_unit in RewardUnit], ensure_ascii=False)
-
     return {
         "type": "json_schema",
         "json_schema": {
@@ -94,11 +86,40 @@ def reward_category_map_response_format():
                         "items": {
                             "type": "object",
                             "properties": {
-                                "category": {"type": "string", "enum": json.loads(enum_category)},
-                                "reward_unit": {"type": "string", "enum": json.loads(enum_reward_unit)},
-                                "amount": {"type": "number"}
+                                "category": {
+                                    "type": "string",
+                                    "enum": [purchase_category.value for purchase_category in PurchaseCategory] + [vendor.value for vendor in Vendors],
+                                    "description": "The category or vendor of the credit card reward"
+                                },
+                                "reward_unit": {
+                                    "type": "string",
+                                    "enum": [reward_unit.value for reward_unit in RewardUnit]
+                                },
+                                "reward_amount": {
+                                    "type": "number",
+                                    "description": "The amount of the reward unit."
+                                },
+                                "reward_threshold": {
+                                    "type": "object",
+                                    "properties": {
+                                        "on_up_to_purchase_amount_usd": {
+                                            "type": "number",
+                                            "description": "The maximum amount of the transaction that the reward is valid for per timeframe. Make this number -1 if there is no limit."
+                                        },
+                                        "per_timeframe_num_months": {
+                                            "type": "number",
+                                            "description": "The number of months the reward is valid for, until it resets. Typically a single month but can be greater than 1. Make this number -1 if there is no limit."
+                                        },
+                                        "fallback_reward_amount": {
+                                            "type": "number",
+                                            "description": "The fallback amount of the reward unit after the on_up_to_purchase_amount_usd is exceeded in the per_timeframe_num_months months timeframe. Typically the same as reward amount in general category.Make this number -1 if there is no limit."
+                                        }   
+                                    },
+                                    "additionalProperties": False,
+                                    "required": ["on_up_to_purchase_amount_usd", "per_timeframe_num_months", "fallback_reward_amount"],
+                                }
                             },
-                            "required": ["category", "reward_unit", "amount"],
+                            "required": ["category", "reward_unit", "reward_amount", "reward_threshold"],
                             "additionalProperties": False
                         }
                     }

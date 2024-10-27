@@ -38,16 +38,15 @@ class OptimalCardsAllocationResponse(BaseModel):
     cards_added: Optional[List[CreditCardSchema]] = None
 
 def create_cards_matrix(cards : List[CreditCardSchema], heavy_hitters: HeavyHittersResponse) -> np.array:
-    categories: List[HeavyHitterSchema] = heavy_hitters.categories    
-    vendors: List[HeavyHitterSchema] = heavy_hitters.vendors
+    hh: List[HeavyHitterSchema] = heavy_hitters.heavyhitters    
 
-    cards_matrix = np.zeros((len(categories), len(cards)))
+    cards_matrix = np.zeros((len(hh), len(cards)))
     # TODO this is super inefficient but i am lazy rn
     for j, card in enumerate(cards):
-        for i, category in enumerate(categories):
+        for i, category in enumerate(hh):
             for reward_category_relation in card.reward_category_map:
                 if category.category == reward_category_relation.category.value:
-                    cards_matrix[i][j] = RewardUnit.get_value(reward_category_relation.reward_unit) * reward_category_relation.amount
+                    cards_matrix[i][j] = RewardUnit.get_value(reward_category_relation.reward_unit) * reward_category_relation.reward_amount
     
     return cards_matrix
 
@@ -57,12 +56,11 @@ def create_wallet_matrix(user: User, heavy_hitters: HeavyHittersResponse) -> np.
     return create_cards_matrix(held_cards, heavy_hitters)
 
 def create_heavy_hitter_matrix(heavy_hitters: HeavyHittersResponse) -> np.array:
-    categories: List[HeavyHitterSchema] = heavy_hitters.categories
-    vendors: List[HeavyHitterSchema] = heavy_hitters.vendors
+    hh_list: List[HeavyHitterSchema] = heavy_hitters.heavyhitters
 
-    heavy_hitter_matrix = np.zeros((len(categories), len(categories)))
-    for i, category in enumerate(categories):
-        heavy_hitter_matrix[i][i] = category.amount
+    heavy_hitter_matrix = np.zeros((len(hh_list), len(hh_list)))
+    for i, hh in enumerate(hh_list):
+        heavy_hitter_matrix[i][i] = hh.amount
 
     return heavy_hitter_matrix
 

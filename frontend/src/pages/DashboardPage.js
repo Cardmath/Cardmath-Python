@@ -49,7 +49,7 @@ const DashboardPage = () => {
                 account_ids: "all"
             })
         }).then(response => response.json())
-        .then(data => setHeavyHittersCategories(data.categories))
+        .then(data => setHeavyHittersCategories(data.heavyhitters))
         .catch(error => console.log(error));
 
     }, []);

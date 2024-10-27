@@ -54,7 +54,7 @@ VENDOR_CONST = "VENDOR"
 CATEGORY_CONST = "CATEGORY"
 class HeavyHitterSchema(BaseModel):
     type: str # VENDOR or CATEGORY
-    name: Optional[str] = None
+    name: Optional[enums.Vendors] = None
     category: str
     percent: str 
     amount: float
@@ -86,8 +86,7 @@ class HeavyHitterSchema(BaseModel):
 
 class HeavyHittersResponse(BaseModel):
     total: Optional[int] = None
-    categories: List[HeavyHitterSchema]
-    vendors: List[HeavyHitterSchema]
+    heavyhitters: List[HeavyHitterSchema]
     timeframe: MonthlyTimeframe
 
     @field_validator("total")

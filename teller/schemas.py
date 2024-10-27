@@ -91,6 +91,12 @@ class TransactionSchema(BaseModel):
     details: TransactionDetailsSchema
 
     model_config = ConfigDict(from_attributes=True)
+
+    def get_vendor(transaction) -> enums.Vendors:
+        counterparty_name = transaction.details.counterparty.name
+        txn_description = transaction.description
+        return enums.Vendors.get_vendor(counterparty_name, txn_description)
+
 class CreditProfileSchema(BaseModel):
     credit_score : Optional[int] = None
     salary : Optional[int] = None

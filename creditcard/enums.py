@@ -1,5 +1,7 @@
 from enum import Enum
 
+import re
+
 def strip_up_to_period(text):
     parts = text.split('.', 1) 
     if len(parts) > 1:
@@ -60,12 +62,14 @@ class RewardUnit(str, Enum):
     JETBLUE_TRUEBLUE_POINTS = "JetBlue TrueBlue Points"
     ALASKA_MILEAGE_PLAN_MILES = "Alaska Mileage Plan Miles"
     RADISSON_REWARDS_POINTS = "Radisson Rewards Points"
-    CASHBACK_USD = "Cashback USD"
+    CASHBACK_USD = "Percent Cashback USD",
+    STATEMENT_CREDIT_USD = "Statement Credit USD",
     AVIOS = "Avios"
     AEROPLAN_POINTS = "Aeroplan Points"
     CHOICE_PRIVILEGES_POINTS = "Choice Privileges Points"
     UNKNOWN = "Unknown"
     
+    @staticmethod
     def get_value(reward_unit) -> float:
         _values = {
             RewardUnit.CHASE_ULTIMATE_REWARDS: 0.0125, #  average from 1 to 1.5 cents.
@@ -201,6 +205,39 @@ class Vendors(str, Enum):
     LOWES = "Lowes"
     ALDI = "Aldi"
     COSTCO = "Costco"
+    UNKNOWN = "Unknown"
+
+    def get_category(vendor) -> PurchaseCategory:
+        _values = {
+            Vendors.AMAZON: PurchaseCategory.SHOPPING,
+            Vendors.TARGET: PurchaseCategory.SHOPPING,
+            Vendors.WALGREENS: PurchaseCategory.GROCERIES,
+            Vendors.WALMART: PurchaseCategory.GROCERIES,
+            Vendors.KROGER: PurchaseCategory.GROCERIES,
+            Vendors.LOWES: PurchaseCategory.GROCERIES,
+            Vendors.ALDI: PurchaseCategory.GROCERIES,
+            Vendors.COSTCO: PurchaseCategory.GROCERIES,
+        }
+
+        return _values.get(vendor, PurchaseCategory.GENERAL)
+    
+    def get_vendor(name: str, description: str):
+        def check_string_for_vendor_name(s: str):
+            if s:
+                for vendor in Vendors:
+                    if re.search(rf'\b{vendor.value}\b', s, re.IGNORECASE):
+                        return vendor
+            return None
+
+        # First check in name
+        out = check_string_for_vendor_name(name)
+        
+        # If not found in name, check the full description
+        if out is None:
+            out = check_string_for_vendor_name(description)
+
+        # Return found vendor or UNKNOWN if no vendor is found
+        return out if out else Vendors.UNKNOWN
 
 class APRType(str, Enum):
     PURCHASE = "Purchase"

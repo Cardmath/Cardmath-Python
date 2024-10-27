@@ -15,42 +15,63 @@ import teller.utils as teller_utils
 class TwoPassHeavyHitters:
     def __init__(self, k, key=None, value=None):
         self.k = k
-        self.key = key if key is not None else lambda x: x  # Use identity function if key is not provided
+        self.keys = key if key is not None else lambda x: x  # Use identity function if key is not provided
         self.value = value if value is not None else lambda x: 1
         self.counters = {}  # Used for Misra-Gries in the first pass
         self.candidates = set()  # Candidate heavy hitters identified in the first pass
 
     def first_pass(self, stream):
         for item in stream:
-            key = self.key(item)  # Extract key from item
-            value = self.value(item)  # Extract value from item
-            if key in self.counters:
-                self.counters[key] += value  # Increment by the item's value
-            elif len(self.counters) < self.k - 1:
-                self.counters[key] = value  # Initialize counter with the item's value
-            else:
-                # Decrease all counters by the current item's value
-                to_remove = []
-                for dict_key in self.counters:
-                    self.counters[dict_key] -= value
-                    if self.counters[dict_key] <= 0:
-                        to_remove.append(dict_key)  # Mark for deletion
+            for key in self.keys(item):
+                if not key:
+                    continue
+                value = self.value(item)  # Extract value from item
+                if key in self.counters:
+                    self.counters[key] += value  # Increment by the item's value
+                elif len(self.counters) < self.k - 1:
+                    self.counters[key] = value  # Initialize counter with the item's value
+                else:
+                    # Decrease all counters by the current item's value
+                    to_remove = []
+                    for dict_key in self.counters:
+                        self.counters[dict_key] -= value
+                        if self.counters[dict_key] <= 0:
+                            to_remove.append(dict_key)  # Mark for deletion
 
-                # Remove keys with zero or negative counts
-                for dict_key in to_remove:
-                    del self.counters[dict_key]
+                    # Remove keys with zero or negative counts
+                    for dict_key in to_remove:
+                        del self.counters[dict_key]
         
         # Identify candidate heavy hitters after the first pass
         self.candidates = set(self.counters.keys())
 
     def second_pass(self, stream):
         exact_counts = defaultdict(int)
+        
+        # Accumulate exact counts for candidates
         for item in stream:
-            key = self.key(item)  # Extract key from item
-            value = self.value(item)   # Extract value from item
-            if key in self.candidates:
-                exact_counts[key] += value  # Accumulate the exact count for candidates
+            for key in self.keys(item):
+                if not key:
+                    continue
+                value = self.value(item)
+                if key in self.candidates:
+                    exact_counts[key] += value
+        
+        # TODO: Iterate over exact_counts, and if a vendor is present, remove the associated vendor value from the category total
+        for key, value in list(exact_counts.items()):
+            # Check if the key is a known vendor
+            if key in enums.Vendors:
+                # Get the associated category for the vendor
+                category = enums.Vendors.get_category(key)
+                
+                # Subtract the vendor's count from the category total
+                if category in exact_counts:
+                    exact_counts[category] -= value
+                else:
+                    exact_counts[category] = -value  # Initialize with negative count if not present
+
         return exact_counts
+    
 
     def heavy_hitters(self, stream):
         # First pass: Identify candidate heavy hitters
@@ -78,7 +99,7 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
 
         if len(accounts) == 0:
             print(f"[INFO] No accounts found for user {user.id}")
-            return HeavyHittersResponse(vendors=[], categories=[])
+            return HeavyHittersResponse(vendors=[], heavyhitters=[])
         
         
         all_transactions: List[TransactionSchema] = []
@@ -105,53 +126,32 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
             all_transactions.extend(TypeAdapter(List[TransactionSchema]).validate_python(transactions))
         
         print(f"[INFO] Found {len(all_transactions)} total transactions.")
-        hh_categories_two_pass = TwoPassHeavyHitters(k=100, key=get_transaction_category, value=get_transaction_amount)
-        hh_categories: dict[str, tuple] = hh_categories_two_pass.heavy_hitters(all_transactions)
-        hh_counterparties_two_pass = TwoPassHeavyHitters(k=100, key=get_transaction_counterparty_id, value=get_transaction_amount)
-        hh_counterparties_ids: dict[int, tuple] = hh_counterparties_two_pass.heavy_hitters(all_transactions)
+        hh_two_pass = TwoPassHeavyHitters(k=200, key=get_transaction_category_and_vendor, value=get_transaction_amount)
+        hh: dict[str, tuple] = hh_two_pass.heavy_hitters(all_transactions)
 
-        # find the vendor categories and names with the id
-        hh_vendors: List[Counterparty] = db.query(Counterparty).filter(Counterparty.id.in_(hh_counterparties_ids.keys())).all() 
-        hh_vendors_category_dict: dict = {vendor.id: (vendor.name, vendor.transaction_details[0].category) for vendor in hh_vendors}
-
-        out_vendors = []
-        for hh_counterparty_id, (percent, amount) in hh_counterparties_ids.items():
-            name, category = hh_vendors_category_dict[hh_counterparty_id]
-            if category is not None:
-                out_vendors.append(HeavyHitterSchema(type=VENDOR_CONST, name=name, category=category, percent=percent, amount=amount))
-            else:
-                out_vendors.append(HeavyHitterSchema(type=VENDOR_CONST, name=name, category=None, percent=percent, amount=amount))
-
-        out_categories = []
-        for hh_category, (percent, amount) in hh_categories.items():
-            print(f"Category: {hh_category}, percent: {percent}, amount: {amount}")
-            if hh_category is not None:
-                out_categories.append(HeavyHitterSchema(type=CATEGORY_CONST, category=hh_category, percent=percent, amount=amount))
-
-        return HeavyHittersResponse(vendors=out_vendors, categories=out_categories, timeframe=MonthlyTimeframe(start_month=start_date, end_month=end_date))
+        out_hh = []
+        categories = 0
+        vendors = 0
+        for hh, (percent, amount) in hh.items():
+            print(f"Heavy Hitter: {hh}, percent: {percent}, amount: {amount}")
+            if hh in enums.Vendors:
+                out_hh.append(HeavyHitterSchema(type=VENDOR_CONST, name=hh, category=enums.Vendors.get_category(hh), percent=percent, amount=amount))
+                vendors += 1
+            elif hh in enums.PurchaseCategory:
+                out_hh.append(HeavyHitterSchema(type=CATEGORY_CONST, category=hh, percent=percent, amount=amount))
+                categories += 1
+        print(f"[INFO] Found {vendors} vendors and {categories} categories in heavy hitters.")  
+        return HeavyHittersResponse(heavyhitters=out_hh, timeframe=MonthlyTimeframe(start_month=start_date, end_month=end_date))
 
 
-def get_transaction_counterparty_id(transaction: Union[TransactionSchema, Transaction]):
-    if not transaction.details:
-        return None
+def get_transaction_category_and_vendor(transaction: Union[Transaction, TransactionSchema]) -> Union[tuple[enums.Vendors, enums.PurchaseCategory], enums.PurchaseCategory]:
+    transaction = TransactionSchema.model_validate(transaction)
+    vendor = TransactionSchema.get_vendor(transaction)
+
+    if vendor == enums.Vendors.UNKNOWN:
+        return None, transaction.details.category
     
-    if isinstance(transaction, Transaction):
-        return transaction.details.counterparty_id
-    
-    if isinstance(transaction, TransactionSchema):
-        return transaction.details.counterparty.id
-    
-    return "no counterparty id" 
-    
-def get_transaction_category(transaction: Union[Transaction, TransactionSchema]):
-    unknown = enums.PurchaseCategory.UNKNOWN.value
-    if not transaction.details:
-        return unknown
-
-    if transaction.details.category:
-        return transaction.details.category
-    
-    return unknown
+    return vendor, transaction.details.category
 
 def get_transaction_amount(transaction: Union[Transaction, TransactionSchema]) -> float:
     return abs(transaction.amount)

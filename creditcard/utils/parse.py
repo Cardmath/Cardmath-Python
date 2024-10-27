@@ -1,7 +1,7 @@
 from creditcard.enums import *
 from creditcard.utils.openai import *
 from pydantic import BaseModel, ConfigDict, field_validator, field_serializer
-from typing import List, Union
+from typing import List, Union, Optional
 from datetime import timedelta
 
 RIGHTS_RESERVED = '\u00AE'
@@ -18,21 +18,40 @@ def get_credit_needed(credit_needed_html_text : str):
 async def get_benefits(card_description : str):
     openai_response = await prompt_openai_for_json(benefits_prompt(card_description), response_format=benefits_response_format())
     return multiple_nearest(openai_response, Benefit) 
-    
-class RewardCategoryRelation(BaseModel):
-    category : PurchaseCategory
-    reward_unit : RewardUnit
-    amount : float
+
+class RewardCategoryThreshold(BaseModel):
+    on_up_to_purchase_amount_usd: float
+    per_timeframe_num_months: int
+    fallback_reward_amount: float
 
     model_config = ConfigDict(from_attributes=True)
 
-    @field_validator('amount')
+class RewardCategoryRelation(BaseModel):
+    category : Union[PurchaseCategory, Vendors]
+    reward_unit : RewardUnit
+    reward_amount : float
+
+    reward_threshold : Optional[RewardCategoryThreshold] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator('reward_amount', mode="before")
+    @classmethod
     def amount_must_be_reasonable(cls, v):
         if v < 0 or v > 100:
             raise ValueError('Amount must be positive and less than 100 to be reasonable')
         return v
+    
+    @field_validator('reward_threshold', mode="before")
+    @classmethod
+    def validate_threshold(cls, v):
+        if v is not None:
+            v = RewardCategoryThreshold.model_validate(v)
+            if v.on_up_to_purchase_amount_usd < 0 or v.fallback_reward_amount < 0 or v.per_timeframe_num_months < 0:
+                return None
+            else :
+                return v
 
-# THIS SHOULD ONLY BE CALLED FOR STRUCTURING
 class RewardCategoryMap(BaseModel):
     reward_category_map : List[RewardCategoryRelation]
 

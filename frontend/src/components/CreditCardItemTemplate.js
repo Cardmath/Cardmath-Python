@@ -49,7 +49,9 @@ const CreditCardItemTemplate = ({ cardData , sizingCss = "h-4 w-4"}) => {
                 <ScrollPanel style={{ width: '100%', height: '100px' }}>
                     <ul className="m-0">
                         {cardData.reward_category_map.map(reward => (
-                            <li key={reward.category}>Spend one USD on {reward.category} and get {reward.amount}{reward.reward_unit === 'Cashback USD' && '%'} {reward.reward_unit}</li>
+                            <li key={reward.category}>Spend one USD on {reward.category} and get {reward.reward_amount}{reward.reward_unit === 'Cashback USD' && '%'} {reward.reward_unit}
+                                {reward.reward_threshold !== null && " on up to $" + reward.reward_threshold.on_up_to_purchase_amount_usd }
+                            </li>
                         ))}
                     </ul>
                 </ScrollPanel>
@@ -79,7 +81,7 @@ const CreditCardItemTemplate = ({ cardData , sizingCss = "h-4 w-4"}) => {
                             </div>
                             }
                             
-                            {cardData.annual_fee.waived_for > 0 &&
+                            {cardData.annual_fee.fee_usd > 0 &&cardData.annual_fee.waived_for > 0 &&
                                 <div className='text-base'>Waived for {cardData.annual_fee.waived_for} years</div>
                             }
 
