@@ -1,8 +1,9 @@
+from collections import defaultdict
 from creditcard.endpoints.read_database import read_credit_cards_database, CreditCardsDatabaseRequest
 from creditcard.enums import *
 from creditcard.schemas import CreditCardSchema, RewardCategoryRelation, RewardCategoryThreshold
 from database.auth.user import User
-from insights.category_spending_prediction import compute_user_card_sign_on_bonus_value
+from insights.category_spending_prediction import compute_user_card_sign_on_bonus_value, calculate_incremental_spending_probabilities
 from insights.heavyhitters import read_heavy_hitters, HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema
 from insights.schemas import MonthlyTimeframe
 from pydantic import BaseModel, ConfigDict
@@ -154,6 +155,7 @@ async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocat
         reward_relations=reward_relations,
         heavy_hitter_vector=H_vector
     )
+
 async def optimize_credit_card_selection_milp(
     db: Session,
     user: User,
@@ -195,10 +197,10 @@ async def optimize_credit_card_selection_milp(
         for j in range(H):
             x[(i, j)] = model.addVar(vtype="C", lb=0.0, name=f"x[{i},{j}]")
 
-    # Constraint: Total spending in each category must be covered
+    # Constraint: Total spending in each category cannot exceed projected spending
     for j in range(H):
         model.addCons(
-            quicksum(x[(i, j)] for i in range(C)) == rmatrix.heavy_hitter_vector[j],
+            quicksum(x[(i, j)] for i in range(C)) <= rmatrix.heavy_hitter_vector[j],
             name=f"TotalSpending_Category_{j}"
         )
 
@@ -214,6 +216,108 @@ async def optimize_credit_card_selection_milp(
         reward_unit=enums.RewardUnit.UNKNOWN.value,
         reward_amount=0.0
     )
+
+    # Binary variables for card usage
+    z = {i: model.addVar(vtype="B", name=f"z[{i}]") for i in range(C)}
+
+    # Linking constraints between x and z
+    M = sum(rmatrix.heavy_hitter_vector) * 10  # Big M value
+    for i in range(C):
+        for j in range(H):
+            model.addCons(x[(i, j)] <= M * z[i], name=f"Linking_{i}_{j}")
+
+    # Constraints for total cards used based on request
+    if request.to_use > wallet_size:
+        request.to_use = wallet_size
+    model.addCons(quicksum(z[i] for i in wallet_indices) <= request.to_use, name="MaxHeldCards")
+    model.addCons(quicksum(z[i] for i in eligible_indices) <= request.to_add, name="MaxAddedCards")
+
+    # Collect sign-on bonus data
+    card_sob_data = {}  # Key: card index i, Value: dict with SOB details
+
+    for idx in range(C):
+        if idx >= wallet_size:
+            card = rmatrix.ccs_added[idx - wallet_size]
+        else:
+            continue  # We assume existing cards don't have new SOBs
+        if request.use_sign_on_bonus:
+            for sob in card.sign_on_bonus:
+                category = sob.purchase_type
+                threshold = sob.condition_amount
+                T = sob.get_timeframe_in_months()
+                sob_amount = sob.reward_amount * RewardUnit.get_value(sob.reward_type)
+                # Define levels from $500 up to threshold + $1000 in $500 increments
+                max_level = int(threshold + 1000)
+                levels = [l for l in range(500, max_level + 1, 500)]
+                levels = sorted(set(levels))  # Ensure unique, sorted levels
+                # Compute incremental probabilities
+                levels_and_probs = await calculate_incremental_spending_probabilities(
+                    user=user,
+                    db=db,
+                    category=category,
+                    levels=levels,
+                    T=T
+                )
+                incremental_probs = {}
+                for l, p in levels_and_probs:
+                    incremental_probs[l] = p
+                # Store the data
+                card_sob_data[idx] = {
+                    'category': category,
+                    'levels': levels,
+                    'incremental_probs': incremental_probs,
+                    'sob_amount': sob_amount,
+                    'timeframe': T
+                }
+
+    # Create variables for sign-on bonuses
+    s_il = {}  # Key: (i, l), Value: binary variable s_il
+
+    for i, sob_info in card_sob_data.items():
+        category = sob_info['category']
+        levels = sob_info['levels']
+        incremental_probs = sob_info['incremental_probs']
+        sob_amount = sob_info['sob_amount']
+        T_sob = sob_info['timeframe']
+        # Find the index j of the category in rmatrix.categories
+        if category in rmatrix.categories:
+            j = rmatrix.categories.index(category)
+        else:
+            # If category is not in user's spending, skip
+            continue
+        # Adjust heavy hitter vector for SOB category
+        original_spending = rmatrix.heavy_hitter_vector[j]
+        adjusted_spending = original_spending * (T_sob / timeframe_months)
+        rmatrix.heavy_hitter_vector[j] = min(original_spending, adjusted_spending)
+        # Create binary variables s_il
+        s_il[i] = {}
+        levels = sorted(levels)
+        for l in levels:
+            s_il[i][l] = model.addVar(vtype="B", name=f"s_{i}_{l}")
+        # Add spending level activation constraints
+        for l in levels:
+            model.addCons(
+                x[(i, j)] >= l * s_il[i][l],
+                name=f"SpendingLevelActivation_{i}_{l}"
+            )
+        # Add sequential activation constraints
+        for idx_level in range(1, len(levels)):
+            l_current = levels[idx_level]
+            l_prev = levels[idx_level - 1]
+            model.addCons(
+                s_il[i][l_current] <= s_il[i][l_prev],
+                name=f"SequentialActivation_{i}_{l_current}"
+            )
+        # Ensure s_il[i][l] <= z[i]
+        for l in levels:
+            model.addCons(
+                s_il[i][l] <= z[i],
+                name=f"SOBActivation_{i}_{l}"
+            )
+        # Add to objective function
+        for l in levels:
+            EV_il = sob_amount * incremental_probs[l]
+            objective_terms.append(EV_il * s_il[i][l])
 
     # Add constraints and objective function terms for each card and category
     for i in range(C):
@@ -264,26 +368,20 @@ async def optimize_credit_card_selection_milp(
                     objective_terms.append(fallback_multiplier * y2)
                 else:
                     # No effective threshold; use x directly
-                    reward_multiplier = RewardUnit.get_value(reward_unit) * reward_amount 
+                    reward_multiplier = RewardUnit.get_value(reward_unit) * reward_amount
                     objective_terms.append(reward_multiplier * x[(i, j)])
             else:
                 # No threshold; use x directly
                 reward_multiplier = RewardUnit.get_value(reward_unit) * reward_amount
                 objective_terms.append(reward_multiplier * x[(i, j)])
 
-    # Annual fees and sign-on bonuses
-    sign_on_bonus_values = [0.0] * C
+    # Annual fees
     annual_fee_values = [0.0] * C
     for idx in range(C):
         if idx >= wallet_size:
             card = rmatrix.ccs_added[idx - wallet_size]
         else:
             card = rmatrix.ccs_used[idx]
-        # Compute sign-on bonus
-        if request.use_sign_on_bonus and idx >= wallet_size:
-            sign_on_bonus_values[idx] = await compute_user_card_sign_on_bonus_value(user, db, card)
-        else:
-            sign_on_bonus_values[idx] = 0.0  # Assume no new sign-on bonus for existing cards
 
         # Compute annual fees (annual fees are always in USD)
         if card.annual_fee:
@@ -294,23 +392,7 @@ async def optimize_credit_card_selection_milp(
         else:
             annual_fee_values[idx] = 0.0
 
-    # Binary variables for card usage
-    z = {i: model.addVar(vtype="B", name=f"z[{i}]") for i in range(C)}
-
-    # Linking constraints between x and z
-    M = sum(rmatrix.heavy_hitter_vector) * 10  # Big M value
-    for i in range(C):
-        for j in range(H):
-            model.addCons(x[(i, j)] <= M * z[i], name=f"Linking_{i}_{j}")
-
-    # Constraints for total cards used based on request
-    if request.to_use > wallet_size:
-        request.to_use = wallet_size
-    model.addCons(quicksum(z[i] for i in wallet_indices) <= request.to_use, name="MaxHeldCards")
-    model.addCons(quicksum(z[i] for i in eligible_indices) <= request.to_add, name="MaxAddedCards")
-
-    # Add annual fees and sign-on bonuses to the objective function
-    objective_terms += [sign_on_bonus_values[i] * z[i] for i in range(C)]
+    # Add annual fees to the objective function
     objective_terms += [-annual_fee_values[i] * z[i] for i in range(C)]
 
     # Set the objective function
@@ -357,10 +439,10 @@ async def optimize_credit_card_selection_milp(
     summary = []
     for idx in selected_cards:
         card_name = rmatrix.card_names[idx]
-        total_value = 0.0
-        # Include annual fees and sign-on bonuses in the total_value
-        total_value -= annual_fee_values[idx]
-        total_value += sign_on_bonus_values[idx]
+        annual_fee = annual_fee_values[idx]
+        total_rewards = 0.0
+        sign_on_bonus = 0.0
+        # Regular rewards from spending
         for j in range(H):
             category = rmatrix.categories[j]
             reward_relation = rmatrix.reward_relations.get(
@@ -372,12 +454,27 @@ async def optimize_credit_card_selection_milp(
             x_value = model.getVal(x[(idx, j)])
             # Adjust reward calculation based on reward unit
             reward_multiplier = RewardUnit.get_value(reward_unit) * reward_amount
-            total_value += x_value * reward_multiplier
-        summary.append(HeldCardsUseSummary(name=card_name, 
-                                           profit_usd=total_value, 
-                                           annual_fee_usd=annual_fee_values[idx], 
-                                           sign_on_bonus_estimated=sign_on_bonus_values[idx])
-        )   
+            total_rewards += x_value * reward_multiplier
+        # Sign-on bonus calculation
+        if idx in card_sob_data:
+            sob_info = card_sob_data[idx]
+            levels = sob_info['levels']
+            incremental_probs = sob_info['incremental_probs']
+            sob_amount = sob_info['sob_amount']
+            for l in levels:
+                s_value = model.getVal(s_il[idx][l])
+                if s_value > 0.5:
+                    sign_on_bonus += sob_amount * incremental_probs[l]
+                    # Assuming we sum up all activated levels
+        profit_usd = total_rewards + sign_on_bonus - annual_fee
+        summary.append(
+            HeldCardsUseSummary(
+                name=card_name,
+                profit_usd=profit_usd,
+                annual_fee_usd=annual_fee,
+                sign_on_bonus_estimated=sign_on_bonus
+            )
+        )
     print(f"[INFO] Summary: {summary}")
 
     return OptimalCardsAllocationResponse(
