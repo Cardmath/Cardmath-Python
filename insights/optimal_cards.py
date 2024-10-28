@@ -10,8 +10,8 @@ from pyscipopt import Model, quicksum
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
+import creditcard.enums as enums
 import numpy as np
-from datetime import date
 
 class OptimalCardsAllocationRequest(BaseModel):
     to_use: Optional[int] = 4
@@ -37,17 +37,51 @@ class OptimalCardsAllocationResponse(BaseModel):
     cards_used: Optional[List[CreditCardSchema]] = None
     cards_added: Optional[List[CreditCardSchema]] = None
 
-def create_cards_matrix(cards : List[CreditCardSchema], heavy_hitters: HeavyHittersResponse) -> np.array:
-    hh: List[HeavyHitterSchema] = heavy_hitters.heavyhitters    
+def remove_duplicates_ordered(lst):
+    seen = set()
+    return [x for x in lst if x not in seen and not seen.add(x)]
 
-    cards_matrix = np.zeros((len(hh), len(cards)))
+
+
+def create_cards_matrix(cards : List[CreditCardSchema], heavy_hitters: HeavyHittersResponse) -> np.array:
+    hh_list: List[HeavyHitterSchema] = heavy_hitters.heavyhitters   
+    vendors = list(filter(lambda x: x is not None, [hh.name if hh.name else None for hh in hh_list]))
+    categories: list = remove_duplicates_ordered([hh.category for hh in hh_list])
+
+    cards_matrix = np.zeros((len(hh_list), len(cards)))
     # TODO this is super inefficient but i am lazy rn
     for j, card in enumerate(cards):
-        for i, category in enumerate(hh):
+        for i, hh in enumerate(hh_list):
+            hc_idx = categories.index(hh.category)
+            # Find the index for the category in reward_category_map
+            cc_idx = None
+            if hh.category in [rcr.category for rcr in card.reward_category_map]:
+                cc_idx = [rcr.category for rcr in card.reward_category_map].index(hh.category)
+            elif enums.PurchaseCategory.GENERAL.value in [rcr.category for rcr in card.reward_category_map]:
+                cc_idx = [rcr.category for rcr in card.reward_category_map].index(enums.PurchaseCategory.GENERAL.value)
+            elif enums.PurchaseCategory.UNKNOWN.value in [rcr.category for rcr in card.reward_category_map]:
+                cc_idx = [rcr.category for rcr in card.reward_category_map].index(enums.PurchaseCategory.UNKNOWN.value)
+                print(f"[OpenAI Prompt WARNING] Used unknown category {hh.category} in {card.reward_category_map}")
+            else:
+                print(f"Could not find category {hh.category} in {card.reward_category_map}")
+
+            # If a category index is found, calculate the reward
+            if cc_idx is not None:
+                reward_data = card.reward_category_map[cc_idx]
+                r_unit_val = RewardUnit.get_value(reward_data.reward_unit)
+                r_reward_amount = reward_data.reward_amount
+                cards_matrix[hc_idx][j] = r_unit_val * r_reward_amount
+
             for reward_category_relation in card.reward_category_map:
-                if category.category == reward_category_relation.category.value:
+                
+                # Add the vendors to the matrix
+                if hh.name == reward_category_relation.category.value:
                     cards_matrix[i][j] = RewardUnit.get_value(reward_category_relation.reward_unit) * reward_category_relation.reward_amount
-    
+
+                # Add the categories to the matrix
+                elif hh.category == reward_category_relation.category.value:
+                    cards_matrix[i][j] = RewardUnit.get_value(reward_category_relation.reward_unit) * reward_category_relation.reward_amount
+
     return cards_matrix
 
 def create_wallet_matrix(user: User, heavy_hitters: HeavyHittersResponse) -> np.array:
@@ -56,11 +90,20 @@ def create_wallet_matrix(user: User, heavy_hitters: HeavyHittersResponse) -> np.
     return create_cards_matrix(held_cards, heavy_hitters)
 
 def create_heavy_hitter_matrix(heavy_hitters: HeavyHittersResponse) -> np.array:
-    hh_list: List[HeavyHitterSchema] = heavy_hitters.heavyhitters
+    hh_list: List[HeavyHitterSchema] = heavy_hitters.heavyhitters   
+    vendors: list = remove_duplicates_ordered(([hh.name for hh in hh_list]))
+    categories: list = remove_duplicates_ordered([hh.category for hh in hh_list])
 
-    heavy_hitter_matrix = np.zeros((len(hh_list), len(hh_list)))
-    for i, hh in enumerate(hh_list):
-        heavy_hitter_matrix[i][i] = hh.amount
+    heavy_hitter_matrix = np.zeros((len(hh_list),len(hh_list)))
+    categories_index = len(vendors)
+    vendors_index = 0
+    for hh in hh_list:
+        if hh.name in vendors:
+            heavy_hitter_matrix[vendors_index][vendors_index] = hh.amount
+            vendors_index += 1
+        elif hh.category in categories:
+            heavy_hitter_matrix[categories_index][categories_index] = hh.amount
+            categories_index += 1
 
     return heavy_hitter_matrix
 

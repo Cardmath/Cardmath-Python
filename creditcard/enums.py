@@ -62,7 +62,7 @@ class RewardUnit(str, Enum):
     JETBLUE_TRUEBLUE_POINTS = "JetBlue TrueBlue Points"
     ALASKA_MILEAGE_PLAN_MILES = "Alaska Mileage Plan Miles"
     RADISSON_REWARDS_POINTS = "Radisson Rewards Points"
-    CASHBACK_USD = "Percent Cashback USD",
+    PERCENT_CASHBACK_USD = "Percent Cashback USD",
     STATEMENT_CREDIT_USD = "Statement Credit USD",
     AVIOS = "Avios"
     AEROPLAN_POINTS = "Aeroplan Points"
@@ -93,7 +93,7 @@ class RewardUnit(str, Enum):
             RewardUnit.JETBLUE_TRUEBLUE_POINTS: 0.0136,
             RewardUnit.ALASKA_MILEAGE_PLAN_MILES: 0.015, # from 1.2 cents to 1.8 cents. 
             RewardUnit.RADISSON_REWARDS_POINTS: 0.0045, # average of 0.4 cents to 0.5 cents 
-            RewardUnit.CASHBACK_USD: 0.01,
+            RewardUnit.PERCENT_CASHBACK_USD: 0.01,
             RewardUnit.AVIOS: 0.0135,
             RewardUnit.AEROPLAN_POINTS: 0.0145,
             RewardUnit.CHOICE_PRIVILEGES_POINTS: 0.008

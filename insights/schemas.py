@@ -32,11 +32,7 @@ class MonthlyTimeframe(BaseModel):
                     raise ValueError("End month must be after start month")
                 if start_month > date.today():
                     raise ValueError("Start month must be in the past")
-                if end_month > date.today():
-                    raise ValueError("End month can't be in the future")
-
         return values
-
 
 class HeavyHittersRequest(BaseModel):
     account_ids: Union[str, List[str]]
@@ -141,5 +137,3 @@ class CategoriesMovingAveragesResponse(BaseModel):
                 if len(c.moving_average) != len(dates):
                     raise ValueError('all series must have the same number of amounts as dates')
         return values
-    
-

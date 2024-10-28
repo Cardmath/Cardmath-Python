@@ -9,7 +9,6 @@ import traceback
 separator = "\n - "
 MODEL = "gpt-4o-2024-08-06"
 
-
 async def prompt_openai_for_json(prompt, response_format):    
     client = OpenAI(
         api_key=os.getenv('OPENAI_API_KEY', "your_openai_api_key")
@@ -89,11 +88,15 @@ def reward_category_map_response_format():
                                 "category": {
                                     "type": "string",
                                     "enum": [purchase_category.value for purchase_category in PurchaseCategory] + [vendor.value for vendor in Vendors],
-                                    "description": "The category or vendor of the credit card reward"
+                                    "description": '''The category or vendor of the credit card reward. 
+                                                    If you want to capture default rewards, use the general category.
+                                                    For example, a grocery/dining oriented card might have 3 percent cash
+                                                    back on dining/grocery purchases, but only 1 percent cash back on all other purchases. 
+                                                    '''
                                 },
                                 "reward_unit": {
                                     "type": "string",
-                                    "enum": [reward_unit.value for reward_unit in RewardUnit]
+                                    "enum": [reward_unit.value for reward_unit in RewardUnit],
                                 },
                                 "reward_amount": {
                                     "type": "number",
@@ -130,8 +133,6 @@ def reward_category_map_response_format():
             "strict": True
         }
     }
-
-
 
 def benefits_prompt(card_attributes) : 
     return f""" 
@@ -195,7 +196,7 @@ def conditional_sign_on_bonus_response_format():
                                     "purchase_type": {"type": "string", "enum": [purchase_category.value for purchase_category in PurchaseCategory] + [vendor.value for vendor in Vendors]},
                                     "condition_amount": {"type": "number"},
                                     "timeframe": {"type": "number"},
-                                    "reward_type": {"type": "string", "enum": [reward_unit.value for reward_unit in RewardUnit]},
+                                    "reward_type": {"type": "string", "enum": [reward_unit.value for reward_unit in RewardUnit if reward_unit != RewardUnit.PERCENT_CASHBACK_USD]},
                                     "reward_amount": {"type": "number"}
                                 },
                                 "required": ["purchase_type", "condition_amount", "timeframe", "reward_type", "reward_amount"],
