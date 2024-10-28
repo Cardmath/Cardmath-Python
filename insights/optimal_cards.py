@@ -28,16 +28,27 @@ class HeldCardsUseSummary(BaseModel):
     profit_usd: float
     annual_fee_usd: float
     sign_on_bonus_estimated: float
+    regular_rewards_usd: float
+    net_rewards_usd: float
+
+class SpendingPlanItem(BaseModel):
+    card_name: str
+    category: str
+    amount: float
 
 class OptimalCardsAllocationResponse(BaseModel):
     timeframe: MonthlyTimeframe
     total_reward_usd: float
+    total_regular_rewards_usd: float
+    total_sign_on_bonus_usd: float
+    total_annual_fees_usd: float
+    net_rewards_usd: float
+
     total_reward_allocation: List[int]
-
-    total_annual_fee_held_cards_usd: float = 0
-    total_annual_fee_added_cards_usd: float = 0
-
     summary: Optional[List[HeldCardsUseSummary]] = None
+    spending_plan: Optional[List[SpendingPlanItem]] = None
+    actionable_steps: Optional[List[str]] = None
+
     cards_used: Optional[List[CreditCardSchema]] = None
     cards_added: Optional[List[CreditCardSchema]] = None
 
@@ -182,6 +193,10 @@ async def optimize_credit_card_selection_milp(
         return OptimalCardsAllocationResponse(
             timeframe=rmatrix.timeframe,
             total_reward_usd=0,
+            total_regular_rewards_usd=0,
+            total_sign_on_bonus_usd=0,
+            total_annual_fees_usd=0,
+            net_rewards_usd=0,
             total_reward_allocation=[],
             summary=[],
             cards_used=[],
@@ -408,6 +423,10 @@ async def optimize_credit_card_selection_milp(
         return OptimalCardsAllocationResponse(
             timeframe=rmatrix.timeframe,
             total_reward_usd=0,
+            total_regular_rewards_usd=0,
+            total_sign_on_bonus_usd=0,
+            total_annual_fees_usd=0,
+            net_rewards_usd=0,
             total_reward_allocation=[],
             summary=[],
             cards_used=[],
@@ -435,11 +454,17 @@ async def optimize_credit_card_selection_milp(
             if idx in wallet_indices
         ]
 
-    # Prepare summary
+    # Prepare summary and spending plan
     summary = []
+    spending_plan = []
+    total_regular_rewards_usd = 0.0
+    total_sign_on_bonus_usd = 0.0
+    total_annual_fees_usd = 0.0
+
     for idx in selected_cards:
         card_name = rmatrix.card_names[idx]
         annual_fee = annual_fee_values[idx]
+        total_annual_fees_usd += annual_fee
         total_rewards = 0.0
         sign_on_bonus = 0.0
         # Regular rewards from spending
@@ -454,7 +479,18 @@ async def optimize_credit_card_selection_milp(
             x_value = model.getVal(x[(idx, j)])
             # Adjust reward calculation based on reward unit
             reward_multiplier = RewardUnit.get_value(reward_unit) * reward_amount
-            total_rewards += x_value * reward_multiplier
+            reward = x_value * reward_multiplier
+            total_rewards += reward
+
+            # Add to spending plan if spending is allocated
+            if x_value > 0:
+                spending_plan.append(
+                    SpendingPlanItem(
+                        card_name=card_name,
+                        category=category,
+                        amount=round(x_value, 2)
+                    )
+                )
         # Sign-on bonus calculation
         if idx in card_sob_data:
             sob_info = card_sob_data[idx]
@@ -466,22 +502,41 @@ async def optimize_credit_card_selection_milp(
                 if s_value > 0.5:
                     sign_on_bonus += sob_amount * incremental_probs[l]
                     # Assuming we sum up all activated levels
-        profit_usd = total_rewards + sign_on_bonus - annual_fee
+            total_sign_on_bonus_usd += sign_on_bonus
+        total_regular_rewards_usd += total_rewards
+        net_rewards = total_rewards + sign_on_bonus - annual_fee
         summary.append(
             HeldCardsUseSummary(
                 name=card_name,
-                profit_usd=profit_usd,
+                profit_usd=total_rewards + sign_on_bonus - annual_fee,
                 annual_fee_usd=annual_fee,
-                sign_on_bonus_estimated=sign_on_bonus
+                sign_on_bonus_estimated=sign_on_bonus,
+                regular_rewards_usd=total_rewards,
+                net_rewards_usd=net_rewards
             )
         )
-    print(f"[INFO] Summary: {summary}")
+
+    net_rewards_usd = total_regular_rewards_usd + total_sign_on_bonus_usd - total_annual_fees_usd
+
+    # Prepare actionable steps
+    actionable_steps = []
+    if cards_added:
+        actionable_steps.append("Apply for the recommended credit cards.")
+    if spending_plan:
+        actionable_steps.append("Allocate your spending according to the spending plan.")
+    # Add more steps as needed
 
     return OptimalCardsAllocationResponse(
         timeframe=rmatrix.timeframe,
         total_reward_usd=total_reward_usd,
+        total_regular_rewards_usd=round(total_regular_rewards_usd, 2),
+        total_sign_on_bonus_usd=round(total_sign_on_bonus_usd, 2),
+        total_annual_fees_usd=round(total_annual_fees_usd, 2),
+        net_rewards_usd=round(net_rewards_usd, 2),
         total_reward_allocation=selected_cards,
         summary=summary,
+        spending_plan=spending_plan,
+        actionable_steps=actionable_steps,
         cards_used=cards_used,
         cards_added=cards_added
     )
