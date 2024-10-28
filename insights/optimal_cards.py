@@ -1,6 +1,6 @@
 from creditcard.endpoints.read_database import read_credit_cards_database, CreditCardsDatabaseRequest
-from creditcard.enums import * 
-from creditcard.schemas import CreditCardSchema
+from creditcard.enums import *
+from creditcard.schemas import CreditCardSchema, RewardCategoryRelation, RewardCategoryThreshold
 from database.auth.user import User
 from insights.category_spending_prediction import compute_user_card_sign_on_bonus_value
 from insights.heavyhitters import read_heavy_hitters, HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema
@@ -8,10 +8,11 @@ from insights.schemas import MonthlyTimeframe
 from pydantic import BaseModel, ConfigDict
 from pyscipopt import Model, quicksum
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Optional, List, Dict, Tuple
 
 import creditcard.enums as enums
 import numpy as np
+import datetime
 
 class OptimalCardsAllocationRequest(BaseModel):
     to_use: Optional[int] = 4
@@ -23,7 +24,9 @@ class OptimalCardsAllocationRequest(BaseModel):
 
 class HeldCardsUseSummary(BaseModel):
     name: str
-    value: float
+    profit_usd: float
+    annual_fee_usd: float
+    sign_on_bonus_estimated: float
 
 class OptimalCardsAllocationResponse(BaseModel):
     timeframe: MonthlyTimeframe
@@ -41,199 +44,347 @@ def remove_duplicates_ordered(lst):
     seen = set()
     return [x for x in lst if x not in seen and not seen.add(x)]
 
+def months_between(start_date: datetime.date, end_date: datetime.date) -> int:
+    return (end_date.year - start_date.year) * 12 + end_date.month - start_date.month + 1
 
+def calculate_timeframe_years(timeframe: MonthlyTimeframe) -> int:
+    total_months = months_between(timeframe.start_month, timeframe.end_month)
+    return max(1, total_months // 12)
 
-def create_cards_matrix(cards : List[CreditCardSchema], heavy_hitters: HeavyHittersResponse) -> np.array:
-    hh_list: List[HeavyHitterSchema] = heavy_hitters.heavyhitters   
+def calculate_timeframe_months(timeframe: MonthlyTimeframe) -> int:
+    return months_between(timeframe.start_month, timeframe.end_month)
+
+def create_cards_matrix(cards: List[CreditCardSchema], heavy_hitters: HeavyHittersResponse) -> Tuple[np.array, List[str], List[str], Dict[Tuple[str, str], RewardCategoryRelation]]:
+    hh_list: List[HeavyHitterSchema] = heavy_hitters.heavyhitters
     vendors = list(filter(lambda x: x is not None, [hh.name if hh.name else None for hh in hh_list]))
     categories: list = remove_duplicates_ordered([hh.category for hh in hh_list])
 
-    cards_matrix = np.zeros((len(hh_list), len(cards)))
-    # TODO this is super inefficient but i am lazy rn
+    num_categories = len(categories)
+    num_cards = len(cards)
+    cards_matrix = np.zeros((num_categories, num_cards))
+    reward_relations = {}
+
     for j, card in enumerate(cards):
-        for i, hh in enumerate(hh_list):
-            hc_idx = categories.index(hh.category)
-            # Find the index for the category in reward_category_map
-            cc_idx = None
-            if hh.category in [rcr.category for rcr in card.reward_category_map]:
-                cc_idx = [rcr.category for rcr in card.reward_category_map].index(hh.category)
-            elif enums.PurchaseCategory.GENERAL.value in [rcr.category for rcr in card.reward_category_map]:
-                cc_idx = [rcr.category for rcr in card.reward_category_map].index(enums.PurchaseCategory.GENERAL.value)
-            elif enums.PurchaseCategory.UNKNOWN.value in [rcr.category for rcr in card.reward_category_map]:
-                cc_idx = [rcr.category for rcr in card.reward_category_map].index(enums.PurchaseCategory.UNKNOWN.value)
-                print(f"[OpenAI Prompt WARNING] Used unknown category {hh.category} in {card.reward_category_map}")
+        for i, category in enumerate(categories):
+            # Find the best reward for this category
+            best_reward = None
+            for reward_relation in card.reward_category_map:
+                if reward_relation.category == category or reward_relation.category == enums.PurchaseCategory.GENERAL.value:
+                    best_reward = reward_relation
+                    break  # Assume the first match is the best (adjust if needed)
+
+            if best_reward:
+                reward_relations[(card.name, category)] = best_reward
+                r_unit_val = RewardUnit.get_value(best_reward.reward_unit)
+                r_reward_amount = best_reward.reward_amount
+                cards_matrix[i][j] = r_unit_val * r_reward_amount
             else:
-                print(f"Could not find category {hh.category} in {card.reward_category_map}")
+                # No reward for this category
+                cards_matrix[i][j] = 0
 
-            # If a category index is found, calculate the reward
-            if cc_idx is not None:
-                reward_data = card.reward_category_map[cc_idx]
-                r_unit_val = RewardUnit.get_value(reward_data.reward_unit)
-                r_reward_amount = reward_data.reward_amount
-                cards_matrix[hc_idx][j] = r_unit_val * r_reward_amount
+    return cards_matrix, categories, [card.name for card in cards], reward_relations
 
-            for reward_category_relation in card.reward_category_map:
-                
-                # Add the vendors to the matrix
-                if hh.name == reward_category_relation.category.value:
-                    cards_matrix[i][j] = RewardUnit.get_value(reward_category_relation.reward_unit) * reward_category_relation.reward_amount
-
-                # Add the categories to the matrix
-                elif hh.category == reward_category_relation.category.value:
-                    cards_matrix[i][j] = RewardUnit.get_value(reward_category_relation.reward_unit) * reward_category_relation.reward_amount
-
-    return cards_matrix
-
-def create_wallet_matrix(user: User, heavy_hitters: HeavyHittersResponse) -> np.array:
-    held_cards = user.credit_cards
-    held_cards = [CreditCardSchema.model_validate(cc) for cc in held_cards] 
-    return create_cards_matrix(held_cards, heavy_hitters)
-
-def create_heavy_hitter_matrix(heavy_hitters: HeavyHittersResponse) -> np.array:
-    hh_list: List[HeavyHitterSchema] = heavy_hitters.heavyhitters   
-    vendors: list = remove_duplicates_ordered(([hh.name for hh in hh_list]))
+def create_heavy_hitter_vector(heavy_hitters: HeavyHittersResponse) -> Tuple[np.array, List[str]]:
+    hh_list: List[HeavyHitterSchema] = heavy_hitters.heavyhitters
     categories: list = remove_duplicates_ordered([hh.category for hh in hh_list])
 
-    heavy_hitter_matrix = np.zeros((len(hh_list),len(hh_list)))
-    categories_index = len(vendors)
-    vendors_index = 0
-    for hh in hh_list:
-        if hh.name in vendors:
-            heavy_hitter_matrix[vendors_index][vendors_index] = hh.amount
-            vendors_index += 1
-        elif hh.category in categories:
-            heavy_hitter_matrix[categories_index][categories_index] = hh.amount
-            categories_index += 1
+    num_categories = len(categories)
+    heavy_hitter_vector = np.zeros(num_categories)
+    for i, category in enumerate(categories):
+        total_amount = sum(hh.amount for hh in hh_list if hh.category == category)
+        heavy_hitter_vector[i] = total_amount
 
-    return heavy_hitter_matrix
+    return heavy_hitter_vector, categories
 
 class RMatrixDetails(BaseModel):
-    R: np.array 
+    R: np.array
     wallet_size: int
     add_size: int
     ccs_added: List[CreditCardSchema]
     ccs_used: List[CreditCardSchema]
     timeframe: MonthlyTimeframe
+    categories: List[str]
+    card_names: List[str]
+    reward_relations: Dict[Tuple[str, str], RewardCategoryRelation]
+    heavy_hitter_vector: np.array
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
-
-def calculate_timeframe_years(timeframe: MonthlyTimeframe) -> int:
-    start_date = timeframe.start_month
-    end_date = timeframe.end_month
-    return max(1, (end_date.year - start_date.year + 1))
 
 async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocationRequest) -> RMatrixDetails:
     heavy_hitters_response: HeavyHittersResponse = await read_heavy_hitters(
         db=db, user=user, request=HeavyHittersRequest(account_ids="all", timeframe=request.timeframe)
     )
-    
+
     # Process held (wallet) cards
     held_cards = user.credit_cards
     ccs_used = [CreditCardSchema.model_validate(cc) for cc in held_cards]
-    W: np.array = create_cards_matrix(ccs_used, heavy_hitters=heavy_hitters_response)
+    W, categories, card_names_used, reward_relations_used = create_cards_matrix(ccs_used, heavy_hitters=heavy_hitters_response)
     wallet_size = W.shape[1]
 
     # Initialize additional cards if needed
     add_size = 0
     ccs_added = []
+    reward_relations_added = {}
     if request.to_add > 0:
         cc_response = await read_credit_cards_database(db=db, request=CreditCardsDatabaseRequest(card_details="all"))
         ccs_added = [CreditCardSchema.model_validate(cc) for cc in cc_response.credit_card if cc not in ccs_used]
-    
-        ADD: np.array = create_cards_matrix(ccs_added, heavy_hitters=heavy_hitters_response)
+
+        ADD, _, card_names_added, reward_relations_added = create_cards_matrix(ccs_added, heavy_hitters=heavy_hitters_response)
         add_size = ADD.shape[1]
         W = np.hstack([W, ADD])
+        card_names = card_names_used + card_names_added
+        reward_relations = {**reward_relations_used, **reward_relations_added}
+    else:
+        card_names = card_names_used
+        reward_relations = reward_relations_used
 
     # Calculate reward matrix R
-    H: np.array = create_heavy_hitter_matrix(heavy_hitters=heavy_hitters_response)
-    R = W.T @ H
+    H_vector, categories = create_heavy_hitter_vector(heavy_hitters=heavy_hitters_response)
+    R = W.T * H_vector  # Element-wise multiplication
 
-    # Return both held and added cards in RMatrixDetails
-    return RMatrixDetails(R=R, wallet_size=wallet_size, add_size=add_size, ccs_added=ccs_added, ccs_used=ccs_used, timeframe=heavy_hitters_response.timeframe) 
-
-async def optimize_credit_card_selection_milp(db: Session, user: User, request: OptimalCardsAllocationRequest) -> OptimalCardsAllocationResponse:
+    return RMatrixDetails(
+        R=R,
+        wallet_size=wallet_size,
+        add_size=add_size,
+        ccs_added=ccs_added,
+        ccs_used=ccs_used,
+        timeframe=heavy_hitters_response.timeframe,
+        categories=categories,
+        card_names=card_names,
+        reward_relations=reward_relations,
+        heavy_hitter_vector=H_vector
+    )
+async def optimize_credit_card_selection_milp(
+    db: Session,
+    user: User,
+    request: OptimalCardsAllocationRequest
+) -> OptimalCardsAllocationResponse:
     rmatrix: RMatrixDetails = await compute_r_matrix(db=db, user=user, request=request)
 
     R = rmatrix.R
     wallet_size = rmatrix.wallet_size
     add_size = rmatrix.add_size
-    timeframe_years = calculate_timeframe_years(rmatrix.timeframe)
+    timeframe_months = calculate_timeframe_months(rmatrix.timeframe)
+    timeframe_years = max(1, timeframe_months // 12)
 
     print(f"[INFO] Wallet size: {wallet_size}, add size: {add_size}")
 
     wallet_indices: List[int] = np.arange(0, wallet_size)
     eligible_indices: List[int] = np.arange(wallet_size, add_size + wallet_size)
     assert len(wallet_indices) + len(eligible_indices) == R.shape[0]
-    
+
     model = Model("credit_card_selection")
 
     if R.shape[0] == 0:
         print("[ERROR] R matrix is empty")
-        return OptimalCardsAllocationResponse(total_reward_usd=0, total_reward_allocation=[], summary=[], cards_used=[], cards_added=[])
+        return OptimalCardsAllocationResponse(
+            timeframe=rmatrix.timeframe,
+            total_reward_usd=0,
+            total_reward_allocation=[],
+            summary=[],
+            cards_used=[],
+            cards_added=[]
+        )
 
-    C = len(R)  # Number of cards
-    H = len(R[0])  # Number of categories (columns)
+    C = R.shape[0]  # Number of cards
+    H = R.shape[1]  # Number of categories
 
-    # Define binary variables for card-category assignment
-    y = {(i, j): model.addVar(vtype="B", name=f"y[{i},{j}]") for i in range(C) for j in range(H)}
+    # Decision variables: amount of spending in category assigned to a card
+    x = {}
+    for i in range(C):
+        for j in range(H):
+            x[(i, j)] = model.addVar(vtype="C", lb=0.0, name=f"x[{i},{j}]")
 
-    # Calculate sign-on bonus and annual fee for each card
-    sign_on_bonus_values = [0] * C
-    if request.use_sign_on_bonus:
-        for idx in range(C):
-            card = rmatrix.ccs_added[idx - wallet_size] if idx >= wallet_size else rmatrix.ccs_used[idx]
-            sign_on_bonus_values[idx] = await compute_user_card_sign_on_bonus_value(user, db, card)
+    # Constraint: Total spending in each category must be covered
+    for j in range(H):
+        model.addCons(
+            quicksum(x[(i, j)] for i in range(C)) == rmatrix.heavy_hitter_vector[j],
+            name=f"TotalSpending_Category_{j}"
+        )
 
-    annual_fee_values = [0] * C
+    # Objective function components
+    objective_terms = []
+
+    # Auxiliary variables for thresholds
+    y_vars = {}
+
+    # Define a default RewardCategoryRelation with valid enum values
+    default_reward_relation = RewardCategoryRelation(
+        category=enums.PurchaseCategory.UNKNOWN.value,
+        reward_unit=enums.RewardUnit.UNKNOWN.value,
+        reward_amount=0.0
+    )
+
+    # Add constraints and objective function terms for each card and category
+    for i in range(C):
+        card_name = rmatrix.card_names[i]
+        for j in range(H):
+            category = rmatrix.categories[j]
+            card_category_key = (card_name, category)
+            reward_relation = rmatrix.reward_relations.get(
+                card_category_key, default_reward_relation
+            )
+
+            reward_amount = reward_relation.reward_amount
+            reward_unit = reward_relation.reward_unit
+
+            # Handle thresholds
+            if reward_relation.reward_threshold:
+                threshold_info = reward_relation.reward_threshold
+                threshold = threshold_info.on_up_to_purchase_amount_usd
+                per_timeframe_months = threshold_info.per_timeframe_num_months
+                fallback_reward = threshold_info.fallback_reward_amount
+
+                if threshold > 0 and per_timeframe_months > 0:
+                    # Calculate how many times the threshold timeframe fits into the computation timeframe
+                    num_threshold_periods = max(1, timeframe_months // per_timeframe_months)
+                    effective_threshold = threshold * num_threshold_periods
+
+                    # Variables for spending within and beyond the threshold
+                    y1_var_name = f"y1_{i}_{j}"
+                    y2_var_name = f"y2_{i}_{j}"
+                    y1 = model.addVar(vtype="C", lb=0.0, name=y1_var_name)
+                    y2 = model.addVar(vtype="C", lb=0.0, name=y2_var_name)
+
+                    y_vars[(i, j)] = (y1, y2)
+
+                    # Constraint: y1 ≤ effective_threshold
+                    model.addCons(y1 <= effective_threshold, name=f"Threshold_{i}_{j}")
+
+                    # Constraint: x = y1 + y2
+                    model.addCons(
+                        x[(i, j)] == y1 + y2,
+                        name=f"Split_{i}_{j}"
+                    )
+
+                    # Add to objective function
+                    reward_multiplier = RewardUnit.get_value(reward_unit) * reward_amount
+                    fallback_multiplier = RewardUnit.get_value(reward_unit) * fallback_reward
+                    objective_terms.append(reward_multiplier * y1)
+                    objective_terms.append(fallback_multiplier * y2)
+                else:
+                    # No effective threshold; use x directly
+                    reward_multiplier = RewardUnit.get_value(reward_unit) * reward_amount 
+                    objective_terms.append(reward_multiplier * x[(i, j)])
+            else:
+                # No threshold; use x directly
+                reward_multiplier = RewardUnit.get_value(reward_unit) * reward_amount
+                objective_terms.append(reward_multiplier * x[(i, j)])
+
+    # Annual fees and sign-on bonuses
+    sign_on_bonus_values = [0.0] * C
+    annual_fee_values = [0.0] * C
     for idx in range(C):
-        card = rmatrix.ccs_added[idx - wallet_size] if idx >= wallet_size else rmatrix.ccs_used[idx]
+        if idx >= wallet_size:
+            card = rmatrix.ccs_added[idx - wallet_size]
+        else:
+            card = rmatrix.ccs_used[idx]
+        # Compute sign-on bonus
+        if request.use_sign_on_bonus and idx >= wallet_size:
+            sign_on_bonus_values[idx] = await compute_user_card_sign_on_bonus_value(user, db, card)
+        else:
+            sign_on_bonus_values[idx] = 0.0  # Assume no new sign-on bonus for existing cards
+
+        # Compute annual fees (annual fees are always in USD)
         if card.annual_fee:
             waived_years = card.annual_fee.waived_for
             effective_years = max(0, timeframe_years - waived_years)
-            annual_fee_values[idx] = effective_years * card.annual_fee.fee_usd
+            annual_fee = effective_years * card.annual_fee.fee_usd
+            annual_fee_values[idx] = annual_fee
+        else:
+            annual_fee_values[idx] = 0.0
 
-    # Objective function to maximize rewards, considering sign-on bonus and annual fee
-    model.setObjective(
-        quicksum(y[i, j] * (R[i][j] + sign_on_bonus_values[i] - annual_fee_values[i]) for i in range(C) for j in range(H)),
-        "maximize"
-    )
+    # Binary variables for card usage
+    z = {i: model.addVar(vtype="B", name=f"z[{i}]") for i in range(C)}
 
-    # Constraint: Ensure only one card is assigned per category
-    for j in range(H):
-        model.addCons(quicksum(y[i, j] for i in range(C)) <= 1)
+    # Linking constraints between x and z
+    M = sum(rmatrix.heavy_hitter_vector) * 10  # Big M value
+    for i in range(C):
+        for j in range(H):
+            model.addCons(x[(i, j)] <= M * z[i], name=f"Linking_{i}_{j}")
 
     # Constraints for total cards used based on request
     if request.to_use > wallet_size:
         request.to_use = wallet_size
-    model.addCons(quicksum(y[i, j] for i in wallet_indices for j in range(H)) <= request.to_use)
-    model.addCons(quicksum(y[i, j] for i in eligible_indices for j in range(H)) <= request.to_add)
+    model.addCons(quicksum(z[i] for i in wallet_indices) <= request.to_use, name="MaxHeldCards")
+    model.addCons(quicksum(z[i] for i in eligible_indices) <= request.to_add, name="MaxAddedCards")
+
+    # Add annual fees and sign-on bonuses to the objective function
+    objective_terms += [sign_on_bonus_values[i] * z[i] for i in range(C)]
+    objective_terms += [-annual_fee_values[i] * z[i] for i in range(C)]
+
+    # Set the objective function
+    model.setObjective(quicksum(objective_terms), "maximize")
 
     # Solve the model
     model.optimize()
 
     # Check feasibility
-    if model.getStatus() != "optimal" and model.getStatus() != "feasible":
+    status = model.getStatus()
+    if status not in ["optimal", "feasible"]:
         print("[ERROR] No feasible solution found.")
-        return OptimalCardsAllocationResponse(total_reward_usd=0, total_reward_allocation=[], summary=[], cards_used=[], cards_added=[])
+        return OptimalCardsAllocationResponse(
+            timeframe=rmatrix.timeframe,
+            total_reward_usd=0,
+            total_reward_allocation=[],
+            summary=[],
+            cards_used=[],
+            cards_added=[]
+        )
 
     # Extract results if feasible
-    selected_cards = [i for i in range(C) if any(model.getVal(y[i, j]) > 0.5 for j in range(H))]
+    selected_cards = [i for i in range(C) if model.getVal(z[i]) > 0.5]
     total_reward_usd = round(model.getObjVal(), 2)
 
     cards_added = []
     if request.return_cards_added:
-        cards_added = [card for idx, card in enumerate(rmatrix.ccs_added) if idx + wallet_size in eligible_indices and idx + wallet_size in selected_cards]
+        cards_added = [
+            rmatrix.ccs_added[idx - wallet_size]
+            for idx in selected_cards
+            if idx in eligible_indices
+        ]
         print(f"[INFO] {len(cards_added)} cards added of {len(eligible_indices)} eligible")
 
     cards_used = []
     if request.return_cards_used:
-        cards_used = [CreditCardSchema.model_validate(cc) for cc in rmatrix.ccs_used]
+        cards_used = [
+            rmatrix.ccs_used[idx]
+            for idx in selected_cards
+            if idx in wallet_indices
+        ]
+
+    # Prepare summary
+    summary = []
+    for idx in selected_cards:
+        card_name = rmatrix.card_names[idx]
+        total_value = 0.0
+        # Include annual fees and sign-on bonuses in the total_value
+        total_value -= annual_fee_values[idx]
+        total_value += sign_on_bonus_values[idx]
+        for j in range(H):
+            category = rmatrix.categories[j]
+            reward_relation = rmatrix.reward_relations.get(
+                (card_name, category),
+                default_reward_relation
+            )
+            reward_amount = reward_relation.reward_amount
+            reward_unit = reward_relation.reward_unit
+            x_value = model.getVal(x[(idx, j)])
+            # Adjust reward calculation based on reward unit
+            reward_multiplier = RewardUnit.get_value(reward_unit) * reward_amount
+            total_value += x_value * reward_multiplier
+        summary.append(HeldCardsUseSummary(name=card_name, 
+                                           profit_usd=total_value, 
+                                           annual_fee_usd=annual_fee_values[idx], 
+                                           sign_on_bonus_estimated=sign_on_bonus_values[idx])
+        )   
+    print(f"[INFO] Summary: {summary}")
 
     return OptimalCardsAllocationResponse(
         timeframe=rmatrix.timeframe,
         total_reward_usd=total_reward_usd,
         total_reward_allocation=selected_cards,
-        summary=None,
+        summary=summary,
         cards_used=cards_used,
         cards_added=cards_added
     )
