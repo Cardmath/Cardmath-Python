@@ -1,5 +1,5 @@
 from database.auth.user import Account, User, Enrollment
-from database.teller.preferences import Preferences, CreditProfilePreferences, BanksPreferences, TravelPreferences, BusinessPreferences, ConsumerPreferences
+from database.teller.preferences import Preferences, CreditProfilePreferences, BanksPreferences, RewardsProgramsPreferences, BusinessPreferences, ConsumerPreferences
 from database.teller.transactions import Transaction, Counterparty, TransactionDetails
 from datetime import datetime 
 from sqlalchemy.orm import Session
@@ -125,20 +125,18 @@ async def replace_banks_preferences(user : User, db: Session, preferences: schem
     db.refresh(banks_preferences)
     return
 
-async def replace_travel_preferences(user : User, db: Session, preferences: schemas.TravelPreferencesSchema) -> None:
-    db_travel_preferences = db.query(TravelPreferences).filter_by(user_id=user.id).first()
+async def replace_rewards_programs_preferences(user : User, db: Session, preferences: schemas.RewardsProgramsPreferencesSchema) -> None:
+    db_travel_preferences = db.query(RewardsProgramsPreferences).filter_by(user_id=user.id).first()
     if db_travel_preferences:
         db.delete(db_travel_preferences)
         print("[INFO] Replaced travel preferences.")
     else:
         print("[INFO] No travel preferences were found to replace.")
     
-    airlines_preferences = TravelPreferences(
+    airlines_preferences = RewardsProgramsPreferences(
         user_id = user.id,
-        preferred_airlines = preferences.preferred_airlines,
-        avoid_airlines = preferences.avoid_airlines,
-        frequent_travel_destinations = preferences.frequent_travel_destinations,
-        desired_benefits = preferences.desired_benefits
+        preferred_rewards_programs = preferences.preferred_rewards_programs,
+        avoid_rewards_programs = preferences.avoid_rewards_programs
     )
 
     db.add(airlines_preferences)
@@ -156,13 +154,14 @@ async def replace_consumer_preferences(user : User, db: Session, preferences: sc
     
     consumer_preferences = ConsumerPreferences(
         user_id = user.id,
-        favorite_restaurants = preferences.favorite_restaurants,
-        favorite_stores = preferences.favorite_stores
+        favorite_grocery_stores = preferences.favorite_grocery_stores,
+        favorite_general_goods_stores = preferences.favorite_general_goods_stores
     )
 
     db.add(consumer_preferences)
     db.commit()
     db.refresh(consumer_preferences)
+    print(f"Consumer preferences: {preferences}")
     return consumer_preferences
 
 async def replace_business_preferences(user : User, db: Session, preferences: schemas.BusinessPreferencesSchema) -> None:
@@ -189,22 +188,21 @@ async def replace_preferences(user : User, db: Session, preferences: schemas.Pre
     if db_preferences is None:
         db_preferences = Preferences(
             user_id = user.id,
-            user = user
         )
         db.add(db_preferences)
         db.commit()
         db.refresh(db_preferences)
         # TODO validate the db preferences table
         # 
-    print(preferences) 
 
     # We don't want to overwrite non-empty preferences with empty ones
     if preferences.credit_profile:
         await replace_credit_profile_preferences(user, db, preferences.credit_profile)
     if preferences.banks_preferences:
         await replace_banks_preferences(user, db, preferences.banks_preferences)
-    if preferences.travel_preferences:
-        await replace_travel_preferences(user, db, preferences.travel_preferences)
+    if preferences.rewards_programs_preferences:
+        print(preferences.rewards_programs_preferences)
+        await replace_rewards_programs_preferences(user, db, preferences.rewards_programs_preferences)
     if preferences.consumer_preferences:
         await replace_consumer_preferences(user, db, preferences.consumer_preferences)
     if preferences.business_preferences:

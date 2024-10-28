@@ -47,21 +47,39 @@ const PreferencesCard = ( {setAlert} ) => {
         return null;
     }
 
-    const [selectedAirlines, setSelectedAirlines] = useState(null);
-    const [selectedAvoidAirlines, setSelectedAvoidAirlines] = useState(null);
-    const airlines = [
-        'American Airlines',
-        'Delta Airlines',
-        'United Airlines',
-        'Southwest Airlines',
-        'Alaska Airlines',
-        'JetBlue Airways',
-        'Spirit Airlines',
-        'Frontier Airlines',
-        'Hawaiian Airlines',
+    const [selectedPointsSystems, setSelectedPointsSystems] = useState(null);
+    const [selectedAvoidPointsSystems, setSelectedAvoidPointsSystems] = useState(null);
+    const pointsSystems = [
+        'Chase Ultimate Rewards',
+        'American Express Membership Rewards',
+        'Citi ThankYou Points',
+        'Capital One Miles',
+        'Wells Fargo Go Far Rewards',
+        'Bank of America Preferred Rewards',
+        'Barclays Arrival Points',
+        'Discover Cashback Bonus',
+        'U.S. Bank Altitude Points',
+        'PNC Points',
+        'Hilton Honors Points',
+        'Marriott Bonvoy Points',
+        'World of Hyatt Points',
+        'Delta SkyMiles',
+        'United MileagePlus',
+        'American Airlines AAdvantage Miles',
+        'Southwest Rapid Rewards',
+        'IHG One Rewards Points',
+        'JetBlue TrueBlue Points',
+        'Alaska Mileage Plan Miles',
+        'Radisson Rewards Points',
+        'Percent Cashback USD',
+        'Statement Credit USD',
+        'Avios',
+        'Aeroplan Points',
+        'Choice Privileges Points',
+        'Unknown',
     ];
     const findAirlinesIntersection = () => {
-        const intersection = selectedAirlines?.filter(x => selectedAvoidAirlines?.includes(x)) || [];
+        const intersection = selectedPointsSystems?.filter(x => selectedAvoidPointsSystems?.includes(x)) || [];
         if (intersection.length > 0) {
             return intersection;
         }
@@ -69,32 +87,20 @@ const PreferencesCard = ( {setAlert} ) => {
     }
 
 
-    const [selectedRestaurants, setSelectedRestaurants] = useState(null);
-    const restaurants = [
-        'Starbucks',
-        'McDonalds',
-        'Panera Bread',
-        'Chipotle',
-        'Subway',
-        'Pizza Hut',
-        'Domino\'s Pizza',
-        'Applebee\'s',
-        'Olive Garden',
-        'Red Lobster',
+    const [selectedGroceries, setSelectedGroceries] = useState(null);
+    const groceries = [
+        'Walgreens',
+        'Walmart',
+        'Kroger',
+        'Lowes',
+        'Aldi',
+        'Costco'
     ];
 
     const [selectedShopping, setSelectedShopping] = useState(null);
     const shopping = [
         'Amazon',
         'Target',
-        'Walmart',
-        'Best Buy',
-        'Costco',
-        'Home Depot',
-        'Lowe\'s',
-        'GameStop',
-        'Bed Bath & Beyond',
-        'TJX Companies',
     ];
 
     const [selectedLifestyle, setSelectedLifestyle] = useState(null);
@@ -156,11 +162,9 @@ const PreferencesCard = ( {setAlert} ) => {
             return;
         }
 
-        const travel_preferences_out = {
-            preferred_airlines : selectedAirlines !== null ? [...selectedAirlines] : null,
-            avoid_airlines : selectedAvoidAirlines !== null ? [...selectedAvoidAirlines] : null,
-            frequent_travel_destinations : null,
-            desired_benefits : null
+        const rewards_programs_preferences_out = {
+            preferred_rewards_programs : selectedPointsSystems !== null ? [...selectedPointsSystems] : null,
+            avoid_rewards_programs : selectedAvoidPointsSystems !== null ? [...selectedAvoidPointsSystems] : null
         }
 
         var intersection = findAirlinesIntersection();
@@ -176,8 +180,8 @@ const PreferencesCard = ( {setAlert} ) => {
         }
         
         const consumer_preferences_out = {
-            favorite_restaurants: selectedRestaurants !== null ? [...selectedRestaurants] : null,
-            favorite_stores: selectedShopping !== null ? [...selectedShopping] : null,
+            favorite_grocery_stores: selectedGroceries !== null ? [...selectedGroceries] : null,
+            favorite_general_goods_stores: selectedShopping !== null ? [...selectedShopping] : null,
         };        
 
         const business_preferences_out = {
@@ -191,7 +195,7 @@ const PreferencesCard = ( {setAlert} ) => {
             body: JSON.stringify({
                 credit_profile: checkProperties(credit_profile_out) ? null : credit_profile_out, 
                 banks_preferences: checkProperties(banks_preferences_out) ? null : banks_preferences_out,
-                travel_preferences: checkProperties(travel_preferences_out) ? null : travel_preferences_out,
+                rewards_programs_preferences: checkProperties(rewards_programs_preferences_out) ? null : rewards_programs_preferences_out,
                 consumer_preferences: checkProperties(consumer_preferences_out) ? null : consumer_preferences_out,
                 business_preferences: checkProperties(business_preferences_out) ? null : business_preferences_out
             })
@@ -229,16 +233,16 @@ const PreferencesCard = ( {setAlert} ) => {
                             </a>
                         </li>
                         <li>
-                            <a onClick={() => handleTabClick('Travel')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
-                                <i className="pi pi-map md:mr-2"></i>
-                                <span className="font-medium hidden md:block">Travel</span>
+                            <a onClick={() => handleTabClick('RewardsPrograms')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
+                                <i className="pi pi-money-bill md:mr-2"></i>
+                                <span className="font-medium hidden md:block">Rewards Programs</span>
                                 <Ripple />
                             </a>
                         </li>
                         <li>
-                            <a onClick={() => handleTabClick('Shopping&Dining')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
+                            <a onClick={() => handleTabClick('Vendors')} className="p-ripple flex align-items-center cursor-pointer p-3 border-round text-800 hover:surface-hover transition-duration-150 transition-colors">
                                 <i className="pi pi-shop md:mr-2"></i>
-                                <span className="font-medium hidden md:block">Shopping & Dining</span>
+                                <span className="font-medium hidden md:block">Vendors</span>
                                 <Ripple />
                             </a>
                         </li>
@@ -339,37 +343,37 @@ const PreferencesCard = ( {setAlert} ) => {
                         </div>
                     </div>
                 </div>)}
-                {activeTab == 'Travel' && (<div className="bg-gray-300 sm:w-7 fadein animation-duration-100 p-5 shadow-2 border-round">
-                    <div className="text-900 font-medium text-xl mt-3">Travel Preferences</div>
+                {activeTab == 'RewardsPrograms' && (<div className="bg-gray-300 sm:w-7 fadein animation-duration-100 p-5 shadow-2 border-round">
+                    <div className="text-900 font-medium text-xl mt-3">Rewards Programs</div>
                     <Divider></Divider>
-                    <div className="font-light text-lg text-500 mb-3">Share your travel preferences, and we'll match you with the perfect card to get you there!</div>
+                    <div className="font-light text-lg text-500 mb-3">Pick your preferred points systems (and ones to avoid) for tailored credit card recommendations!</div>
                     <div className="flex gap-5 flex-column-reverse md:flex-row">
                         <div className="flex-auto p-fluid">
                             <div className="mb-4">
                                 <label className="block text-medium mb-2">
-                                    Preferred Airlines
+                                    Preferred Rewards Programs
                                 </label>
                                 
-                                <MultiSelect value={selectedAirlines} onChange={(e) => setSelectedAirlines(e.value)} options={airlines}
+                                <MultiSelect value={selectedPointsSystems} onChange={(e) => setSelectedPointsSystems(e.value)} options={pointsSystems}
                                     placeholder="Select Preferred Airlines" maxSelectedLabels={3} className="w-full md:w-20rem" />
                                 
                             </div>
                             <div className="mb-4">
                                 <label htmlFor="bio" className="block text-medium mb-2">
-                                    Airlines to Avoid
+                                    Rewards Programs to Avoid
                                 </label>
-                                <MultiSelect value={selectedAvoidAirlines} onChange={(e) => setSelectedAvoidAirlines(e.value)} options={airlines}
+                                <MultiSelect value={selectedAvoidPointsSystems} onChange={(e) => setSelectedAvoidPointsSystems(e.value)} options={pointsSystems}
                                     placeholder="Select Airlines to Avoid" maxSelectedLabels={3} className="w-full md:w-20rem" /></div>
                             <div>
                                 <Button onClick={() => {
                                     sendPreferences()
-                                    setActiveTab('Shopping&Dining');     
+                                    setActiveTab('Vendors');     
                                 }} label="Save and Continue" className="p-ripple w-auto"></Button>
                             </div>
                         </div>
                     </div>
                 </div>)}
-                {activeTab == 'Shopping&Dining' && (<div className="bg-gray-300 sm:w-7 fadein animation-duration-100 p-5 shadow-2 border-round">
+                {activeTab == 'Vendors' && (<div className="bg-gray-300 sm:w-7 fadein animation-duration-100 p-5 shadow-2 border-round">
                     <div className="text-900 font-medium text-xl mt-3">Shopping & Dining Preferences</div>
                     <Divider></Divider>
                     <div className="font-light text-lg text-500 mb-3">Share your dining and shopping preferences, and we’ll find the right card to match your taste!</div>
@@ -377,17 +381,17 @@ const PreferencesCard = ( {setAlert} ) => {
                         <div className="flex-auto p-fluid">
                             <div className="mb-4">
                                 <label className="block text-medium mb-2">
-                                    Favorite Restaurants
+                                    Favorite Grocery Stores
                                 </label>
-                                <MultiSelect value={selectedRestaurants} onChange={(e) => setSelectedRestaurants(e.value)} options={restaurants}
-                                    placeholder="Select you favorite restaurants" maxSelectedLabels={3} className="w-full md:w-20rem" />
+                                <MultiSelect value={selectedGroceries} onChange={(e) => setSelectedGroceries(e.value)} options={groceries}
+                                    placeholder="Select you favorite grocery stores" maxSelectedLabels={3} className="w-full md:w-20rem" />
                             </div>
                             <div className="mb-4">
                                 <label htmlFor="bio" className="block text-medium mb-2">
-                                    Favorite Stores
+                                    Favorite General Goods Stores
                                 </label>
                                 <MultiSelect value={selectedShopping} onChange={(e) => setSelectedShopping(e.value)} options={shopping}
-                                    placeholder="Select your favorite stores" maxSelectedLabels={3} className="w-full md:w-20rem" /></div>
+                                    placeholder="Select your favorite general goods stores" maxSelectedLabels={3} className="w-full md:w-20rem" /></div>
                             <div>
                                 <Button onClick={() => {
                                     sendPreferences()

@@ -10,7 +10,8 @@ import moment from 'moment';
 import CreditCardItemTemplate from './CreditCardItemTemplate';
 
 const OptimalAllocationSavingsCard = () => {
-  // Existing state variables
+  const [timeframe, setTimeframe] = useState(null);
+
   const [allTimeSavings, setAllTimeSavings] = useState(0);
   const [lastMonthSavings, setLastMonthSavings] = useState(0);
 
@@ -118,6 +119,7 @@ const OptimalAllocationSavingsCard = () => {
       setRecommendedCardsBonusTotal(data.total_reward_usd);
 
       // Set new data from the API response
+      setTimeframe(data.timeframe);
       setSummary(data.summary);
       setSpendingPlan(data.spending_plan);
       setActionableSteps(data.actionable_steps);
@@ -207,14 +209,18 @@ const OptimalAllocationSavingsCard = () => {
           <div className="font-bold text-2xl grid justify-content-center pb-1">${totalRegularRewardsCurrent}</div>
           <div className="grid justify-content-center py-2">Current Wallet Annual Fees</div>
           <div className="font-bold text-2xl grid justify-content-center pb-1">${totalAnnualFeesCurrent}</div>
-        </div>
+          <div className="grid justify-content-center py-2">Timeframe of Calculation</div>
+          {timeframe && <div className="font-bold text-2xl grid justify-content-center pb-1">{moment(timeframe.start_month).format('MMMM YYYY')} to {moment(timeframe.end_month).format('MMMM YYYY')}</div>}
+          </div>
         {/* Recommended Wallet */}
         <div className="col-5 border-round shadow-3">
           <div className="grid justify-content-center py-2">Recommended Wallet Regular Rewards</div>
           <div className="font-bold text-2xl grid justify-content-center pb-1">${totalRegularRewards}</div>
           <div className="grid justify-content-center py-2">Recommended Wallet Annual Fees</div>
           <div className="font-bold text-2xl grid justify-content-center pb-1">${totalAnnualFees}</div>
-        </div>
+          <div className="grid justify-content-center py-2">Recommended Wallet Sign on Bonus</div>
+          <div className="font-bold text-2xl grid justify-content-center pb-1">${totalSignOnBonus}</div>
+          </div>
       </div>
 
       {/* Input controls and compute button */}
@@ -329,7 +335,7 @@ const OptimalAllocationSavingsCard = () => {
                     .filter(item => recommendedCards.some(card => card.name === item.name))
                     .map((item, index) => (
                       <tr key={index}>
-                        <td className="text-center" >{item.name}</td>
+                        <td>{item.name}</td>
                         <td className="text-center">${item.sign_on_bonus_estimated.toFixed(2)}</td>
                       </tr>
                     ))}
@@ -349,7 +355,7 @@ const OptimalAllocationSavingsCard = () => {
                   <tr>
                     <th>Card Name</th>
                     <th>Category</th>
-                    <th>Amount (USD)</th>
+                    <th>Amount Spent(USD)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -357,7 +363,7 @@ const OptimalAllocationSavingsCard = () => {
                     <tr key={index}>
                       <td>{item.card_name}</td>
                       <td>{item.category}</td>
-                      <td>${item.amount.toFixed(2)}</td>
+                      <td className='text-center'>${item.amount.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>

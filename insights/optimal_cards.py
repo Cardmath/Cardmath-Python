@@ -138,7 +138,7 @@ async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocat
     ccs_added = []
     reward_relations_added = {}
     if request.to_add > 0:
-        cc_response = await read_credit_cards_database(db=db, request=CreditCardsDatabaseRequest(card_details="all"))
+        cc_response = await read_credit_cards_database(db=db, request=CreditCardsDatabaseRequest(card_details="all", use_preferences=True), current_user=user)
         ccs_added = [CreditCardSchema.model_validate(cc) for cc in cc_response.credit_card if cc not in ccs_used]
 
         ADD, _, card_names_added, reward_relations_added = create_cards_matrix(ccs_added, heavy_hitters=heavy_hitters_response)

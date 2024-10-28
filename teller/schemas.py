@@ -141,17 +141,15 @@ class BanksPreferencesSchema(BaseModel):
             
         return data
     
-class TravelPreferencesSchema(BaseModel):
-    preferred_airlines : Optional[List[enums.Airline]] = None
-    avoid_airlines : Optional[List[enums.Airline]] = None
-    frequent_travel_destinations : Optional[List[str]] = None
-    desired_benefits : Optional[List[str]] = None
+class RewardsProgramsPreferencesSchema(BaseModel):
+    preferred_rewards_programs : Optional[List[enums.RewardUnit]] = None
+    avoid_rewards_programs : Optional[List[enums.RewardUnit]] = None
 
     model_config = ConfigDict(from_attributes=True)
     
 class ConsumerPreferencesSchema(BaseModel):
-    favorite_restaurants : Optional[List[str]] = None
-    favorite_stores : Optional[List[str]] = None
+    favorite_grocery_stores : Optional[List[str]] = None
+    favorite_general_goods_stores : Optional[List[str]] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -165,7 +163,7 @@ class BusinessPreferencesSchema(BaseModel):
 class PreferencesSchema(BaseModel):
     credit_profile : Optional[CreditProfileSchema] = None
     banks_preferences : Optional[BanksPreferencesSchema] = None
-    travel_preferences : Optional[TravelPreferencesSchema] = None
+    rewards_programs_preferences : Optional[RewardsProgramsPreferencesSchema] = None
     consumer_preferences : Optional[ConsumerPreferencesSchema] = None
     business_preferences : Optional[BusinessPreferencesSchema] = None
 

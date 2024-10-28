@@ -42,7 +42,7 @@ async def update_user_credit_cards(user: User, db: Session) -> List[Account]:
         for account in accounts:
             credit_cards : List[CreditCard] = []
             if environment == 'dev' and len(user.credit_cards) < 5: 
-                response: CreditCardsDatabaseResponse = await read_credit_cards_database(request=CreditCardsDatabaseRequest(max_num=50), db=db)
+                response: CreditCardsDatabaseResponse = await read_credit_cards_database(request=CreditCardsDatabaseRequest(max_num=50, card_details="all", use_preferences=False), db=db)
                 if response.credit_card:
                     random_card = random.choice(response.credit_card).credit_card()
                     credit_cards = [random_card]

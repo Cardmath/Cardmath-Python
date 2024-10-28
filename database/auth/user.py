@@ -19,7 +19,7 @@ class User(Base):
     disabled = Column(Boolean, default=False)
     enrollments = relationship("Enrollment", back_populates="user")
     credit_cards = relationship("CreditCard", secondary=user_credit_card_association, back_populates="users")
-    preferences = relationship("Preferences", back_populates="user")
+    preferences = relationship("Preferences", uselist=False)
 
 class UserInDB(User):
     hashed_password = Column(String, nullable=False)

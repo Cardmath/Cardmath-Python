@@ -120,6 +120,7 @@ class CreditCardsFilter(BaseModel):
 
 class CreditCardsDatabaseRequest(BaseModel):
     card_details: Union[str, CreditCardsFilter] = "all"
+    use_preferences: bool
     max_num : Optional[int] = None
 
     @field_validator('card_details')
