@@ -15,6 +15,11 @@ import SpendingPlanTable from './SpendingPlanTable';
 import SignOnBonusTable from './SignOnBonusTable';
 
 const OptimalAllocationSavingsCard = () => {
+  const [solutions, setSolutions] = useState([]); // Store all solutions
+  const [solutionIndex, setSolutionIndex] = useState(0); // Track the displayed solution index
+
+  const [computationLoading, setComputationLoading] = useState(false)
+
   const [timeframe, setTimeframe] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
 
@@ -72,7 +77,8 @@ const OptimalAllocationSavingsCard = () => {
             return_cards_used: true,
           })
         });
-        const data = await response.json();
+        let data = await response.json();
+        data = data.solutions[0];
         setAllTimeSavings(data.total_reward_usd);
         // Set current wallet data
         setNetRewardsCurrent(data.net_rewards_usd);
@@ -90,6 +96,7 @@ const OptimalAllocationSavingsCard = () => {
 
   // Fetch recommended allocation
   const fetchOptimalAllocation = async () => {
+    setComputationLoading(true);
     try {
       const response = await fetchWithAuth('http://localhost:8000/compute_optimal_allocation', {
         method: 'POST',
@@ -108,23 +115,35 @@ const OptimalAllocationSavingsCard = () => {
         })
       });
       const data = await response.json();
-      console.log(data);
-      setRecommendedCards(data.cards_added);
-      setRecommendedCardsBonusTotal(data.total_reward_usd);
-
-      // Set new data from the API response
-      setTimeframe(data.timeframe);
-      setSummary(data.summary);
-      setSpendingPlan(data.spending_plan);
-      setActionableSteps(data.actionable_steps);
-      setTotalRegularRewards(data.total_regular_rewards_usd);
-      setTotalSignOnBonus(data.total_sign_on_bonus_usd);
-      setTotalAnnualFees(data.total_annual_fees_usd);
-      setNetRewards(data.net_rewards_usd);
+      setSolutions(data);
     } catch (error) {
       console.error('Error fetching savings data:', error);
     }
+    setComputationLoading(false);
   };
+
+  useEffect(() => {
+    if (!solutions || !solutions.solutions || solutions.solutions.length === 0) {
+      console.log('Solutions array is empty');
+      return;
+    }
+    
+    let data = solutions.solutions[solutionIndex % solutions.solutions.length];
+    let timeframe = solutions.timeframe;
+
+    setRecommendedCards(data.cards_added);
+    setRecommendedCardsBonusTotal(data.total_reward_usd);
+
+    // Set new data from the API response
+    setTimeframe(timeframe);
+    setSummary(data.summary);
+    setSpendingPlan(data.spending_plan);
+    setActionableSteps(data.actionable_steps);
+    setTotalRegularRewards(data.total_regular_rewards_usd);
+    setTotalSignOnBonus(data.total_sign_on_bonus_usd);
+    setTotalAnnualFees(data.total_annual_fees_usd);
+    setNetRewards(data.net_rewards_usd);
+  }, [solutionIndex, solutions]);
 
   // Fetch user's optimal allocation for the selected timeframe on component mount
   useEffect(() => {
@@ -165,6 +184,12 @@ const OptimalAllocationSavingsCard = () => {
         </div>
       </div>
 
+      <div className='pt-4 border-round flex justify-content-center'>
+        <Button icon="pi pi-arrow-left" onClick={() => solutions.solutions && setSolutionIndex(solutionIndex - 1 % solutions.solutions.length)} />
+        <div className='text-center text-2xl px-3'>Current Solution: {solutionIndex + 1} / {solutions.solutions?.length || 0}</div>
+        <Button icon="pi pi-arrow-right" onClick={() => solutions.solutions && setSolutionIndex(solutionIndex + 1 % solutions.solutions.length)} />
+      </div>
+          
       {/* Display total rewards and net rewards */}
       <div className="flex pt-4 gap-2 justify-content-center">
         <Tooltip className='w-3' target=".current-wallet-net-rewards" position="bottom"/>
@@ -269,7 +294,7 @@ const OptimalAllocationSavingsCard = () => {
           <Button onClick={() => {
             fetchOptimalAllocation();
             fetchCurrentCardsOptimalAllocation();
-          }} className='w-full mt-5' label="Compute" />
+          }} className='w-full mt-5' label="Compute" loading={computationLoading} />
         </div>
 
         {/* Display carousels and spending plan */}
@@ -318,7 +343,7 @@ const OptimalAllocationSavingsCard = () => {
           </div>
 
           {/* Replaced Sign-On Bonus Table */}
-          <SignOnBonusTable summary={summary} recommendedCards={recommendedCards} />
+          <SignOnBonusTable summary={summary} recommendedCards={recommendedCards} useSignOnBonus={useSignOnBonus}/>
 
           {/* Spending Plan Table */}
           <SpendingPlanTable spendingPlan={spendingPlan} />

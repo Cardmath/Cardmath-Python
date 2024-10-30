@@ -1,0 +1,119 @@
+from copy import deepcopy
+from creditcard.endpoints.read_database import read_credit_cards_database, CreditCardsDatabaseRequest
+from creditcard.enums import PurchaseCategory, RewardUnit
+from creditcard.schemas import CreditCardSchema
+from database.auth.user import User
+from insights.category_spending_prediction import calculate_incremental_spending_probabilities
+from insights.heavyhitters import read_heavy_hitters, HeavyHittersRequest, HeavyHittersResponse
+from insights.optimal_cards.matrix_helpers import create_cards_matrix, create_heavy_hitter_vector
+from insights.schemas import OptimalCardsAllocationRequest, RMatrixDetails
+from insights.utils import calculate_timeframe_years
+from sqlalchemy.orm import Session
+
+import numpy as np
+
+
+async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocationRequest) -> RMatrixDetails:
+    heavy_hitters_response: HeavyHittersResponse = await read_heavy_hitters(
+        db=db, user=user, request=HeavyHittersRequest(account_ids="all", timeframe=request.timeframe)
+    )
+
+    # Process held (wallet) cards
+    held_cards = user.credit_cards
+    ccs_used = [CreditCardSchema.model_validate(cc) for cc in held_cards]
+    W, categories, card_names_used, reward_relations_used = create_cards_matrix(ccs_used, heavy_hitters=heavy_hitters_response)
+    wallet_size = W.shape[1]
+
+    # Initialize additional cards if needed
+    ccs_added = []
+    reward_relations_added = {}
+    if request.to_add > 0:
+        cc_response = await read_credit_cards_database(db=db, request=CreditCardsDatabaseRequest(card_details="all", use_preferences=True), current_user=user)
+        ccs_added = [CreditCardSchema.model_validate(cc) for cc in cc_response.credit_card if cc not in ccs_used]
+
+        ADD, _, card_names_added, reward_relations_added = create_cards_matrix(ccs_added, heavy_hitters=heavy_hitters_response)
+        W = np.hstack([W, ADD])
+        card_names = card_names_used + card_names_added
+        reward_relations = {**reward_relations_used, **reward_relations_added}
+    else:
+        card_names = card_names_used
+        reward_relations = reward_relations_used
+
+    # Calculate reward matrix R
+    H_vector, categories = create_heavy_hitter_vector(heavy_hitters=heavy_hitters_response)
+    R = W.T * H_vector  # Element-wise multiplication
+    M = abs(sum(H_vector)) * 10
+
+    card_sob_data = {}  # Key: card index i, Value: dict with SOB details
+
+    for idx, card in enumerate(ccs_added):
+        if request.use_sign_on_bonus:
+            for sob in card.sign_on_bonus:
+                category = sob.purchase_type
+                
+                if category == PurchaseCategory.UNKNOWN:
+                    continue  # Skip unknown categories
+
+                threshold = sob.condition_amount
+                T = sob.get_timeframe_in_months()
+                sob_amount = sob.reward_amount * RewardUnit.get_value(sob.reward_type)
+                max_level = int(threshold + 1000)
+                levels = [l for l in range(500, max_level + 1, 500)]
+                levels = sorted(set(levels))  # Ensure unique, sorted levels
+                # Compute incremental probabilities
+                levels_and_probs = await calculate_incremental_spending_probabilities(
+                    user=user,
+                    db=db,
+                    category=category,
+                    levels=levels,
+                    T=T
+                )
+                incremental_probs = {}
+                for l, p in levels_and_probs:
+                    incremental_probs[l] = p
+
+                # Store the data
+                card_sob_data[idx] = {
+                    'category': category,
+                    'levels': levels,
+                    'reward_unit' : sob.reward_type,
+                    'incremental_probs': deepcopy(incremental_probs),
+                    'sob_amount': sob_amount,
+                    'timeframe': T
+                }
+
+    # Annual fees
+    C, H = R.shape
+    annual_fee_values = [0.0] * C
+    for idx in range(C):
+        if idx >= wallet_size:
+            card = ccs_added[idx - wallet_size]
+        else:
+            card = ccs_used[idx]
+
+        # Compute annual fees (annual fees are always in USD)
+        if card.annual_fee:
+            waived_years = card.annual_fee.waived_for
+            effective_years = max(0, calculate_timeframe_years(timeframe=heavy_hitters_response.timeframe) - waived_years)
+            annual_fee = effective_years * card.annual_fee.fee_usd
+            annual_fee_values[idx] = annual_fee
+        else:
+            annual_fee_values[idx] = 0.0
+
+
+    return RMatrixDetails(
+        R=R,
+        wallet_size=wallet_size,
+        to_add = request.to_add,
+        ccs_added=ccs_added,
+        to_use = request.to_use,
+        ccs_used=ccs_used,
+        annual_fees=annual_fee_values,
+        timeframe=heavy_hitters_response.timeframe,
+        categories=categories,
+        card_names=card_names,
+        reward_relations=reward_relations,
+        heavy_hitter_vector=H_vector,
+        card_sob_data=card_sob_data,
+        M = M
+    )

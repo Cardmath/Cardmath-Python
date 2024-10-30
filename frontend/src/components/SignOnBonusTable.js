@@ -2,7 +2,7 @@ import React from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 
-export default function SignOnBonusTable({ summary, recommendedCards }) {
+export default function SignOnBonusTable({ useSignOnBonus, summary, recommendedCards }) {
     // Filter summary based on recommendedCards to match your existing logic
     const filteredSummary = summary.filter(item => 
         recommendedCards.some(card => card.name === item.name)
@@ -11,7 +11,7 @@ export default function SignOnBonusTable({ summary, recommendedCards }) {
     return (
         <div className="col-12 mt-4 shadow-2 border-round bg-gray-200">
             <div className="text-3xl pb-2 text-center">Sign-On Bonus Rewards for New Cards</div>
-            {filteredSummary && filteredSummary.length > 0 ? (
+            {useSignOnBonus && filteredSummary && filteredSummary.length > 0 ? (
                 <DataTable value={filteredSummary} showGridlines tableStyle={{ minWidth: '60rem' }}>
                     <Column field="name" header="Card Name"></Column>
                     <Column 
@@ -51,7 +51,10 @@ export default function SignOnBonusTable({ summary, recommendedCards }) {
                     ></Column>
                 </DataTable>
             ) : (
-                <p>No sign-on bonus data available.</p>
+                <p className='text-center'>
+                    {!useSignOnBonus && <div> You've turned off the Sign On Bonus feature. 
+                        Once you turn it on and perform a new computation, you'll see a summary of the results here.</div>}
+                </p>
             )}
         </div>
     );

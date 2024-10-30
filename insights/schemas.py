@@ -1,8 +1,10 @@
-from datetime import date
+from creditcard.schemas import CreditCardSchema, RewardCategoryRelation
 from datetime import date
 from pydantic import BaseModel
-from pydantic import BaseModel, field_validator, model_validator
-from typing import List, Union, Optional, Tuple
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+from typing import List, Union, Optional, Tuple, Dict
+import creditcard.enums as enums
+import numpy as np
 
 import creditcard.enums as enums
 
@@ -137,3 +139,73 @@ class CategoriesMovingAveragesResponse(BaseModel):
                 if len(c.moving_average) != len(dates):
                     raise ValueError('all series must have the same number of amounts as dates')
         return values
+    
+class OptimalCardsAllocationRequest(BaseModel):
+    num_solutions:int = 5
+
+
+    to_use: Optional[int] = 4
+    to_add: Optional[int] = 0
+    timeframe: Optional[MonthlyTimeframe] = None
+    use_sign_on_bonus: bool = False
+    return_cards_used: Optional[bool] = False
+    return_cards_added: Optional[bool] = False
+class CardsUseSummary(BaseModel):
+    name: str 
+
+    annual_fee_usd: float
+    sign_on_bonus_estimated: float
+    sign_on_bonus_likelihood: float
+    sign_on_bonus_reward_unit: enums.RewardUnit
+    sign_on_bonus_total: float
+    regular_rewards_usd: float
+
+    profit_usd: float
+    
+class SpendingPlanItem(BaseModel):
+    card_name: str
+    category: str
+    amount_value: float
+    reward_unit_amount: float
+    reward_unit: str
+
+class OptimalCardsAllocationSolution(BaseModel):
+    timeframe: MonthlyTimeframe
+    total_reward_usd: float
+    total_regular_rewards_usd: float
+    total_sign_on_bonus_usd: float
+    total_annual_fees_usd: float
+    net_rewards_usd: float
+
+    total_reward_allocation: List[int]
+    summary: Optional[List[CardsUseSummary]] = None
+    spending_plan: Optional[List[SpendingPlanItem]] = None
+
+    cards_used: Optional[List[CreditCardSchema]] = None
+    cards_added: Optional[List[CreditCardSchema]] = None
+
+class OptimalCardsAllocationResponse(BaseModel):
+    timeframe: MonthlyTimeframe
+    solutions: List[OptimalCardsAllocationSolution]
+
+class RMatrixDetails(BaseModel):
+    R: np.array
+    wallet_size: int
+    
+    to_add: int
+    ccs_added: List[CreditCardSchema]
+    
+    to_use: int 
+    ccs_used: List[CreditCardSchema]
+
+    card_sob_data: dict
+    annual_fees: List[float]
+    
+    timeframe: MonthlyTimeframe
+    categories: List[str]
+    card_names: List[str]
+    reward_relations: Dict[Tuple[str, str], RewardCategoryRelation]
+    heavy_hitter_vector: np.array
+    M : float 
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)

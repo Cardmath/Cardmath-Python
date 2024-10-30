@@ -20,7 +20,8 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from insights.heavyhitters import read_heavy_hitters
 from insights.moving_averages import compute_categories_moving_averages
-from insights.optimal_cards import optimize_credit_card_selection_milp, OptimalCardsAllocationRequest, OptimalCardsAllocationResponse
+from insights.optimal_cards.endpoint import optimize_credit_card_selection_milp
+from insights.schemas import OptimalCardsAllocationRequest, OptimalCardsAllocationResponse
 from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, CategoriesMovingAveragesRequest, CategoriesMovingAveragesResponse
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema, PreferencesSchema
@@ -49,7 +50,7 @@ async def lifespan(app: FastAPI):
         try :
             extract(request=ExtractRequest(file_path=SAFE_LOCAL_DOWNLOAD_SPOT,
                     return_json = False,
-                    max_items_to_extract = 50,
+                    max_items_to_extract = 100,
                     save_to_db=True),
                     db=db)
         except Exception as e:
