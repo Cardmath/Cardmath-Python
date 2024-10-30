@@ -1,9 +1,10 @@
 from collections import defaultdict
+from copy import deepcopy
 from creditcard.endpoints.read_database import read_credit_cards_database, CreditCardsDatabaseRequest
 from creditcard.enums import *
 from creditcard.schemas import CreditCardSchema, RewardCategoryRelation, RewardCategoryThreshold
 from database.auth.user import User
-from insights.category_spending_prediction import compute_user_card_sign_on_bonus_value, calculate_incremental_spending_probabilities
+from insights.category_spending_prediction import calculate_incremental_spending_probabilities
 from insights.heavyhitters import read_heavy_hitters, HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema
 from insights.schemas import MonthlyTimeframe
 from pydantic import BaseModel, ConfigDict
@@ -236,7 +237,8 @@ async def optimize_credit_card_selection_milp(
     z = {i: model.addVar(vtype="B", name=f"z[{i}]") for i in range(C)}
 
     # Linking constraints between x and z
-    M = sum(rmatrix.heavy_hitter_vector) * 10  # Big M value
+    M = abs(sum(rmatrix.heavy_hitter_vector)) * 10  # Big M value
+    print(f"[INFO] Big M value: {M}")
     for i in range(C):
         for j in range(H):
             model.addCons(x[(i, j)] <= M * z[i], name=f"Linking_{i}_{j}")
@@ -258,10 +260,13 @@ async def optimize_credit_card_selection_milp(
         if request.use_sign_on_bonus:
             for sob in card.sign_on_bonus:
                 category = sob.purchase_type
+                
+                if category == enums.PurchaseCategory.UNKNOWN:
+                    break  # Skip unknown categories
+
                 threshold = sob.condition_amount
                 T = sob.get_timeframe_in_months()
                 sob_amount = sob.reward_amount * RewardUnit.get_value(sob.reward_type)
-                # Define levels from $500 up to threshold + $1000 in $500 increments
                 max_level = int(threshold + 1000)
                 levels = [l for l in range(500, max_level + 1, 500)]
                 levels = sorted(set(levels))  # Ensure unique, sorted levels
@@ -276,34 +281,32 @@ async def optimize_credit_card_selection_milp(
                 incremental_probs = {}
                 for l, p in levels_and_probs:
                     incremental_probs[l] = p
+
                 # Store the data
                 card_sob_data[idx] = {
                     'category': category,
                     'levels': levels,
-                    'incremental_probs': incremental_probs,
+                    'incremental_probs': deepcopy(incremental_probs),
                     'sob_amount': sob_amount,
                     'timeframe': T
                 }
 
     # Create variables for sign-on bonuses
     s_il = {}  # Key: (i, l), Value: binary variable s_il
-
+    
     for i, sob_info in card_sob_data.items():
         category = sob_info['category']
         levels = sob_info['levels']
         incremental_probs = sob_info['incremental_probs']
         sob_amount = sob_info['sob_amount']
-        T_sob = sob_info['timeframe']
+        
         # Find the index j of the category in rmatrix.categories
         if category in rmatrix.categories:
             j = rmatrix.categories.index(category)
         else:
             # If category is not in user's spending, skip
             continue
-        # Adjust heavy hitter vector for SOB category
-        original_spending = rmatrix.heavy_hitter_vector[j]
-        adjusted_spending = original_spending * (T_sob / timeframe_months)
-        rmatrix.heavy_hitter_vector[j] = min(original_spending, adjusted_spending)
+
         # Create binary variables s_il
         s_il[i] = {}
         levels = sorted(levels)
@@ -311,10 +314,16 @@ async def optimize_credit_card_selection_milp(
             s_il[i][l] = model.addVar(vtype="B", name=f"s_{i}_{l}")
         # Add spending level activation constraints
         for l in levels:
-            model.addCons(
-                x[(i, j)] >= l * s_il[i][l],
-                name=f"SpendingLevelActivation_{i}_{l}"
-            )
+            if category == enums.PurchaseCategory.GENERAL:
+                model.addCons(
+                    quicksum(x[(i, j)] for j in range(H)) >= l * s_il[i][l],
+                    name=f"SpendingLevelActivation_{i}_{l}"
+                )
+            else :
+                model.addCons(
+                    x[(i, j)] >= l * s_il[i][l],
+                    name=f"SpendingLevelActivation_{i}_{l}"
+                )
         # Add sequential activation constraints
         for idx_level in range(1, len(levels)):
             l_current = levels[idx_level]
@@ -413,6 +422,9 @@ async def optimize_credit_card_selection_milp(
     # Set the objective function
     model.setObjective(quicksum(objective_terms), "maximize")
 
+    if (request.use_sign_on_bonus):
+        model.writeProblem("milp_debug.lp")
+
     # Solve the model
     model.optimize()
 
@@ -434,7 +446,12 @@ async def optimize_credit_card_selection_milp(
         )
 
     # Extract results if feasible
-    selected_cards = [i for i in range(C) if model.getVal(z[i]) > 0.5]
+    selected_cards = []
+    for i in range(C):
+        z_val = model.getVal(z[i])
+        if z_val > 0.5:
+            selected_cards.append(i)
+            print(f"[INFO] Selected card {i}, z value: {z_val:.3f}")
     total_reward_usd = round(model.getObjVal(), 2)
 
     cards_added = []
@@ -495,13 +512,17 @@ async def optimize_credit_card_selection_milp(
         if idx in card_sob_data:
             sob_info = card_sob_data[idx]
             levels = sob_info['levels']
-            incremental_probs = sob_info['incremental_probs']
+            incremental_probs = deepcopy(sob_info['incremental_probs'])
             sob_amount = sob_info['sob_amount']
             for l in levels:
                 s_value = model.getVal(s_il[idx][l])
                 if s_value > 0.5:
+                    print(f"Sign on bonus level {l}, prob {incremental_probs[l]} activated { sob_amount }")
                     sign_on_bonus += sob_amount * incremental_probs[l]
                     # Assuming we sum up all activated levels
+                else :
+                    print(f"Sign on bonus level {l}, prob {incremental_probs[l]} not activated { sob_amount }")
+            print(f"sign on bonus {sign_on_bonus}")
             total_sign_on_bonus_usd += sign_on_bonus
         total_regular_rewards_usd += total_rewards
         net_rewards = total_rewards + sign_on_bonus - annual_fee
@@ -517,6 +538,8 @@ async def optimize_credit_card_selection_milp(
         )
 
     net_rewards_usd = total_regular_rewards_usd + total_sign_on_bonus_usd - total_annual_fees_usd
+
+    print(f"Total sign on bonus: {total_sign_on_bonus_usd}")
 
     # Prepare actionable steps
     actionable_steps = []

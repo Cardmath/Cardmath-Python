@@ -8,11 +8,12 @@ import { StyleClass } from 'primereact/styleclass';
 import ConnectBanks from '../components/calltoaction/ConnectBanks';
 import OptimalAllocationSavingsCard from '../components/OptimalAllocationSavingsCard';
 
-
 const DashboardPage = () => {
-    const [dates, setDates] = useState([])
-    const [categories, setCategories] = useState([])
-    const [isMovingAveragesReady, setIsMovingAveragesReady] = useState(false) // isMovingAveragesReady 
+    const [dates, setDates] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [isMovingAveragesReady, setIsMovingAveragesReady] = useState(false);
+    const [heavyHittersCategories, setHeavyHittersCategories] = useState([]);
+    const [dateRange, setDateRange] = useState([null, null]); // State for the date range
 
     useEffect(() => {
         fetchWithAuth('http://localhost:8000/compute_categories_moving_averages', {
@@ -26,8 +27,8 @@ const DashboardPage = () => {
             })
         }).then(response => {
             if (response.status === 200) {
-                return response.json()        
-            } 
+                return response.json()
+            }
             throw new Error(response.statusText);
         }).then(data => {
             setDates(data.dates);
@@ -36,23 +37,21 @@ const DashboardPage = () => {
             }
             setCategories(data.categories);
             setIsMovingAveragesReady(true);
-        })
+        });
     }, []);
-
-    const [heavyHittersCategories, setHeavyHittersCategories] = useState([]);
 
     useEffect(() => {
         fetchWithAuth('http://localhost:8000/read_heavy_hitters', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                account_ids: "all"
+                account_ids: "all",
+                date_range: dateRange // Use the selected date range
             })
         }).then(response => response.json())
-        .then(data => setHeavyHittersCategories(data.heavyhitters))
-        .catch(error => console.log(error));
-
-    }, []);
+            .then(data => setHeavyHittersCategories(data.heavyhitters))
+            .catch(error => console.log(error));
+    }, [dateRange]);
 
     const btnRef10 = React.createRef();
     const btnRef11 = React.createRef();
@@ -61,14 +60,11 @@ const DashboardPage = () => {
     const Badge = React.forwardRef((props, ref) => {
         const { className, ...otherProps } = props;
         return <div ref={ref} className={className} {...otherProps} />;
-    });      
+    });
 
     return <div className="min-h-screen flex relative lg:static surface-ground">
         <div id="app-sidebar-9" className="h-full lg:h-auto surface-section hidden lg:block flex-shrink-0 absolute lg:static left-0 top-0 z-1 border-right-1 surface-border w-18rem lg:w-7rem select-none">
             <div className="flex flex-column h-full">
-                <div className="flex align-items-center justify-content-center" style={{ height: '60px' }}>
-                    <img src="/logos/svg/Black logo - no background.svg" alt="Image" height="20" />
-                </div>
                 <div className="mt-3">
                     <ul className="list-none p-0 m-0">
                         <li>
@@ -86,7 +82,7 @@ const DashboardPage = () => {
                             </a>
                         </li>
                         <li>
-                            <a onClick = {() => window.location.href="http://localhost:3000/preferences"} className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-left-2 border-transparent hover:border-300 transition-duration-150 transition-colors">
+                            <a onClick={() => window.location.href = "http://localhost:3000/preferences"} className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-left-2 border-transparent hover:border-300 transition-duration-150 transition-colors">
                                 <i className="pi pi-heart-fill mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
                                 <span className="font-medium inline text-base lg:text-xs lg:block">Preferences</span>
                                 <Ripple />
@@ -100,7 +96,7 @@ const DashboardPage = () => {
                             </a>
                         </li>
                         <li>
-                            <a onClick = {() => window.location.href="http://localhost:3000/connect"} className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-left-2 border-transparent hover:border-300 transition-duration-150 transition-colors">
+                            <a onClick={() => window.location.href = "http://localhost:3000/connect"} className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-left-2 border-transparent hover:border-300 transition-duration-150 transition-colors">
                                 <i className="pi pi-link mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
                                 <span className="font-medium inline text-base lg:text-xs lg:block">Connect Bank Accounts</span>
                                 <Ripple />
@@ -111,20 +107,20 @@ const DashboardPage = () => {
             </div>
         </div>
         <div className="grid">
-                <div className="grid surface-surface-ground">                                                 
-                        <OptimalAllocationSavingsCard className="h-12rem w-full" />
+            <div className="grid surface-surface-ground">
+                <OptimalAllocationSavingsCard className="h-12rem w-full" />
+            </div>
+            <div className="grid align-content-end py-2">
+                <div className="col-5 shadow-2 surface-card border-round">
+                    {heavyHittersCategories && heavyHittersCategories.length > 0 && <HeavyHitterPieChart heavyHitters={heavyHittersCategories} dateRange={dateRange} />}
                 </div>
-                <div className="grid align-content-end py-2">
-                    <div className="col-5 shadow-2 surface-card border-round">
-                        {heavyHittersCategories && heavyHittersCategories.length > 0 && <HeavyHitterPieChart heavyHitters={heavyHittersCategories} />}
-                    </div>
-                    <div className="col-7 shadow-2 surface-card border-round">
-                        <ChartSlider x={dates} y_list={categories} ready={isMovingAveragesReady}/>
-                    </div>
+                <div className="col-7 shadow-2 surface-card border-round">
+                    <ChartSlider x={dates} y_list={categories} ready={isMovingAveragesReady} onDateRangeChange={setDateRange} />
                 </div>
-                <div className="grid p-3 gap-3 surface-surface-ground">                                                 
-                        <ConnectBanks className="col-6" />
-                </div>
+            </div>
+            <div className="grid p-3 gap-3 surface-surface-ground">
+                <ConnectBanks className="col-6" />
+            </div>
         </div>
     </div>
 };

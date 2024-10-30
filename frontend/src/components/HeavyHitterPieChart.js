@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Chart } from 'chart.js';
 
-const HeavyHitterPieChart = ({ heavyHitters, type }) => {
+const HeavyHitterPieChart = ({ heavyHitters, dateRange }) => {
   const chartRef = useRef(null); // Store chart instance
   const canvasRef = useRef(null); // Store canvas DOM element
 
@@ -19,6 +19,8 @@ const HeavyHitterPieChart = ({ heavyHitters, type }) => {
       return;
     }
 
+    const filteredHeavyHitters = heavyHitters.filter(element => element.amount > 0);
+
     const colors = [
       '#FFC107',
       '#73C238',
@@ -33,16 +35,10 @@ const HeavyHitterPieChart = ({ heavyHitters, type }) => {
     chartRef.current = new Chart(ctx, {
       type: 'pie',
       data: {
-        labels: heavyHitters.map(element => {
-          if (element.name) {
-            return element.name
-          } else {
-            return element.category
-          }
-        }),
+        labels: filteredHeavyHitters.map(element => element.name || element.category),
         datasets: [
           {
-            data: heavyHitters.map(element => element.amount),
+            data: filteredHeavyHitters.map(element => element.amount),
             backgroundColor: colors,
           }
         ]
@@ -53,8 +49,20 @@ const HeavyHitterPieChart = ({ heavyHitters, type }) => {
         plugins: {
           legend: {
             position: 'top',
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const amount = context.raw || 0;
+                return `${context.label}: ${amount}`;
+              }
+            }
           }
-        }
+        },
+        title: {
+          display: true,
+          text: 'Heavy Hitters by Category'
+        },
       }
     });
 
@@ -65,7 +73,7 @@ const HeavyHitterPieChart = ({ heavyHitters, type }) => {
         chartRef.current = null; // Set to null to avoid lingering references
       }
     };
-  }, [heavyHitters]); // Effect depends on heavyHitters data
+  }, [heavyHitters, dateRange]); // Effect depends on heavyHitters and dateRange data
 
   return (
     <div>

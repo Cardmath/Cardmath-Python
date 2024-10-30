@@ -22,7 +22,7 @@ const LineChartWrapper = ({ x, y_list, ready }) => {
             label: e.name,
             data: e.moving_average,
             fill: false,
-            borderColor: colors[index % colors.length], // Assign a different color for each dataset
+            borderColor: colors[index % colors.length],
             tension: 0.5,
           })),
         },
@@ -34,7 +34,9 @@ const LineChartWrapper = ({ x, y_list, ready }) => {
             mode: "index",
           },
           plugins: {
-            legend: false,
+            legend: {
+              display: true,
+            },
             tooltip: {
               backgroundColor: "#fff",
               titleColor: "#000",
@@ -45,7 +47,7 @@ const LineChartWrapper = ({ x, y_list, ready }) => {
               bodySpacing: 8,
               usePointStyle: true,
               callbacks: {
-                label: function (context) {
+                label: (context) => {
                   return `${context.dataset.label}: ${context.parsed.y || 0}`;
                 },
               },
@@ -65,16 +67,29 @@ const LineChartWrapper = ({ x, y_list, ready }) => {
               grid: {
                 drawOnChartArea: false,
               },
+              title: {
+                display: true,
+                text: 'Date',
+              },
             },
             y: {
-              beginAtZero: false,  // Allow y-axis to automatically scale
+              beginAtZero: true,
               ticks: {
-                stepSize: 1 // Customize step size for better scale
-              }
+                stepSize: 1,
+              },
+              title: {
+                display: true,
+                text: 'Spending Amount',
+              },
             },
+          },
+          title: {
+            display: true,
+            text: 'Category Moving Averages Over Time',
           },
         },
       });
+      
     }
   }, [ready, x, y_list]);
 

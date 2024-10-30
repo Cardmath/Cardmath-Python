@@ -101,25 +101,11 @@ async def calculate_incremental_spending_probabilities(user, db, category, level
 
     # Compute incremental probabilities
     incremental_probs = []
-    previous_prob = 0
+    previous_prob = 1
     for prob in cumulative_probs:
-        incremental_prob = prob - previous_prob
+        incremental_prob = previous_prob - prob 
         incremental_probs.append(max(0, incremental_prob))  # Ensure non-negative
         previous_prob = prob
-
-    # Return a list of (level, incremental_prob)
+    
     return list(zip(levels, incremental_probs))
 
-async def compute_user_card_sign_on_bonus_value(user: User, db: Session, card: CreditCardSchema):
-    total = 0
-    for sign_on_bonus in card.sign_on_bonus:
-        prob: float = await calculate_spending_probability(
-            user=user,
-            db=db,
-            category=sign_on_bonus.purchase_type,
-            threshold=sign_on_bonus.condition_amount,
-            T=sign_on_bonus.get_timeframe_in_months()
-        )
-        total += prob * sign_on_bonus.reward_amount * RewardUnit.get_value(sign_on_bonus.reward_type)
-
-    return total
