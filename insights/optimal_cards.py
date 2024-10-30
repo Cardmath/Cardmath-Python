@@ -1,7 +1,6 @@
 from collections import defaultdict
 from copy import deepcopy
 from creditcard.endpoints.read_database import read_credit_cards_database, CreditCardsDatabaseRequest
-from creditcard.enums import *
 from creditcard.schemas import CreditCardSchema, RewardCategoryRelation, RewardCategoryThreshold
 from database.auth.user import User
 from insights.category_spending_prediction import calculate_incremental_spending_probabilities
@@ -35,7 +34,9 @@ class HeldCardsUseSummary(BaseModel):
 class SpendingPlanItem(BaseModel):
     card_name: str
     category: str
-    amount: float
+    amount_value: float
+    reward_amount: float
+    reward_unit: str
 
 class OptimalCardsAllocationResponse(BaseModel):
     timeframe: MonthlyTimeframe
@@ -88,7 +89,7 @@ def create_cards_matrix(cards: List[CreditCardSchema], heavy_hitters: HeavyHitte
 
             if best_reward:
                 reward_relations[(card.name, category)] = best_reward
-                r_unit_val = RewardUnit.get_value(best_reward.reward_unit)
+                r_unit_val = enums.RewardUnit.get_value(best_reward.reward_unit)
                 r_reward_amount = best_reward.reward_amount
                 cards_matrix[i][j] = r_unit_val * r_reward_amount
             else:
@@ -266,7 +267,7 @@ async def optimize_credit_card_selection_milp(
 
                 threshold = sob.condition_amount
                 T = sob.get_timeframe_in_months()
-                sob_amount = sob.reward_amount * RewardUnit.get_value(sob.reward_type)
+                sob_amount = sob.reward_amount * enums.RewardUnit.get_value(sob.reward_type)
                 max_level = int(threshold + 1000)
                 levels = [l for l in range(500, max_level + 1, 500)]
                 levels = sorted(set(levels))  # Ensure unique, sorted levels
@@ -386,17 +387,17 @@ async def optimize_credit_card_selection_milp(
                     )
 
                     # Add to objective function
-                    reward_multiplier = RewardUnit.get_value(reward_unit) * reward_amount
-                    fallback_multiplier = RewardUnit.get_value(reward_unit) * fallback_reward
+                    reward_multiplier = enums.RewardUnit.get_value(reward_unit) * reward_amount
+                    fallback_multiplier = enums.RewardUnit.get_value(reward_unit) * fallback_reward
                     objective_terms.append(reward_multiplier * y1)
                     objective_terms.append(fallback_multiplier * y2)
                 else:
                     # No effective threshold; use x directly
-                    reward_multiplier = RewardUnit.get_value(reward_unit) * reward_amount
+                    reward_multiplier = enums.RewardUnit.get_value(reward_unit) * reward_amount
                     objective_terms.append(reward_multiplier * x[(i, j)])
             else:
                 # No threshold; use x directly
-                reward_multiplier = RewardUnit.get_value(reward_unit) * reward_amount
+                reward_multiplier = enums.RewardUnit.get_value(reward_unit) * reward_amount
                 objective_terms.append(reward_multiplier * x[(i, j)])
 
     # Annual fees
@@ -493,9 +494,10 @@ async def optimize_credit_card_selection_milp(
             )
             reward_amount = reward_relation.reward_amount
             reward_unit = reward_relation.reward_unit
+            print(reward_unit in enums.RewardUnit)
             x_value = model.getVal(x[(idx, j)])
             # Adjust reward calculation based on reward unit
-            reward_multiplier = RewardUnit.get_value(reward_unit) * reward_amount
+            reward_multiplier = enums.RewardUnit.get_value(reward_unit) * reward_amount
             reward = x_value * reward_multiplier
             total_rewards += reward
 
@@ -505,7 +507,9 @@ async def optimize_credit_card_selection_milp(
                     SpendingPlanItem(
                         card_name=card_name,
                         category=category,
-                        amount=round(x_value, 2)
+                        amount_value=reward,
+                        reward_amount=x_value * reward_multiplier,
+                        reward_unit=reward_unit
                     )
                 )
         # Sign-on bonus calculation

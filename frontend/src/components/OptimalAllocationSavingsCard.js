@@ -11,6 +11,7 @@ import { Tooltip } from 'primereact/tooltip';
 import moment from 'moment';
 
 import CreditCardItemTemplate from './CreditCardItemTemplate';
+import SpendingPlanTable from './SpendingPlanTable';
 
 const OptimalAllocationSavingsCard = () => {
   const [timeframe, setTimeframe] = useState(null);
@@ -342,32 +343,7 @@ const OptimalAllocationSavingsCard = () => {
             )}
           </div>
 
-          {/* Spending Plan */}
-          <div className="col-12 mt-4 shadow-2 border-round bg-gray-200">
-            <div className="text-3xl pb-2 text-center">Spending Allocation Plan</div>
-            {spendingPlan && spendingPlan.length > 0 ? (
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th>Card Name</th>
-                    <th>Category</th>
-                    <th>Amount Spent (USD)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {spendingPlan.map((item, index) => (
-                    <tr key={index}>
-                      <td>{item.card_name}</td>
-                      <td>{item.category}</td>
-                      <td className='text-center'>${item.amount.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p>No spending plan available.</p>
-            )}
-          </div>
+          <SpendingPlanTable spendingPlan={spendingPlan} />
         </div>
       </div>
     </Card>
