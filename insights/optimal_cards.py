@@ -23,19 +23,23 @@ class OptimalCardsAllocationRequest(BaseModel):
     return_cards_used: Optional[bool] = False
     return_cards_added: Optional[bool] = False
 
-class HeldCardsUseSummary(BaseModel):
-    name: str
-    profit_usd: float
+class CardsUseSummary(BaseModel):
+    name: str 
+
     annual_fee_usd: float
     sign_on_bonus_estimated: float
+    sign_on_bonus_likelihood: float
+    sign_on_bonus_reward_unit: enums.RewardUnit
+    sign_on_bonus_total: float
     regular_rewards_usd: float
-    net_rewards_usd: float
 
+    profit_usd: float
+    
 class SpendingPlanItem(BaseModel):
     card_name: str
     category: str
     amount_value: float
-    reward_amount: float
+    reward_unit_amount: float
     reward_unit: str
 
 class OptimalCardsAllocationResponse(BaseModel):
@@ -47,7 +51,7 @@ class OptimalCardsAllocationResponse(BaseModel):
     net_rewards_usd: float
 
     total_reward_allocation: List[int]
-    summary: Optional[List[HeldCardsUseSummary]] = None
+    summary: Optional[List[CardsUseSummary]] = None
     spending_plan: Optional[List[SpendingPlanItem]] = None
     actionable_steps: Optional[List[str]] = None
 
@@ -287,6 +291,7 @@ async def optimize_credit_card_selection_milp(
                 card_sob_data[idx] = {
                     'category': category,
                     'levels': levels,
+                    'reward_unit' : sob.reward_type,
                     'incremental_probs': deepcopy(incremental_probs),
                     'sob_amount': sob_amount,
                     'timeframe': T
@@ -423,8 +428,9 @@ async def optimize_credit_card_selection_milp(
     # Set the objective function
     model.setObjective(quicksum(objective_terms), "maximize")
 
-    if (request.use_sign_on_bonus):
-        model.writeProblem("milp_debug.lp")
+    # use this to debug
+    # if (request.use_sign_on_bonus):
+    #     model.writeProblem("milp_debug.lp")
 
     # Solve the model
     model.optimize()
@@ -484,7 +490,7 @@ async def optimize_credit_card_selection_milp(
         annual_fee = annual_fee_values[idx]
         total_annual_fees_usd += annual_fee
         total_rewards = 0.0
-        sign_on_bonus = 0.0
+        est_sign_on_bonus = 0.0
         # Regular rewards from spending
         for j in range(H):
             category = rmatrix.categories[j]
@@ -494,7 +500,6 @@ async def optimize_credit_card_selection_milp(
             )
             reward_amount = reward_relation.reward_amount
             reward_unit = reward_relation.reward_unit
-            print(reward_unit in enums.RewardUnit)
             x_value = model.getVal(x[(idx, j)])
             # Adjust reward calculation based on reward unit
             reward_multiplier = enums.RewardUnit.get_value(reward_unit) * reward_amount
@@ -508,42 +513,47 @@ async def optimize_credit_card_selection_milp(
                         card_name=card_name,
                         category=category,
                         amount_value=reward,
-                        reward_amount=x_value * reward_multiplier,
+                        reward_unit_amount=x_value * reward_amount,
                         reward_unit=reward_unit
                     )
                 )
         # Sign-on bonus calculation
+        total_sob_likelihood = 0.0
+        sob_amount = 0.0
+        sob_reward_unit = enums.RewardUnit.UNKNOWN
         if idx in card_sob_data:
             sob_info = card_sob_data[idx]
             levels = sob_info['levels']
             incremental_probs = deepcopy(sob_info['incremental_probs'])
             sob_amount = sob_info['sob_amount']
+            sob_reward_unit = sob_info['reward_unit']
             for l in levels:
                 s_value = model.getVal(s_il[idx][l])
                 if s_value > 0.5:
                     print(f"Sign on bonus level {l}, prob {incremental_probs[l]} activated { sob_amount }")
-                    sign_on_bonus += sob_amount * incremental_probs[l]
-                    # Assuming we sum up all activated levels
-                else :
-                    print(f"Sign on bonus level {l}, prob {incremental_probs[l]} not activated { sob_amount }")
-            print(f"sign on bonus {sign_on_bonus}")
-            total_sign_on_bonus_usd += sign_on_bonus
+                    est_sign_on_bonus += sob_amount * incremental_probs[l]
+                    total_sob_likelihood += incremental_probs[l]
+            
+            total_sign_on_bonus_usd += est_sign_on_bonus
         total_regular_rewards_usd += total_rewards
-        net_rewards = total_rewards + sign_on_bonus - annual_fee
+        net_rewards = total_rewards + est_sign_on_bonus - annual_fee
         summary.append(
-            HeldCardsUseSummary(
+            CardsUseSummary(
                 name=card_name,
-                profit_usd=total_rewards + sign_on_bonus - annual_fee,
+                profit_usd=total_rewards + est_sign_on_bonus - annual_fee,
                 annual_fee_usd=annual_fee,
-                sign_on_bonus_estimated=sign_on_bonus,
-                regular_rewards_usd=total_rewards,
+                
+                sign_on_bonus_reward_unit=sob_reward_unit,
+                sign_on_bonus_estimated=est_sign_on_bonus,
+                sign_on_bonus_likelihood=total_sob_likelihood,
+                sign_on_bonus_total=sob_amount,
+
+                regular_rewards_usd=total_regular_rewards_usd,
                 net_rewards_usd=net_rewards
             )
         )
 
     net_rewards_usd = total_regular_rewards_usd + total_sign_on_bonus_usd - total_annual_fees_usd
-
-    print(f"Total sign on bonus: {total_sign_on_bonus_usd}")
 
     # Prepare actionable steps
     actionable_steps = []

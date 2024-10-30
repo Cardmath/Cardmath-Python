@@ -12,6 +12,7 @@ import moment from 'moment';
 
 import CreditCardItemTemplate from './CreditCardItemTemplate';
 import SpendingPlanTable from './SpendingPlanTable';
+import SignOnBonusTable from './SignOnBonusTable';
 
 const OptimalAllocationSavingsCard = () => {
   const [timeframe, setTimeframe] = useState(null);
@@ -316,33 +317,10 @@ const OptimalAllocationSavingsCard = () => {
             </div>
           </div>
 
-          {/* Sign-On Bonus Rewards Table */}
-          <div className="col-12 mt-4 shadow-2 border-round bg-gray-200">
-            <div className="text-3xl pb-2 text-center">Sign-On Bonus Rewards for New Cards</div>
-            {summary && summary.length > 0 ? (
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th>Card Name</th>
-                    <th>Sign-On Bonus Estimated (USD)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {summary
-                    .filter(item => recommendedCards.some(card => card.name === item.name))
-                    .map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.name}</td>
-                        <td className="text-center">${item.sign_on_bonus_estimated.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            ) : (
-              <p>No sign-on bonus data available.</p>
-            )}
-          </div>
+          {/* Replaced Sign-On Bonus Table */}
+          <SignOnBonusTable summary={summary} recommendedCards={recommendedCards} />
 
+          {/* Spending Plan Table */}
           <SpendingPlanTable spendingPlan={spendingPlan} />
         </div>
       </div>

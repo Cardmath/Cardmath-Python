@@ -14,11 +14,11 @@ export default function SpendingPlanTable({ spendingPlan }) {
                     <Column 
                         field="reward_amount" 
                         header="Amount of Reward Unit" 
-                        body={(rowData) => rowData.reward_amount.toFixed(2)}
+                        body={(rowData) => rowData.reward_unit_amount.toFixed(2)}
                     ></Column>
                     <Column 
                         field="amount_value" 
-                        header="Dollar Value (USD)" 
+                        header="Total Dollar Value (USD)" 
                         body={(rowData) => `$${rowData.amount_value.toFixed(2)}`}
                         className="text-center"
                     ></Column>

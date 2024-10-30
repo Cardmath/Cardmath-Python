@@ -8,3 +8,4 @@ cardratings.html
 **/*.db-wal
 bin
 **/*venv*/
+milp_debug.lp
