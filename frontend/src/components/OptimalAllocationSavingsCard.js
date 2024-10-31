@@ -184,10 +184,13 @@ const OptimalAllocationSavingsCard = () => {
         </div>
       </div>
 
+      <Tooltip className='w-3' target=".solutions-iterator" position="bottom"/>
       <div className='pt-4 border-round flex justify-content-center'>
-        <Button icon="pi pi-arrow-left" onClick={() => solutions.solutions && setSolutionIndex(solutionIndex - 1 % solutions.solutions.length)} />
-        <div className='text-center text-2xl px-3'>Current Solution: {solutionIndex + 1} / {solutions.solutions?.length || 0}</div>
-        <Button icon="pi pi-arrow-right" onClick={() => solutions.solutions && setSolutionIndex(solutionIndex + 1 % solutions.solutions.length)} />
+        <div className='solutions-iterator  w-4 flex justify-content-center' data-pr-tooltip="We find at most 5 (but often fewer) possible credit card wallets, including the optimal one. Click on the left and right arrows to cycle through solutions."> 
+          <Button icon="pi pi-arrow-left" onClick={() => solutions.solutions && setSolutionIndex(solutionIndex - 1 % solutions.solutions.length)} />
+          <div className='text-center text-2xl px-3'>Current Solution: {solutionIndex + 1} / {solutions.solutions?.length || 0}</div>
+          <Button icon="pi pi-arrow-right" onClick={() => solutions.solutions && setSolutionIndex(solutionIndex + 1 % solutions.solutions.length)} />
+        </div>
       </div>
           
       {/* Display total rewards and net rewards */}
