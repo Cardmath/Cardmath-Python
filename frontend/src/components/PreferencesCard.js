@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import { Ripple } from 'primereact/ripple';
 import { Button } from 'primereact/button';
 import { Divider } from 'primereact/divider';
@@ -9,6 +9,47 @@ import { fetchWithAuth } from '../pages/AuthPage';
 import { Dropdown } from 'primereact/dropdown';
 
 const PreferencesCard = ( {setAlert} ) => {
+
+    useEffect(() => {
+        const fetchUserPreferences = async () => {
+            try {
+                const response = await fetchWithAuth('http://localhost:8000/read_user_preferences', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                const data = await response.json();
+
+                // Update state variables with fetched data
+                if (data.banks_preferences) {
+                    setSelectedHaveBanks(data.banks_preferences.have_banks || []);
+                    setSelectedBanks(data.banks_preferences.preferred_banks || []);
+                    setSelectedAvoidBanks(data.banks_preferences.avoid_banks || []);
+                }
+                if (data.rewards_programs_preferences) {
+                    setSelectedPointsSystems(data.rewards_programs_preferences.preferred_rewards_programs || []);
+                    setSelectedAvoidPointsSystems(data.rewards_programs_preferences.avoid_rewards_programs || []);
+                }
+                if (data.consumer_preferences) {
+                    setSelectedGroceries(data.consumer_preferences.favorite_grocery_stores || []);
+                    setSelectedShopping(data.consumer_preferences.favorite_general_goods_stores || []);
+                }
+                if (data.credit_profile) {
+                    setCreditScore(data.credit_profile.credit_score || '');
+                    setSalary(data.credit_profile.salary || '');
+                    setSelectedLifestyle(data.credit_profile.lifestyle || null);
+                }
+                if (data.business_preferences) {
+                    setSelectedIndustries(data.business_preferences.business_type || []);
+                    setSelectedBusinessSize(data.business_preferences.business_size || null);
+                }
+            } catch (error) {
+                console.error('Error fetching user preferences:', error);
+            }
+        };
+
+        fetchUserPreferences();
+    }, []);
+
     function checkProperties(obj) {
         for (var key in obj) {
             if (obj[key] !== null && obj[key] != "")

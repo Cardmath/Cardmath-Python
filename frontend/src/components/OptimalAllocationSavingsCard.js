@@ -13,10 +13,13 @@ import moment from 'moment';
 import CreditCardItemTemplate from './CreditCardItemTemplate';
 import SpendingPlanTable from './SpendingPlanTable';
 import SignOnBonusTable from './SignOnBonusTable';
+import PreferencesDisplay from './PreferencesDisplay';
 
 const OptimalAllocationSavingsCard = () => {
   const [solutions, setSolutions] = useState([]); // Store all solutions
   const [solutionIndex, setSolutionIndex] = useState(0); // Track the displayed solution index
+
+  const [preferences, setPreferences] = useState(null);
 
   const [computationLoading, setComputationLoading] = useState(false)
 
@@ -57,6 +60,19 @@ const OptimalAllocationSavingsCard = () => {
 
   // Variable to store the difference in net rewards
   const netRewardsDifference = (netRewards - netRewardsCurrent).toFixed(2);
+
+  const fetchUserPreferences = async () => {
+    try {
+      const response = await fetchWithAuth('http://localhost:8000/read_user_preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await response.json();
+      setPreferences(data);
+    } catch (error) {
+      console.error('Error fetching user preferences:', error);
+    }
+  };
 
   // Method to fetch user's optimal allocation with just their current cards
   const fetchCurrentCardsOptimalAllocation = async () => {
@@ -148,6 +164,7 @@ const OptimalAllocationSavingsCard = () => {
   // Fetch user's optimal allocation for the selected timeframe on component mount
   useEffect(() => {
     fetchOptimalAllocation();
+    fetchUserPreferences();
   }, []);
 
   // Fetch user's held cards
@@ -186,7 +203,7 @@ const OptimalAllocationSavingsCard = () => {
 
       <Tooltip className='w-3' target=".solutions-iterator" position="bottom"/>
       <div className='pt-4 border-round flex justify-content-center'>
-        <div className='solutions-iterator  w-4 flex justify-content-center' data-pr-tooltip="We find at most 5 (but often fewer) possible credit card wallets, including the optimal one. Click on the left and right arrows to cycle through solutions."> 
+        <div className='solutions-iterator w-3 p-3 shadow-2 flex justify-content-center' data-pr-tooltip="We find at most 5 (but often fewer) possible credit card wallets, including the optimal one. Click on the left and right arrows to cycle through solutions."> 
           <Button icon="pi pi-arrow-left" onClick={() => solutions.solutions && setSolutionIndex(solutionIndex - 1 % solutions.solutions.length)} />
           <div className='text-center text-2xl px-3'>Current Solution: {solutionIndex + 1} / {solutions.solutions?.length || 0}</div>
           <Button icon="pi pi-arrow-right" onClick={() => solutions.solutions && setSolutionIndex(solutionIndex + 1 % solutions.solutions.length)} />
@@ -293,11 +310,21 @@ const OptimalAllocationSavingsCard = () => {
               </FloatLabel>
             </div>
           </div>
-
           <Button onClick={() => {
             fetchOptimalAllocation();
             fetchCurrentCardsOptimalAllocation();
           }} className='w-full mt-5' label="Compute" loading={computationLoading} />
+
+
+          <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
+            <p className='font-italic'>
+              Your preferences inform which credit cards we input to our recommendation algorithm. If you haven't set your preferences yet, you can do so by clicking the button below.
+            </p>
+            {preferences && <PreferencesDisplay preferences={preferences} />}
+            <Button onClick={() => window.location.href="/preferences"} className='w-full mt-5' label="Set Preferences" />
+          </div>
+
+          
         </div>
 
         {/* Display carousels and spending plan */}

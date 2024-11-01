@@ -31,3 +31,9 @@ async def ingest_user_preferences(user: User, db: Session, preferences : Prefere
     '''
     await replace_preferences(user=user, db=db, preferences=preferences)
     return
+
+async def read_user_preferences(user: User, db: Session):
+    '''
+    Reads the user's credit card preferences
+    '''
+    return PreferencesSchema.model_validate(user.preferences) if user.preferences else None

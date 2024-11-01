@@ -173,3 +173,7 @@ async def read_user_held_cards_endpoint(current_user: Annotated[User, Depends(au
     user_cards = current_user.credit_cards
     user_cards_schemas = [CreditCardSchema.model_validate(cc) for cc in user_cards]
     return CreditCardsDatabaseResponse(credit_card=user_cards_schemas) 
+
+@app.post("/read_user_preferences")
+async def read_user_preferences_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], db: Session = Depends(get_sync_db)) -> PreferencesSchema:
+    return await teller_endpoints.read_user_preferences(user=current_user, db=db)
