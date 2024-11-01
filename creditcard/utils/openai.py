@@ -1,4 +1,4 @@
-from creditcard.enums import PurchaseCategory, RewardUnit, Benefit, Vendors, APRType
+from creditcard.enums import PurchaseCategory, RewardUnit, Benefit, Vendors, APRType, CreditCardKeyword
 from openai import OpenAI
 from pydantic import BaseModel, TypeAdapter
 from typing import Union
@@ -297,3 +297,36 @@ def annual_fee_response_format():
             "strict": True
         }
     }
+
+def card_keywords_prompt(card_attributes):
+    return f"""
+    Your task is to identify and extract any mentioned keywords from the following credit card details. 
+    Output a list of keywords that have been mentioned in the text.
+
+    Here is the text you need to analyze:
+    "{card_attributes}"
+
+    """
+
+def card_keywords_response_format():
+    return {"type": "json_schema",
+            "json_schema": {
+                "name": "card_keywords_response",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "card_keywords": {
+                            "type": "array",
+                            "items": {
+                                    "type": "string",
+                                    "enum": [keyword.value for keyword in CreditCardKeyword],
+                                    "description": "keywords that have been mentioned or implied in the text about credit cards"
+                            }
+                        }
+                    },
+                    "required": ["card_keywords"],
+                    "additionalProperties": False,
+                },
+                "strict": True
+            },
+        }

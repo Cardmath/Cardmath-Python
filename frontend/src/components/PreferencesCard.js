@@ -14,8 +14,9 @@ const PreferencesCard = ( {setAlert} ) => {
         const fetchUserPreferences = async () => {
             try {
                 const response = await fetchWithAuth('http://localhost:8000/read_user_preferences', {
-                    method: 'POST',
+                    method: 'POST',  
                     headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}),
                 });
                 const data = await response.json();
 

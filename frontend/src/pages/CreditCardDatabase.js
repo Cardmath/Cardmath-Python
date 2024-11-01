@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Divider } from 'primereact/divider';
 import { InputText } from 'primereact/inputtext';
-import { Accordion, AccordionTab } from 'primereact/accordion';
 import { Dropdown } from 'primereact/dropdown';
 import { Slider } from 'primereact/slider';
 import CreditCardFaceouts from '../components/CreditCardFaceout';
@@ -12,20 +11,31 @@ const CreditCardDatabase = () => {
     const [selectedIssuer, setSelectedIssuer] = useState(null);
     const [nameFilter, setNameFilter] = useState('');
     const [annualFeeRange, setAnnualFeeRange] = useState([0, 500]);
-    const issuers = [
-        { label: 'Capital One', value: "Capital One" },
-        { label: 'Chase', value: "Chase" },
-        { label: 'American Express', value: 'American Express' },
-        { label: 'Citi', value: 'Citi' },
-        { label: 'Discover', value: 'Discover' },
-        { label: 'Bank of America', value: 'Bank of America' },
-        { label: 'Wells Fargo', value: 'Wells Fargo' },
-        { label: 'Barclays', value: 'Barclays' },
-        { label: 'US Bank', value: 'US Bank' },
-        { label: 'PNC', value: 'PNC' },
-        { label: 'TD Bank', value: 'TD Bank' },
-        { label: 'HSBC', value: 'HSBC' }
-    ];
+    const [selectedRewardUnit, setSelectedRewardUnit] = useState(null);
+    const [selectedKeyword, setSelectedKeyword] = useState(null);
+
+    // State for dynamically loaded dropdown options
+    const [issuers, setIssuers] = useState([]);
+    const [rewardUnits, setRewardUnits] = useState([]);
+    const [keywords, setKeywords] = useState([]);
+
+    // Fetch enum values from backend API on component mount
+    useEffect(() => {
+        fetch("http://localhost:8000/api/issuers")
+            .then(response => response.json())
+            .then(data => setIssuers(data.map(item => ({ label: item, value: item }))))
+            .catch(error => console.error("Error fetching issuers:", error));
+
+        fetch("http://localhost:8000/api/reward_units")
+            .then(response => response.json())
+            .then(data => setRewardUnits(data.map(item => ({ label: item, value: item }))))
+            .catch(error => console.error("Error fetching reward units:", error));
+
+        fetch("http://localhost:8000/api/keywords")
+            .then(response => response.json())
+            .then(data => setKeywords(data.map(item => ({ label: item, value: item }))))
+            .catch(error => console.error("Error fetching keywords:", error));
+    }, []);
 
     const onIssuerChange = (e) => {
         setSelectedIssuer(e.value);
@@ -37,6 +47,14 @@ const CreditCardDatabase = () => {
 
     const onAnnualFeeChange = (e) => {
         setAnnualFeeRange(e.value);
+    };
+
+    const onRewardUnitChange = (e) => {
+        setSelectedRewardUnit(e.value);
+    };
+
+    const onKeywordChange = (e) => {
+        setSelectedKeyword(e.value);
     };
 
     return (
@@ -61,6 +79,7 @@ const CreditCardDatabase = () => {
                                     onChange={onIssuerChange}
                                     placeholder="Select Issuer"
                                     className="w-full"
+                                    showClear // Enable clear option
                                 />
                             </div>
 
@@ -91,6 +110,32 @@ const CreditCardDatabase = () => {
                                     <span>${annualFeeRange[1]}</span>
                                 </div>
                             </div>
+
+                            {/* Primary Reward Unit Filter */}
+                            <div className="p-field mb-4">
+                                <h3 className="text-white mb-2">Primary Reward Unit</h3>
+                                <Dropdown
+                                    value={selectedRewardUnit}
+                                    options={rewardUnits}
+                                    onChange={onRewardUnitChange}
+                                    placeholder="Select Reward Unit"
+                                    className="w-full"
+                                    showClear // Enable clear option
+                                />
+                            </div>
+
+                            {/* Keywords Filter */}
+                            <div className="p-field mb-4">
+                                <h3 className="text-white mb-2">Keywords</h3>
+                                <Dropdown
+                                    value={selectedKeyword}
+                                    options={keywords}
+                                    onChange={onKeywordChange}
+                                    placeholder="Select Keyword"
+                                    className="w-full"
+                                    showClear // Enable clear option
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -100,6 +145,8 @@ const CreditCardDatabase = () => {
                             issuer={selectedIssuer}
                             name={nameFilter}
                             annualFeeRange={annualFeeRange}
+                            primaryRewardUnit={selectedRewardUnit}
+                            keyword={selectedKeyword}
                         />
                     </div>
                 </div>

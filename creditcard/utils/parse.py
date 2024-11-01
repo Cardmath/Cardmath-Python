@@ -143,3 +143,11 @@ async def get_annual_fee(card_description):
     prompt = annual_fee_prompt(card_description)
     annual_fee: AnnualFeeResponse = await structure_with_openai(prompt, response_format=annual_fee_response_format(), schema=AnnualFeeResponse)
     return annual_fee.annual_fee
+
+class CreditCardKeywordResponse(BaseModel):
+    card_keywords: List[CreditCardKeyword]
+
+async def get_keywords(card_description):
+    prompt = card_keywords_prompt(card_description)
+    keywords: CreditCardKeywordResponse = await structure_with_openai(prompt, response_format=card_keywords_response_format(), schema=CreditCardKeywordResponse)
+    return keywords.card_keywords

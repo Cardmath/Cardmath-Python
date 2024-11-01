@@ -36,4 +36,6 @@ async def read_user_preferences(user: User, db: Session):
     '''
     Reads the user's credit card preferences
     '''
-    return PreferencesSchema.model_validate(user.preferences) if user.preferences else None
+    if user.preferences is None:
+        return PreferencesSchema()
+    return PreferencesSchema.model_validate(user.preferences)

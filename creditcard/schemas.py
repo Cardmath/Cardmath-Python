@@ -5,8 +5,24 @@ from database.scrapes.cardratings import CardratingsScrape
 from pydantic import BaseModel, ConfigDict, field_validator, TypeAdapter
 from typing import List
 from typing import Optional, Union
+from collections import defaultdict
 
 import json
+
+def get_primary_reward_unit(reward_category_map: List[RewardCategoryRelation]) -> RewardUnit:
+    if not reward_category_map:
+        return RewardUnit.UNKNOWN
+
+    # Dictionary to count occurrences of each RewardUnit
+    reward_unit_counts = defaultdict(int)
+    
+    # Count each reward unit occurrence
+    for relation in reward_category_map:
+        reward_unit_counts[relation.reward_unit] += 1
+
+    # Find the RewardUnit with the maximum count
+    primary_reward_unit = max(reward_unit_counts, key=reward_unit_counts.get)
+    return primary_reward_unit
 
 class CardRatingsScrapeSchema(BaseModel):
     name: str
@@ -23,9 +39,13 @@ class CardRatingsScrapeSchema(BaseModel):
         benefits = await get_benefits(self.unparsed_card_attributes)
         credit_needed = get_credit_needed(self.unparsed_credit_needed)
         reward_category_map = await get_reward_category_map(self.unparsed_card_attributes)
+        primary_reward_unit = get_primary_reward_unit(reward_category_map)
+        
         apr = await get_apr(self.unparsed_card_attributes)
         sign_on_bonus = await get_sign_on_bonus(self.unparsed_card_attributes)
         annual_fee = await get_annual_fee(self.unparsed_card_attributes)
+
+        keywords = await get_keywords(self.unparsed_card_attributes)
         return CreditCardSchema(name=name, 
                           issuer=issuer,
                           benefits=benefits,
@@ -33,7 +53,9 @@ class CardRatingsScrapeSchema(BaseModel):
                           reward_category_map=reward_category_map,
                           sign_on_bonus=sign_on_bonus,
                           apr=apr,
-                          annual_fee=annual_fee)
+                          annual_fee=annual_fee,
+                          primary_reward_unit=primary_reward_unit,
+                          keywords=keywords)
         
     def cardratings_scrape(self):
         return CardratingsScrape(
@@ -53,6 +75,8 @@ class CreditCardSchema(BaseModel):
     apr : List[APR]
     sign_on_bonus : Optional[List[ConditionalSignOnBonus]] = None
     annual_fee: Optional[AnnualFee] = None
+    primary_reward_unit: RewardUnit
+    keywords: List[CreditCardKeyword]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -109,7 +133,9 @@ class CreditCardSchema(BaseModel):
                           reward_category_map=TypeAdapter(List[RewardCategoryRelation]).dump_python(self.reward_category_map),
                           sign_on_bonus=TypeAdapter(List[ConditionalSignOnBonus]).dump_python(self.sign_on_bonus),
                           apr=TypeAdapter(List[APR]).dump_python(self.apr),
-                          annual_fee = self.annual_fee.model_dump())
+                          annual_fee = self.annual_fee.model_dump(),
+                          keywords= TypeAdapter(List[CreditCardKeyword]).dump_python(self.keywords),
+                          primary_reward_unit=self.primary_reward_unit)
 
 class CreditCardsFilter(BaseModel):
     id_in_db : Optional[List[int]]

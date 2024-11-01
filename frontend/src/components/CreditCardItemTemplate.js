@@ -15,23 +15,11 @@ const CreditCardItemTemplate = ({ cardData, sizingCss = "h-4 w-4" }) => {
         );
     }
 
-    const footer = (e) => {
-        return (
-            <div className="flex flex-wrap">
-                <b className="mr-2">Credit Needed:</b>
-                {e.credit_needed.map(creditNeeded => (
-                    <Chip key={creditNeeded} label={creditNeeded} className="mr-2 mb-2 bg-purple-100 text-black" />
-                ))}
-            </div>
-        );
-    }
-
     return (
         <div className={`p-2 ${sizingCss}`} key={cardData.id} style={{ width: '300px', height: '650px' }}>
             <Card
                 title={cardData.name}
                 subTitle={cardData.issuer}
-                footer={footer(cardData)}
                 className="flex flex-col h-full w-full bg-gray-300 border-3 shadow-2 surface-border surface-card border-round"
             >
                 {cardData.benefits.length > 0 && (
@@ -52,6 +40,8 @@ const CreditCardItemTemplate = ({ cardData, sizingCss = "h-4 w-4" }) => {
                         </div>
                     </div>
                 )}
+                
+                {/* Reward Summary */}
                 <div className="mb-2">
                     <b>Reward Summary:</b>
                     <ScrollPanel style={{ width: '100%', height: '125px' }}>
@@ -66,8 +56,24 @@ const CreditCardItemTemplate = ({ cardData, sizingCss = "h-4 w-4" }) => {
                         </ul>
                     </ScrollPanel>
                 </div>
+
+                {/* Primary Reward Unit */}
+                <div className="mb-2">
+                    <b>Primary Reward Unit:</b> {cardData.primary_reward_unit}
+                </div>
+
+                {/* Keywords */}
+                <div className="mb-2">
+                    <b>Keywords:</b>
+                    <div className="flex flex-wrap">
+                        {cardData.keywords.map(keyword => (
+                            <Chip key={keyword} label={keyword} className="bg-blue-100 mr-1 mb-1" />
+                        ))}
+                    </div>
+                </div>
+
                 {cardData.apr.length > 0 && (
-                    <div className="mb-2">
+                    <div className="mb-1">
                         <b>APR:</b>
                         <ul className='m-0'>
                             {cardData.apr.map(apr => (
@@ -77,7 +83,7 @@ const CreditCardItemTemplate = ({ cardData, sizingCss = "h-4 w-4" }) => {
                     </div>
                 )}
                 {cardData.annual_fee && (
-                    <div className="mb-2">
+                    <div className="mb-1">
                         {cardData.annual_fee.fee_usd === 0 && cardData.annual_fee.waived_for === 0 ? (
                             <b>No Annual Fee!</b>
                         ) : (
@@ -90,6 +96,13 @@ const CreditCardItemTemplate = ({ cardData, sizingCss = "h-4 w-4" }) => {
                         )}
                     </div>
                 )}
+
+            <div className="flex flex-wrap">
+                <b className="mr-1">Credit Needed:</b>
+                {cardData.credit_needed.map(creditNeeded => (
+                    <Chip key={creditNeeded} label={creditNeeded} className="mr-2 mb-2 bg-purple-100 text-black" />
+                ))}
+            </div>
             </Card>
         </div>
     );
