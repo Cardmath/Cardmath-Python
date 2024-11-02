@@ -1,11 +1,12 @@
+from collections import defaultdict
 from creditcard.enums import *  
 from creditcard.utils.parse import *
 from database.creditcard.creditcard import CreditCard
 from database.scrapes.cardratings import CardratingsScrape
+from datetime import date
 from pydantic import BaseModel, ConfigDict, field_validator, TypeAdapter
 from typing import List
 from typing import Optional, Union
-from collections import defaultdict
 
 import json
 
@@ -159,3 +160,20 @@ class CreditCardsDatabaseRequest(BaseModel):
 
 class CreditCardsDatabaseResponse(BaseModel):
     credit_card: List[CreditCardSchema]
+
+class CardInWalletSchema(BaseModel):
+    is_held : bool
+    credit_card_id: int
+    wallet_id: int
+    card : CreditCardSchema
+
+    model_config = ConfigDict(from_attributes=True)
+
+class WalletSchema(BaseModel):
+    id : int
+    name : str
+    last_edited : date
+    is_custom : bool
+    cards: List[CardInWalletSchema]
+
+    model_config = ConfigDict(from_attributes=True)

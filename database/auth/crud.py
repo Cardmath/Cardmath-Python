@@ -1,7 +1,8 @@
 from auth.schemas import UserCreate
-from database.auth.user import User, UserInDB, Enrollment, Account
+from database.auth.user import User, UserInDB, Enrollment, Account, Wallet, wallet_card_association
 from database.creditcard.creditcard import CreditCard
 from passlib.context import CryptContext
+from sqlalchemy import insert
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema
 from typing import List, Optional
@@ -55,10 +56,44 @@ async def update_user_enrollment(db: Session, enrollment_schema: AccessTokenSche
     
     return db_enrollment
 
-async def update_user_with_credit_cards(db : Session, credit_cards : List[CreditCard], user_id : int) -> Optional[User]:
+async def update_user_with_credit_cards(db: Session, credit_cards: List[CreditCard], user_id: int, is_held: bool = True) -> Optional[User]:
     user = get_user(db, user_id)
+    
+    # Check if the user already has a wallet; if not, create one and commit to get its ID
+    if not user.wallets:
+        print("[INFO] Creating new wallet of held cards for user")
+        new_wallet = Wallet(user_id=user_id, name="Default Wallet", last_edited=datetime.today())
+        db.add(new_wallet)
+        db.commit()  # Commit to assign an ID to the wallet
+        db.refresh(new_wallet)  # Refresh to get the wallet ID
+        user.wallets.append(new_wallet)
+    
+    wallet = user.wallets[0]
+    wallet.last_edited = datetime.today()
+    wallet.is_custom = False
+
+    # Ensure each credit card has an ID by adding it to the session and committing if necessary
     for credit_card in credit_cards:
-        user.credit_cards.append(credit_card)
+        if credit_card.id is None:  # Add to session if not already in the database
+            db.add(credit_card)
+            db.commit()
+            db.refresh(credit_card)
+
+        # Now, add the card to the wallet association table with `is_held` status
+        stmt = insert(wallet_card_association).values(
+            wallet_id=wallet.id,
+            credit_card_id=credit_card.id,
+            is_held=True
+        )
+        db.execute(stmt)
+        
+        if not user.credit_cards:
+            user.credit_cards = []
+
+        # Also, associate credit card directly with user if needed
+        if credit_card not in user.credit_cards:
+            user.credit_cards.append(credit_card)
+
     db.commit()
     db.refresh(user)
     return user

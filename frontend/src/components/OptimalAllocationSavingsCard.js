@@ -76,13 +76,12 @@ const OptimalAllocationSavingsCard = () => {
 
   // Method to fetch user's optimal allocation with just their current cards
   const fetchCurrentCardsOptimalAllocation = async () => {
-    if (cardsHeld.length > 0) {
       try {
         const response = await fetchWithAuth('http://localhost:8000/compute_optimal_allocation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            to_use: cardsHeld.length,
+            to_use: 4,
             to_add: 0,
             use_sign_on_bonus: false,
             save_to_db: false,
@@ -96,19 +95,13 @@ const OptimalAllocationSavingsCard = () => {
         let data = await response.json();
         data = data.solutions[0];
         setAllTimeSavings(data.total_reward_usd);
-        // Set current wallet data
         setNetRewardsCurrent(data.net_rewards_usd);
         setTotalRegularRewardsCurrent(data.total_regular_rewards_usd);
+        setCardsHeld(data.cards_used);
       } catch (error) {
         console.error('Error fetching current cards optimal allocation:', error);
       }
-    }
   };
-
-  // Fetch user's current card rewards (All-time)
-  useEffect(() => {
-    fetchCurrentCardsOptimalAllocation();
-  }, [cardsHeld]);
 
   // Fetch recommended allocation
   const fetchOptimalAllocation = async () => {
@@ -149,7 +142,6 @@ const OptimalAllocationSavingsCard = () => {
 
     setRecommendedCards(data.cards_added);
     setRecommendedCardsBonusTotal(data.total_reward_usd);
-    setCardsHeld(data.cards_used);
 
     // Set new data from the API response
     setTimeframe(timeframe);
@@ -166,6 +158,7 @@ const OptimalAllocationSavingsCard = () => {
   useEffect(() => {
     fetchOptimalAllocation();
     fetchUserPreferences();
+    fetchCurrentCardsOptimalAllocation();
   }, []);
   
   return (
@@ -177,13 +170,13 @@ const OptimalAllocationSavingsCard = () => {
           <div className="grid align-items-center justify-content-center py-2">
             Potential Increase in Net Rewards with Recommended Cards:
           </div>
-          {cardsHeld.length === 0 ? (
-            <div className='text-red-400 text-xl text-center p-2'>
-              No cards detected. Unable to compute potential increase in net rewards.
-            </div>
-          ) : (
+          {netRewardsDifference ? (
             <div className="font-bold text-3xl grid justify-content-center pb-1 text-green-600">
               ${netRewardsDifference}
+            </div> 
+          ) : (
+            <div className='text-red-400 text-xl text-center p-2'>
+              No cards detected. Unable to compute potential increase in net rewards.
             </div>
           )}
         </div>

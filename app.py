@@ -176,7 +176,11 @@ async def read_user_held_cards_endpoint(current_user: Annotated[User, Depends(au
 
 @app.post("/read_user_preferences")
 async def read_user_preferences_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], db: Session = Depends(get_sync_db)) -> PreferencesSchema:
-    return await teller_endpoints.read_user_preferences(user=current_user, db=db)
+    return await teller_endpoints.read_user_preferences(user=current_user)
+
+@app.post("/read_user_wallets")
+async def read_user_wallets_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], db: Session = Depends(get_sync_db)) -> List[WalletSchema]:
+    return await teller_endpoints.read_user_wallets(user=current_user, db=db)
 
 # Define each endpoint for returning enums as lists
 @app.get("/api/issuers")

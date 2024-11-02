@@ -9,6 +9,14 @@ user_credit_card_association = Table(
     Column('credit_card_id', Integer, ForeignKey('credit_cards.id'), primary_key=True)
 )
 
+wallet_card_association = Table(
+    'wallet_new_card_association',
+    Base.metadata,
+    Column('wallet_id', Integer, ForeignKey('wallets.id'), primary_key=True),
+    Column('credit_card_id', Integer, ForeignKey('credit_cards.id'), primary_key=True),
+    Column('is_held', Boolean, default=False, nullable=False, primary_key=False)
+)
+
 class User(Base):
     __tablename__ = 'users'
     
@@ -20,10 +28,22 @@ class User(Base):
     enrollments = relationship("Enrollment", back_populates="user")
     credit_cards = relationship("CreditCard", secondary=user_credit_card_association, back_populates="users")
     preferences = relationship("Preferences", uselist=False)
+    wallets = relationship("Wallet", back_populates="user")
 
 class UserInDB(User):
     hashed_password = Column(String, nullable=False)
-  
+
+class Wallet(Base):
+    __tablename__ = 'wallets'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship("User", back_populates="wallets")
+    name = Column(String, nullable=False)
+    last_edited = Column(Date, nullable=False)
+    is_custom = Column(Boolean, default=False)
+    cards = relationship("CreditCard", secondary=wallet_card_association, uselist=True)
+
 class Enrollment(Base):
     __tablename__ = 'enrollments'
     
