@@ -46,8 +46,15 @@ async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocat
 
     card_sob_data = {}  # Key: card index i, Value: dict with SOB details
 
-    for idx, card in enumerate(ccs_added):
-        if request.use_sign_on_bonus:
+    # Annual fees
+    C, H = R.shape
+
+    for idx in range(C):
+        card = None
+        if idx >= wallet_size:
+            card = ccs_added[idx - wallet_size]
+        
+        if card and request.use_sign_on_bonus:
             for sob in card.sign_on_bonus:
                 category = sob.purchase_type
                 
@@ -82,8 +89,6 @@ async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocat
                     'timeframe': T
                 }
 
-    # Annual fees
-    C, H = R.shape
     annual_fee_values = [0.0] * C
     for idx in range(C):
         if idx >= wallet_size:

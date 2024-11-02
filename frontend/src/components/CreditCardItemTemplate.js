@@ -16,7 +16,7 @@ const CreditCardItemTemplate = ({ cardData, sizingCss = "h-4 w-4" }) => {
     }
 
     return (
-        <div className={`p-2 ${sizingCss}`} key={cardData.id} style={{ width: '300px', height: '650px' }}>
+        <div className={`p-2 ${sizingCss}`} key={cardData.id} style={{ width: '300px', height: '700px' }}>
             <Card
                 title={cardData.name}
                 subTitle={cardData.issuer}

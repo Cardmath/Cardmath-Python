@@ -149,6 +149,7 @@ const OptimalAllocationSavingsCard = () => {
 
     setRecommendedCards(data.cards_added);
     setRecommendedCardsBonusTotal(data.total_reward_usd);
+    setCardsHeld(data.cards_used);
 
     // Set new data from the API response
     setTimeframe(timeframe);
@@ -165,19 +166,6 @@ const OptimalAllocationSavingsCard = () => {
   useEffect(() => {
     fetchOptimalAllocation();
     fetchUserPreferences();
-  }, []);
-
-  // Fetch user's held cards
-  useEffect(() => {
-    fetchWithAuth('http://localhost:8000/read_user_held_cards', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-      .then(response => response.json())
-      .then(data => {
-        setCardsHeld(data.credit_card);
-      })
-      .catch(error => console.log(error));
   }, []);
   
   return (
@@ -205,7 +193,7 @@ const OptimalAllocationSavingsCard = () => {
       <div className='pt-4 border-round flex justify-content-center'>
         <div className='solutions-iterator w-3 p-3 shadow-2 flex justify-content-center' data-pr-tooltip="We find at most 5 (but often fewer) possible credit card wallets, including the optimal one. Click on the left and right arrows to cycle through solutions."> 
           <Button icon="pi pi-arrow-left" onClick={() => solutions.solutions && setSolutionIndex(solutionIndex - 1 % solutions.solutions.length)} />
-          <div className='text-center text-2xl px-3'>Current Solution: {solutionIndex + 1} / {solutions.solutions?.length || 0}</div>
+          <div className='text-center text-2xl px-3 pt-1'>Current Solution: {solutionIndex + 1} / {solutions.solutions?.length || 0}</div>
           <Button icon="pi pi-arrow-right" onClick={() => solutions.solutions && setSolutionIndex(solutionIndex + 1 % solutions.solutions.length)} />
         </div>
       </div>
@@ -301,7 +289,7 @@ const OptimalAllocationSavingsCard = () => {
 
           <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
             <p className='font-italic'>
-              Select the date range to over which to calculate the optimal credit card wallet. You might do this when old transactions are not representative of your current spending habits.
+              Select the date range to over which to calculate the optimal credit card wallet. You might do this when old transactions are not representative of your current spending habits. If no date range is selected, we'll use the last 48 months of your entire available history.
             </p>
             <div className="flex justify-content-center mt-2">
               <FloatLabel htmlFor="dateRange" className="p-float-label mt-3">
@@ -333,7 +321,7 @@ const OptimalAllocationSavingsCard = () => {
           <div className="col-12 grid flex justify-content-center align-items-start">
             {/* Your Cards Carousel */}
             <div className="col-6">
-              <div className="text-3xl pb-2 text-center">Your Cards</div>
+              <div className="text-3xl pb-2 text-center">Your Held Cards</div>
               {cardsHeld.length === 0 ? (
                 <Card title="No Credit Cards detected" className="w-9 py-3 bg-pink-200 border-3 shadow-2 surface-border border-round">
                   <p className="m-0">We couldn't detect any credit cards associated with your account.</p>
@@ -353,7 +341,7 @@ const OptimalAllocationSavingsCard = () => {
 
             {/* Recommended Cards Carousel */}
             <div className="col-6">
-              <div className="text-3xl pb-2 text-center">Recommended Cards</div>
+              <div className="text-3xl pb-2 text-center">Recommended New Cards</div>
               {recommendedCards.length === 0 ? (
                 <Card title="No Recommended Cards" className="w-9 py-3 bg-yellow-200 border-3 shadow-2 surface-border border-round">
                   <p className="m-0">No recommended cards based on your preferences.</p>
