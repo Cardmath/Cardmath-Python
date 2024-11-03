@@ -182,7 +182,21 @@ async def read_user_preferences_endpoint(current_user: Annotated[User, Depends(a
 async def read_user_wallets_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], db: Session = Depends(get_sync_db)) -> List[WalletSchema]:
     return await teller_endpoints.read_user_wallets(user=current_user, db=db)
 
-# Define each endpoint for returning enums as lists
+@app.post("/ingest_user_wallet")
+async def ingest_user_wallet_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
+                   wallet: WalletsIngestRequest, db: Session = Depends(get_sync_db)) -> WalletSchema:
+    return await teller_endpoints.ingest_user_wallet(wallet=wallet, user=current_user, db=db)
+
+@app.post("/delete_user_wallet")
+async def delete_user_wallet_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
+                   wallet: WalletDeleteRequest, db: Session = Depends(get_sync_db)):
+    return await teller_endpoints.delete_wallet(request=wallet, current_user=current_user, db=db)
+
+@app.post("/edit_user_wallet")
+async def edit_user_wallet_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
+                   wallet: WalletUpdateRequest, db: Session = Depends(get_sync_db)):
+    return await teller_endpoints.edit_wallet(request=wallet, current_user=current_user, db=db)
+
 @app.get("/api/issuers")
 def get_issuers():
     return [issuer.value for issuer in Issuer]

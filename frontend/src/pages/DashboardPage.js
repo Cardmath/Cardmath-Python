@@ -19,8 +19,39 @@ const DashboardPage = () => {
     const [heavyHittersCategories, setHeavyHittersCategories] = useState([]);
     const [dateRange, setDateRange] = useState([null, null]);
 
+    // Function to fetch wallets
+    const fetchWallets = () => {
+        setLoading(true);
+        fetchWithAuth('http://localhost:8000/read_user_wallets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(response => response.json())
+        .then(data => {
+            setWallets(data);
+            setLoading(false);
+        })
+        .catch(err => {
+            console.error('Error fetching wallets:', err);
+            setError('Failed to load wallets. Please try again later.');
+            setLoading(false);
+        });
+    };
+
+    // Fetch wallets only when the page view is 'wallets'
     useEffect(() => {
-        // Fetch data for charts (for the home view)
+        if (pageView === 'wallets') {
+            fetchWallets();
+        }
+    }, [pageView]);
+
+    // Function to handle wallet updates, which refreshes the wallet list
+    const onWalletUpdate = () => {
+        fetchWallets();
+    };
+
+    // Fetch data for charts (for the home view)
+    useEffect(() => {
         fetchWithAuth('http://localhost:8000/compute_categories_moving_averages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -45,8 +76,8 @@ const DashboardPage = () => {
         });
     }, []);
 
+    // Fetch heavy hitters for the chart
     useEffect(() => {
-        // Fetch heavy hitters for the chart
         fetchWithAuth('http://localhost:8000/read_heavy_hitters', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -58,27 +89,6 @@ const DashboardPage = () => {
             .then(data => setHeavyHittersCategories(data.heavyhitters))
             .catch(error => console.log(error));
     }, [dateRange]);
-
-    useEffect(() => {
-        // Fetch wallets when viewing the wallets page
-        if (pageView === 'wallets') {
-            setLoading(true);
-            fetchWithAuth('http://localhost:8000/read_user_wallets', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            })
-            .then(response => response.json())
-            .then(data => {
-                setWallets(data);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error('Error fetching wallets:', err);
-                setError('Failed to load wallets. Please try again later.');
-                setLoading(false);
-            });
-        }
-    }, [pageView]);
 
     return (
         <div className="min-h-screen flex relative lg:static surface-ground">
@@ -135,10 +145,14 @@ const DashboardPage = () => {
                 {pageView === 'wallets' && (
                     <div className="p-4 gap-4 surface-ground">
                         <div className='text-4xl font-bold'>Your Wallets</div>
-                        <WalletDisplay wallets={wallets} loading={loading} error={error} />
+                        <WalletDisplay 
+                            wallets={wallets} 
+                            loading={loading} 
+                            error={error} 
+                            onWalletUpdate={onWalletUpdate}  // Pass onWalletUpdate function
+                        />
                     </div>
                 )}
-
 
                 {pageView === 'preferences' && (
                     <div className="grid p-4 gap-4 surface-ground">

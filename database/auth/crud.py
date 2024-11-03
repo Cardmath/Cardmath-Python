@@ -62,7 +62,7 @@ async def update_user_with_credit_cards(db: Session, credit_cards: List[CreditCa
     # Check if the user already has a wallet; if not, create one and commit to get its ID
     if not user.wallets:
         print("[INFO] Creating new wallet of held cards for user")
-        new_wallet = Wallet(user_id=user_id, name="Default Wallet", last_edited=datetime.today())
+        new_wallet = Wallet(user_id=user_id, name="All Detected Cards", last_edited=datetime.today())
         db.add(new_wallet)
         db.commit()  # Commit to assign an ID to the wallet
         db.refresh(new_wallet)  # Refresh to get the wallet ID

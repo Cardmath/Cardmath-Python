@@ -164,7 +164,7 @@ class CreditCardsDatabaseResponse(BaseModel):
 class CardInWalletSchema(BaseModel):
     is_held : bool
     credit_card_id: int
-    wallet_id: int
+    wallet_id: Optional[int]
     card : CreditCardSchema
 
     model_config = ConfigDict(from_attributes=True)
@@ -177,3 +177,27 @@ class WalletSchema(BaseModel):
     cards: List[CardInWalletSchema]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CardLookupSchema(BaseModel):
+    name: str
+    issuer: str
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class WalletsIngestRequest(BaseModel):
+    name : str
+    cards : List[CardLookupSchema]
+    is_custom : bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class WalletDeleteRequest(BaseModel):
+    wallet_id: int
+
+class WalletUpdateRequest(BaseModel):
+    wallet_id: int
+    name: Optional[str]
+    is_custom: Optional[bool]
+    cards: Optional[List[CardLookupSchema]]
