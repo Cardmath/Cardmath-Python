@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card } from 'primereact/card';
 import { Tooltip } from 'primereact/tooltip';
 import 'primeflex/primeflex.css';
 
@@ -19,9 +18,9 @@ const PreferencesDisplay = ({ preferences }) => {
       {/* Credit Profile */}
       <div className="flex flex-column">
         <Tooltip target=".credit-profile" position="bottom"/>
-        <h3 className="credit-profile p-2 bg-blue-100 border-round" data-pr-tooltip="Your credit profile informs the types of cards recommended.">
+        <div className="credit-profile font-bold p-2 bg-blue-100 border-round" data-pr-tooltip="Your credit profile informs the types of cards recommended.">
           Credit Profile
-        </h3>
+        </div>
         <p>{credit_profile || "No credit profile specified."}</p>
       </div>
 
@@ -29,15 +28,15 @@ const PreferencesDisplay = ({ preferences }) => {
       {banks_preferences && (
         <div className="flex flex-column">
           <Tooltip target=".banks-preferences" position="bottom"/>
-          <h3 className="banks-preferences p-2 bg-blue-100 border-round" data-pr-tooltip="These are your bank preferences used in recommendations.">
+          <div className="banks-preferences font-bold p-2 bg-blue-100 border-round" data-pr-tooltip="These are your bank preferences used in recommendations.">
             Banks Preferences
-          </h3>
+          </div>
           
           {/* Have Banks */}
           <div className="p-2">
-            <h4 className="mb-1">Have Banks</h4>
-            {banks_preferences.have_banks?.length ? (
-              <ul>
+            <div className="text-lg font-bold mb-1">Have Banks</div>
+            {banks_preferences.have_banks?.length > 0 ? (
+              <ul className="ml-3">
                 {banks_preferences.have_banks.map((bank, index) => (
                   <li key={index}>{bank}</li>
                 ))}
@@ -49,9 +48,9 @@ const PreferencesDisplay = ({ preferences }) => {
 
           {/* Preferred Banks */}
           <div className="p-2">
-            <h4 className="mb-1">Preferred Banks</h4>
-            {banks_preferences.preferred_banks ? (
-              <ul>
+            <div className="text-lg font-bold mb-1">Preferred Banks</div>
+            {banks_preferences.preferred_banks?.length > 0 ? (
+              <ul className="ml-3">
                 {banks_preferences.preferred_banks.map((bank, index) => (
                   <li key={index}>{bank}</li>
                 ))}
@@ -64,8 +63,8 @@ const PreferencesDisplay = ({ preferences }) => {
           {/* Avoid Banks */}
           {banks_preferences.avoid_banks?.length > 0 && (
             <div className="p-2">
-              <h4 className="mb-1">Avoid Banks</h4>
-              <ul>
+              <div className="text-lg font-bold mb-1">Avoid Banks</div>
+              <ul className="ml-3">
                 {banks_preferences.avoid_banks.map((bank, index) => (
                   <li key={index}>{bank}</li>
                 ))}
@@ -76,29 +75,72 @@ const PreferencesDisplay = ({ preferences }) => {
       )}
 
       {/* Rewards Programs Preferences */}
-      <div className="flex flex-column mb-3">
-        <Tooltip target=".rewards-preferences" position="bottom"/>
-        <h3 className="rewards-preferences p-2 bg-blue-100 border-round" data-pr-tooltip="Specifies your preferences for rewards programs.">
-          Rewards Programs Preferences
-        </h3>
-        <p>{rewards_programs_preferences ? JSON.stringify(rewards_programs_preferences) : "No rewards programs preferences specified."}</p>
-      </div>
+      {rewards_programs_preferences ? (
+        <div className="flex flex-column ">
+          <Tooltip target=".rewards-preferences" position="bottom"/>
+          <div className="rewards-preferences font-bold p-2 bg-blue-100 border-round" data-pr-tooltip="Specifies your preferences for rewards programs.">
+            Rewards Programs Preferences
+          </div>
+
+          {/* Preferred Rewards Programs */}
+          {rewards_programs_preferences.preferred_rewards_programs && rewards_programs_preferences.preferred_rewards_programs.length > 0 ? (
+            <div className="p-2">
+              <div className="text-lg font-bold mb-1">Preferred Rewards Programs</div>
+              <ul className="ml-3">
+                {rewards_programs_preferences.preferred_rewards_programs.map((program, index) => (
+                  <li key={index}>{program}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p>No preferred rewards programs specified.</p>
+          )}
+
+          {/* Avoid Rewards Programs */}
+          {rewards_programs_preferences.avoid_rewards_programs && rewards_programs_preferences.avoid_rewards_programs.length > 0 ? (
+            <div className="p-2">
+              <div className="text-lg font-bold mb-1">Avoid Rewards Programs</div>
+              <ul className="ml-3">
+                {rewards_programs_preferences.avoid_rewards_programs.map((program, index) => (
+                  <li key={index}>{program}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p>No rewards programs to avoid specified.</p>
+          )}
+
+          {/* If both lists are empty */}
+          {(!rewards_programs_preferences.preferred_rewards_programs || rewards_programs_preferences.preferred_rewards_programs.length === 0) &&
+           (!rewards_programs_preferences.avoid_rewards_programs || rewards_programs_preferences.avoid_rewards_programs.length === 0) && (
+            <p>No rewards programs preferences specified.</p>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-column ">
+          <Tooltip target=".rewards-preferences" position="bottom"/>
+          <div className="rewards-preferences font-bold p-2 bg-blue-100 border-round" data-pr-tooltip="Specifies your preferences for rewards programs.">
+            Rewards Programs Preferences
+          </div>
+          <p>No rewards programs preferences specified.</p>
+        </div>
+      )}
 
       {/* Consumer Preferences */}
-      <div className="flex flex-column mb-3">
+      <div className="flex flex-column ">
         <Tooltip target=".consumer-preferences" position="bottom"/>
-        <h3 className="consumer-preferences p-2 bg-blue-100 border-round" data-pr-tooltip="Your consumer-specific card preferences.">
+        <div className="consumer-preferences font-bold p-2 bg-blue-100 border-round" data-pr-tooltip="Your consumer-specific card preferences.">
           Consumer Preferences
-        </h3>
+        </div>
         <p>{consumer_preferences ? JSON.stringify(consumer_preferences) : "No consumer preferences specified."}</p>
       </div>
 
       {/* Business Preferences */}
-      <div className="flex flex-column mb-3">
+      <div className="flex flex-column ">
         <Tooltip target=".business-preferences" position="bottom"/>
-        <h3 className="business-preferences p-2 bg-blue-100 border-round" data-pr-tooltip="Business-specific preferences that guide recommendations.">
+        <div className="business-preferences font-bold p-2 bg-blue-100 border-round" data-pr-tooltip="Business-specific preferences that guide recommendations.">
           Business Preferences
-        </h3>
+        </div>
         <p>{business_preferences ? JSON.stringify(business_preferences) : "No business preferences specified."}</p>
       </div>
     </div>

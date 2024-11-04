@@ -69,9 +69,9 @@ async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocat
         if idx >= wallet_size:
             card = ccs_added[idx - wallet_size]
         elif request.wallet_override and idx in is_new_flags:
-            card = request.wallet_override.cards[idx]
+            card = ccs_used[idx]
         
-        if card and request.use_sign_on_bonus:
+        if card and card.sign_on_bonus and request.use_sign_on_bonus:
             for sob in card.sign_on_bonus:
                 category = sob.purchase_type
                 

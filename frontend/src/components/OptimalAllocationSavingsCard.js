@@ -203,18 +203,6 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
 
   return (
     <Card className="w-full h-full justify-content-center align-items-stretch flex-wrap border-round shadow-2 mt-2">
-      {/* Dropdown to select wallet */}
-      <div className="flex justify-content-center mb-3">
-        <Dropdown 
-          value={selectedWalletState} 
-          options={wallets} 
-          onChange={(e) => setSelectedWalletState(e.value)} 
-          optionLabel="name" 
-          placeholder="Select a Wallet" 
-          className="w-6"
-        />
-      </div>
-
       {/* Display net rewards difference */}
       <div className="flex gap-2 justify-content-center">
         <Tooltip className='w-3' target=".potential-increase" position="bottom"/>
@@ -236,7 +224,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
 
       <Tooltip className='w-3' target=".solutions-iterator" position="bottom"/>
       <div className='pt-4 border-round flex justify-content-center'>
-        <div className='solutions-iterator w-3 p-3 shadow-2 flex justify-content-center' data-pr-tooltip="We find at most 5 (but often fewer) possible credit card wallets, including the optimal one. Click on the left and right arrows to cycle through solutions."> 
+        <div className='solutions-iterator w-3 p-3 shadow-2 flex justify-content-center' data-pr-tooltip="We find at most 5 of the best (but often fewer) credit card wallets, including the optimal one. Click on the left and right arrows to cycle through solutions."> 
           <Button icon="pi pi-arrow-left" onClick={() => solutions.solutions && setSolutionIndex((solutionIndex - 1 + solutions.solutions.length) % solutions.solutions.length)} />
           <div className='text-center text-2xl px-3 pt-1'>Current Solution: {solutionIndex + 1} / {solutions.solutions?.length || 0}</div>
           <Button icon="pi pi-arrow-right" onClick={() => solutions.solutions && setSolutionIndex((solutionIndex + 1) % solutions.solutions.length)} />
@@ -312,6 +300,24 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
 
           <img src="/logos/png/Black logo - no background.png" alt="Optimal Savings" className="w-full" />
 
+          {/* Wallet selector */}
+          <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
+            <p className='font-italic'>
+              Use a different wallet to change the cards that appear in 'Your Held Cards'. The custom wallet option is great for experimenting with different combinations of cards.
+            </p>
+            
+            <div className='flex justify-content-center'> 
+              <Dropdown 
+                value={selectedWalletState} 
+                options={wallets} 
+                onChange={(e) => setSelectedWalletState(e.value)} 
+                optionLabel="name" 
+                placeholder="Select a Wallet" 
+                className="w-6 flex"
+              />
+            </div>
+          </div>
+  
           {/* Existing controls */}
           <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
             <p className='font-italic'>
@@ -322,6 +328,9 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
 
             <div id="toAddInput" className="p-float-label mt-2">Number of Desired New Cards</div>
             <InputNumber aria-labelledby='toAddInput' showButtons inputId="integeronly" className="w-full" value={toAdd} onChange={e => setToAdd(e.value)} min={0} max={5} />
+            <p className='font-italic'>
+              Since you have <span className='font-bold'>{cardsHeld.length}</span> credit cards in this wallet, and you want to add up to <span className='font-bold'>{toAdd}</span> new credit cards from the recommendation algorithm, we'll recommend you to cancel up to <span className='font-bold'>{Math.max(cardsHeld.length, cardsHeld.length - toAdd)}</span> of your <span className='font-bold'>{cardsHeld.length}</span> cards. Cancelling up to  <span className='font-bold'>{Math.max(cardsHeld.length, cardsHeld.length - toAdd)}</span> of your cards will make room for up to <span className='font-bold'>{toAdd}</span> new ones so that you have a final wallet of <span className='font-bold'>{toUse}</span> credit cards. 
+            </p>
           </div>
 
           <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
