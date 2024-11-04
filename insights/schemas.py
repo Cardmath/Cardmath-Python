@@ -1,4 +1,4 @@
-from creditcard.schemas import CreditCardSchema, RewardCategoryRelation
+from creditcard.schemas import CreditCardSchema, RewardCategoryRelation, CardLookupSchema
 from datetime import date
 from pydantic import BaseModel
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
@@ -139,17 +139,28 @@ class CategoriesMovingAveragesResponse(BaseModel):
                 if len(c.moving_average) != len(dates):
                     raise ValueError('all series must have the same number of amounts as dates')
         return values
-    
-class OptimalCardsAllocationRequest(BaseModel):
-    num_solutions:int = 5
 
+class OptimalCardsAllocationCardLookupSchema(BaseModel):
+    is_new: bool = False # if true then card is new and should consider sign on bonus (sob)
+    card: CardLookupSchema
+
+class OptimalCardsAllocationRequestWalletOverride(BaseModel):
+    name: str
+    cards: List[OptimalCardsAllocationCardLookupSchema]
+
+class OptimalCardsAllocationRequest(BaseModel):
+    num_solutions: int = 5
+
+    wallet_override: Optional[OptimalCardsAllocationRequestWalletOverride] = None
 
     to_use: Optional[int] = 4
     to_add: Optional[int] = 0
+
     timeframe: Optional[MonthlyTimeframe] = None
     use_sign_on_bonus: bool = False
     return_cards_used: Optional[bool] = False
     return_cards_added: Optional[bool] = False
+
 class CardsUseSummary(BaseModel):
     name: str 
 

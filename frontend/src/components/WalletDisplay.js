@@ -6,11 +6,11 @@ import { PickList } from 'primereact/picklist';
 import { Button } from 'primereact/button';
 import { Tooltip } from 'primereact/tooltip';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
-import { InputText } from 'primereact/inputtext'; // Import InputText component
+import { InputText } from 'primereact/inputtext';
 import { fetchWithAuth } from '../pages/AuthPage';
 import moment from 'moment';
 
-const WalletDisplay = ({ wallets, loading, error, onWalletUpdate }) => {
+const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptimalAllocation }) => {
   const [showDialog, setShowDialog] = useState(false);
   const [availableCards, setAvailableCards] = useState([]);
   const [newWalletCards, setNewWalletCards] = useState([]);
@@ -51,12 +51,12 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate }) => {
     setShowDialog(false);
     setWalletName("");
     setNewWalletCards([]);
-    setIsNameInvalid(false); // Reset name validity
+    setIsNameInvalid(false);
   };
 
   const saveWallet = async () => {
     if (!walletName.trim()) {
-      setIsNameInvalid(true); // Set invalid if wallet name is empty
+      setIsNameInvalid(true);
       return;
     }
 
@@ -83,7 +83,7 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate }) => {
 
       if (response.ok) {
         closeDialog();
-        onWalletUpdate(); // Refresh wallets after adding or editing
+        onWalletUpdate();
       } else {
         console.error("Failed to save wallet:", await response.text());
       }
@@ -110,7 +110,7 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate }) => {
       });
 
       if (response.ok) {
-        onWalletUpdate(); // Refresh wallets after deletion
+        onWalletUpdate();
       } else {
         console.error("Failed to delete wallet:", await response.text());
       }
@@ -148,7 +148,7 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate }) => {
 
   return (
     <div className="flex flex-wrap gap-4 justify-content-start p-4">
-      <ConfirmDialog /> {/* ConfirmDialog component at the top level */}
+      <ConfirmDialog />
 
       <Card 
         className="flex flex-column align-items-center justify-content-center p-5 w-3 shadow-3 cursor-pointer surface-200 border-round" 
@@ -179,12 +179,12 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate }) => {
               >
                 <i className="pi pi-info-circle text-lg"></i>
               </div>
-              <Button label="Edit" icon="pi pi-pencil" onClick={() => openDialog(wallet)} className="mt-2 mr-4" />
+              <Button label="Edit" icon="pi pi-pencil" onClick={() => openDialog(wallet)} className="mt-2 mr-2" />
               <Button 
                 label="Delete" 
                 icon="pi pi-trash" 
                 onClick={() => confirmDeleteWallet(wallet.id)} 
-                className="mt-2 p-button-danger" 
+                className="mt-2 p-button-danger mr-2" 
               />
             </div>
 
@@ -204,6 +204,13 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate }) => {
                 <p className="m-0 text-500">No credit cards available in this wallet.</p>
               </div>
             )}
+
+            {/* Added Button to compute optimal allocation */}
+            <Button 
+              label="Compute Optimal Allocation with this Wallet" 
+              onClick={() => onComputeOptimalAllocation(wallet)} 
+              className="mt-2 w-full" 
+            />
           </Card>
         ))
       )}

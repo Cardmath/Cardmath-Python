@@ -8,8 +8,8 @@ import OptimalAllocationSavingsCard from '../components/OptimalAllocationSavings
 import WalletDisplay from '../components/WalletDisplay';
 
 const DashboardPage = () => {
-    const [pageView, setPageView] = useState('home'); // State to manage which page is viewed
-    const [wallets, setWallets] = useState([]); // State to store fetched wallets
+    const [pageView, setPageView] = useState('home');
+    const [wallets, setWallets] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -18,6 +18,8 @@ const DashboardPage = () => {
     const [isMovingAveragesReady, setIsMovingAveragesReady] = useState(false);
     const [heavyHittersCategories, setHeavyHittersCategories] = useState([]);
     const [dateRange, setDateRange] = useState([null, null]);
+
+    const [selectedWallet, setSelectedWallet] = useState(null);
 
     // Function to fetch wallets
     const fetchWallets = () => {
@@ -38,19 +40,23 @@ const DashboardPage = () => {
         });
     };
 
-    // Fetch wallets only when the page view is 'wallets'
+    // Fetch wallets when the component mounts or when pageView changes
     useEffect(() => {
-        if (pageView === 'wallets') {
-            fetchWallets();
-        }
+        fetchWallets();
     }, [pageView]);
 
-    // Function to handle wallet updates, which refreshes the wallet list
+    // Function to handle wallet updates
     const onWalletUpdate = () => {
         fetchWallets();
     };
 
-    // Fetch data for charts (for the home view)
+    // Function to handle computing optimal allocation with a selected wallet
+    const handleComputeOptimalAllocation = (wallet) => {
+        setSelectedWallet(wallet);
+        setPageView('home'); // Switch back to the 'home' view
+    };
+
+    // Fetch data for charts
     useEffect(() => {
         fetchWithAuth('http://localhost:8000/compute_categories_moving_averages', {
             method: 'POST',
@@ -127,7 +133,11 @@ const DashboardPage = () => {
             <div className="grid surface-ground">
                 {pageView === 'home' && (
                     <div className="grid surface-surface-ground">
-                        <OptimalAllocationSavingsCard className="h-12rem w-full" />
+                        <OptimalAllocationSavingsCard 
+                            className="h-12rem w-full" 
+                            selectedWallet={selectedWallet} 
+                            wallets={wallets} 
+                        />
                         <div className="grid align-content-end py-2">
                             <div className="col-5 shadow-2 surface-card border-round">
                                 {heavyHittersCategories.length > 0 && <HeavyHitterPieChart heavyHitters={heavyHittersCategories} dateRange={dateRange} />}
@@ -149,7 +159,8 @@ const DashboardPage = () => {
                             wallets={wallets} 
                             loading={loading} 
                             error={error} 
-                            onWalletUpdate={onWalletUpdate}  // Pass onWalletUpdate function
+                            onWalletUpdate={onWalletUpdate}
+                            onComputeOptimalAllocation={handleComputeOptimalAllocation}
                         />
                     </div>
                 )}

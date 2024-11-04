@@ -2,6 +2,8 @@ from copy import deepcopy
 from creditcard.endpoints.read_database import read_credit_cards_database, CreditCardsDatabaseRequest
 from creditcard.enums import PurchaseCategory, RewardUnit
 from creditcard.schemas import CreditCardSchema
+from database.creditcard.creditcard import CreditCard
+from fastapi import HTTPException
 from database.auth.user import User
 from insights.category_spending_prediction import calculate_incremental_spending_probabilities
 from insights.heavyhitters import read_heavy_hitters, HeavyHittersRequest, HeavyHittersResponse
@@ -18,26 +20,39 @@ async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocat
         db=db, user=user, request=HeavyHittersRequest(account_ids="all", timeframe=request.timeframe)
     )
 
-    # Process held (wallet) cards
-    held_cards = user.credit_cards
-    ccs_used = [CreditCardSchema.model_validate(cc) for cc in held_cards]
-    W, categories, card_names_used, reward_relations_used = create_cards_matrix(ccs_used, heavy_hitters=heavy_hitters_response)
-    wallet_size = W.shape[1]
-
-    # Initialize additional cards if needed
+    ccs_used = []
     ccs_added = []
-    reward_relations_added = {}
+    is_new_flags = []  # Keep track of whether each card is new
+
+    if request.wallet_override:
+        # Process wallet_override cards
+        for idx, cc in enumerate(request.wallet_override.cards):
+            # cc is an OptimalCardsAllocationCardLookupSchema
+            # cc.card is a CardLookupSchema with 'name' and 'issuer'
+            card_db = db.query(CreditCard).filter_by(name=cc.card.name, issuer=cc.card.issuer).first()
+            if not card_db:
+                raise HTTPException(status_code=400, detail=f"Credit card {cc.card.name} by {cc.card.issuer} not found.")
+            card_schema = CreditCardSchema.model_validate(card_db)
+            ccs_used.append(card_schema)
+            
+            if cc.is_new:
+                is_new_flags.append(idx)
+    else:
+        held_cards = user.credit_cards
+        ccs_used = [CreditCardSchema.model_validate(cc) for cc in held_cards]
+
     if request.to_add > 0:
         cc_response = await read_credit_cards_database(db=db, request=CreditCardsDatabaseRequest(card_details="all", use_preferences=True), current_user=user)
         ccs_added = [CreditCardSchema.model_validate(cc) for cc in cc_response.credit_card if cc not in ccs_used]
 
-        ADD, _, card_names_added, reward_relations_added = create_cards_matrix(ccs_added, heavy_hitters=heavy_hitters_response)
-        W = np.hstack([W, ADD])
-        card_names = card_names_used + card_names_added
-        reward_relations = {**reward_relations_used, **reward_relations_added}
-    else:
-        card_names = card_names_used
-        reward_relations = reward_relations_used
+    W, categories, card_names_used, reward_relations_used = create_cards_matrix(ccs_used, heavy_hitters=heavy_hitters_response)
+    ADD, _, card_names_added, reward_relations_added = create_cards_matrix(ccs_added, heavy_hitters=heavy_hitters_response)
+    wallet_size = W.shape[1]
+
+    W = np.hstack([W, ADD])
+
+    card_names = card_names_used + card_names_added
+    reward_relations = {**reward_relations_used, **reward_relations_added}
 
     # Calculate reward matrix R
     H_vector, categories = create_heavy_hitter_vector(heavy_hitters=heavy_hitters_response)
@@ -53,6 +68,8 @@ async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocat
         card = None
         if idx >= wallet_size:
             card = ccs_added[idx - wallet_size]
+        elif request.wallet_override and idx in is_new_flags:
+            card = request.wallet_override.cards[idx]
         
         if card and request.use_sign_on_bonus:
             for sob in card.sign_on_bonus:

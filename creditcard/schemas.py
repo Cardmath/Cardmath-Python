@@ -192,7 +192,6 @@ class WalletsIngestRequest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
 class WalletDeleteRequest(BaseModel):
     wallet_id: int
 

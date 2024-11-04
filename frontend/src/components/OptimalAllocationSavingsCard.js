@@ -8,6 +8,7 @@ import { Carousel } from 'primereact/carousel';
 import { FloatLabel } from 'primereact/floatlabel';
 import { Calendar } from 'primereact/calendar';
 import { Tooltip } from 'primereact/tooltip';
+import { Dropdown } from 'primereact/dropdown';
 import moment from 'moment';
 
 import CreditCardItemTemplate from './CreditCardItemTemplate';
@@ -15,13 +16,13 @@ import SpendingPlanTable from './SpendingPlanTable';
 import SignOnBonusTable from './SignOnBonusTable';
 import PreferencesDisplay from './PreferencesDisplay';
 
-const OptimalAllocationSavingsCard = () => {
-  const [solutions, setSolutions] = useState([]); // Store all solutions
-  const [solutionIndex, setSolutionIndex] = useState(0); // Track the displayed solution index
+const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
+  const [solutions, setSolutions] = useState([]);
+  const [solutionIndex, setSolutionIndex] = useState(0);
 
   const [preferences, setPreferences] = useState(null);
 
-  const [computationLoading, setComputationLoading] = useState(false)
+  const [computationLoading, setComputationLoading] = useState(false);
 
   const [timeframe, setTimeframe] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -43,7 +44,6 @@ const OptimalAllocationSavingsCard = () => {
   const [numRecommendedCards, setNumRecommendedCards] = useState(0);
   const [tolerance, setTolerance] = useState(5);
 
-  // New state variables for the additional data
   const [summary, setSummary] = useState([]);
   const [spendingPlan, setSpendingPlan] = useState([]);
   const [actionableSteps, setActionableSteps] = useState([]);
@@ -52,14 +52,20 @@ const OptimalAllocationSavingsCard = () => {
   const [totalAnnualFees, setTotalAnnualFees] = useState(0);
   const [netRewards, setNetRewards] = useState(0);
 
-  // New state variables for the current wallet data
   const [netRewardsCurrent, setNetRewardsCurrent] = useState(0);
   const [totalRegularRewardsCurrent, setTotalRegularRewardsCurrent] = useState(0);
   const [totalSignOnBonusCurrent, setTotalSignOnBonusCurrent] = useState(0);
   const [totalAnnualFeesCurrent, setTotalAnnualFeesCurrent] = useState(0);
 
-  // Variable to store the difference in net rewards
   const netRewardsDifference = (netRewards - netRewardsCurrent).toFixed(2);
+
+  const [selectedWalletState, setSelectedWalletState] = useState(selectedWallet);
+
+  useEffect(() => {
+    if (selectedWallet) {
+      setSelectedWalletState(selectedWallet);
+    }
+  }, [selectedWallet]);
 
   const fetchUserPreferences = async () => {
     try {
@@ -74,26 +80,42 @@ const OptimalAllocationSavingsCard = () => {
     }
   };
 
-  // Method to fetch user's optimal allocation with just their current cards
+  // Fetch current cards optimal allocation
   const fetchCurrentCardsOptimalAllocation = async () => {
       try {
+        const body = {
+          to_use: 4,
+          to_add: 0,
+          use_sign_on_bonus: false,
+          save_to_db: false,
+          timeframe: selectedDate !== null ? {
+            start_month: moment(selectedDate[0]).startOf('month').format('YYYY-MM-DD'),
+            end_month: moment(selectedDate[1]).startOf('month').format('YYYY-MM-DD')
+          } : null,
+          return_cards_used: true,
+        };
+
+        if (selectedWalletState) {
+          body.wallet_override = {
+            name: selectedWalletState.name,
+            cards: selectedWalletState.cards.map(cc => ({
+              is_new: cc.is_held ? false : true,
+              card: {
+                name: cc.card.name,
+                issuer: cc.card.issuer
+              }
+            }))
+          };
+        }
+
         const response = await fetchWithAuth('http://localhost:8000/compute_optimal_allocation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to_use: 4,
-            to_add: 0,
-            use_sign_on_bonus: false,
-            save_to_db: false,
-            timeframe: selectedDate !== null ? {
-              start_month: moment(selectedDate[0]).startOf('month').format('YYYY-MM-DD'),
-              end_month: moment(selectedDate[1]).startOf('month').format('YYYY-MM-DD')
-            } : null,
-            return_cards_used: true,
-          })
+          body: JSON.stringify(body)
         });
         let data = await response.json();
         data = data.solutions[0];
+        console.log(data)
         setAllTimeSavings(data.total_reward_usd);
         setNetRewardsCurrent(data.net_rewards_usd);
         setTotalRegularRewardsCurrent(data.total_regular_rewards_usd);
@@ -107,21 +129,36 @@ const OptimalAllocationSavingsCard = () => {
   const fetchOptimalAllocation = async () => {
     setComputationLoading(true);
     try {
+      const body = {
+        to_use: toUse,
+        to_add: toAdd,
+        use_sign_on_bonus: useSignOnBonus,
+        timeframe: selectedDate !== null ? {
+          start_month: moment(selectedDate[0]).startOf('month').format('YYYY-MM-DD'),
+          end_month: moment(selectedDate[1]).startOf('month').format('YYYY-MM-DD')
+        } : null,          
+        return_cards_added: true,
+        return_cards_used: true,
+        save_to_db: false
+      };
+
+      if (selectedWalletState) {
+        body.wallet_override = {
+          name: selectedWalletState.name,
+          cards: selectedWalletState.cards.map(cc => ({
+            is_new: cc.is_held ? false : true,
+            card: {
+              name: cc.card.name,
+              issuer: cc.card.issuer
+            }
+          }))
+        };
+      }
+
       const response = await fetchWithAuth('http://localhost:8000/compute_optimal_allocation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to_use: toUse,
-          to_add: toAdd,
-          use_sign_on_bonus: useSignOnBonus,
-          timeframe: selectedDate !== null ? {
-            start_month: moment(selectedDate[0]).startOf('month').format('YYYY-MM-DD'),
-            end_month: moment(selectedDate[1]).startOf('month').format('YYYY-MM-DD')
-          } : null,          
-          return_cards_added: true,
-          return_cards_used: true,
-          save_to_db: false
-        })
+        body: JSON.stringify(body)
       });
       const data = await response.json();
       setSolutions(data);
@@ -143,7 +180,6 @@ const OptimalAllocationSavingsCard = () => {
     setRecommendedCards(data.cards_added);
     setRecommendedCardsBonusTotal(data.total_reward_usd);
 
-    // Set new data from the API response
     setTimeframe(timeframe);
     setSummary(data.summary);
     setSpendingPlan(data.spending_plan);
@@ -154,15 +190,31 @@ const OptimalAllocationSavingsCard = () => {
     setNetRewards(data.net_rewards_usd);
   }, [solutionIndex, solutions]);
 
-  // Fetch user's optimal allocation for the selected timeframe on component mount
+  // Fetch user's optimal allocation on component mount
   useEffect(() => {
     fetchOptimalAllocation();
     fetchUserPreferences();
     fetchCurrentCardsOptimalAllocation();
   }, []);
-  
+
+  useEffect(() => {
+    fetchCurrentCardsOptimalAllocation();
+  }, [selectedWalletState]);
+
   return (
     <Card className="w-full h-full justify-content-center align-items-stretch flex-wrap border-round shadow-2 mt-2">
+      {/* Dropdown to select wallet */}
+      <div className="flex justify-content-center mb-3">
+        <Dropdown 
+          value={selectedWalletState} 
+          options={wallets} 
+          onChange={(e) => setSelectedWalletState(e.value)} 
+          optionLabel="name" 
+          placeholder="Select a Wallet" 
+          className="w-6"
+        />
+      </div>
+
       {/* Display net rewards difference */}
       <div className="flex gap-2 justify-content-center">
         <Tooltip className='w-3' target=".potential-increase" position="bottom"/>
@@ -185,9 +237,9 @@ const OptimalAllocationSavingsCard = () => {
       <Tooltip className='w-3' target=".solutions-iterator" position="bottom"/>
       <div className='pt-4 border-round flex justify-content-center'>
         <div className='solutions-iterator w-3 p-3 shadow-2 flex justify-content-center' data-pr-tooltip="We find at most 5 (but often fewer) possible credit card wallets, including the optimal one. Click on the left and right arrows to cycle through solutions."> 
-          <Button icon="pi pi-arrow-left" onClick={() => solutions.solutions && setSolutionIndex(solutionIndex - 1 % solutions.solutions.length)} />
+          <Button icon="pi pi-arrow-left" onClick={() => solutions.solutions && setSolutionIndex((solutionIndex - 1 + solutions.solutions.length) % solutions.solutions.length)} />
           <div className='text-center text-2xl px-3 pt-1'>Current Solution: {solutionIndex + 1} / {solutions.solutions?.length || 0}</div>
-          <Button icon="pi pi-arrow-right" onClick={() => solutions.solutions && setSolutionIndex(solutionIndex + 1 % solutions.solutions.length)} />
+          <Button icon="pi pi-arrow-right" onClick={() => solutions.solutions && setSolutionIndex((solutionIndex + 1) % solutions.solutions.length)} />
         </div>
       </div>
           
