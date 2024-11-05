@@ -21,7 +21,7 @@ const DashboardPage = () => {
 
     const [selectedWallet, setSelectedWallet] = useState(null);
 
-    // Function to fetch wallets
+    // Fetch wallets function
     const fetchWallets = () => {
         setLoading(true);
         fetchWithAuth('http://localhost:8000/read_user_wallets', {
@@ -45,18 +45,15 @@ const DashboardPage = () => {
         fetchWallets();
     }, [pageView]);
 
-    // Function to handle wallet updates
     const onWalletUpdate = () => {
         fetchWallets();
     };
 
-    // Function to handle computing optimal allocation with a selected wallet
     const handleComputeOptimalAllocation = (wallet) => {
         setSelectedWallet(wallet);
-        setPageView('home'); // Switch back to the 'home' view
+        setPageView('home');
     };
 
-    // Fetch data for charts
     useEffect(() => {
         fetchWithAuth('http://localhost:8000/compute_categories_moving_averages', {
             method: 'POST',
@@ -69,7 +66,7 @@ const DashboardPage = () => {
             })
         }).then(response => {
             if (response.status === 200) {
-                return response.json()
+                return response.json();
             }
             throw new Error(response.statusText);
         }).then(data => {
@@ -82,7 +79,6 @@ const DashboardPage = () => {
         });
     }, []);
 
-    // Fetch heavy hitters for the chart
     useEffect(() => {
         fetchWithAuth('http://localhost:8000/read_heavy_hitters', {
             method: 'POST',
@@ -117,8 +113,15 @@ const DashboardPage = () => {
                                     <Ripple />
                                 </a>
                             </li>
-                            <li onClick={() => setPageView('preferences')}>
-                                <a className={`p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center ${pageView === 'preferences' ? 'text-cyan-600 border-left-2 border-cyan-600' : 'text-600 border-transparent hover:border-300'} transition-duration-150 transition-colors`}>
+                            <li onClick={() => setPageView('travel')}>
+                                <a className={`p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center ${pageView === 'travel' ? 'text-cyan-600 border-left-2 border-cyan-600' : 'text-600 border-transparent hover:border-300'} transition-duration-150 transition-colors`}>
+                                    <i className="pi pi-compass mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
+                                    <span className="font-medium inline text-base lg:text-xs lg:block">Travel</span>
+                                    <Ripple />
+                                </a>
+                            </li>
+                            <li onClick={() => window.location.href="http://localhost:3000/preferences"}>
+                                <a className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-transparent hover:border-300 transition-duration-150 transition-colors">
                                     <i className="pi pi-heart-fill mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
                                     <span className="font-medium inline text-base lg:text-xs lg:block">Preferences</span>
                                     <Ripple />
@@ -130,7 +133,7 @@ const DashboardPage = () => {
             </div>
 
             {/* Page Content */}
-            <div className="grid surface-ground">
+            <div className="surface-ground w-full">
                 {pageView === 'home' && (
                     <div className="grid surface-surface-ground">
                         <OptimalAllocationSavingsCard 
@@ -165,10 +168,15 @@ const DashboardPage = () => {
                     </div>
                 )}
 
-                {pageView === 'preferences' && (
-                    <div className="grid p-4 gap-4 surface-ground">
-                        <h2>Your Preferences</h2>
-                        {/* Preferences display component or content goes here */}
+                {pageView === 'travel' && (
+                    <div className="flex flex-column align-items-center justify-content-center h-screen">
+                        <i className="pi pi-wrench text-4xl mb-3"></i>
+                        <div className="text-3xl font-bold text-center mb-4">
+                            Our developers are working to release this feature in Q1 2025.
+                        </div>
+                        <p className="text-lg text-center">
+                            Tell us your favorite destinations and when you want to go, and we'll calculate the cheapest, fastest, and most comfortable way to get you there!
+                        </p>
                     </div>
                 )}
             </div>
