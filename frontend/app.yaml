@@ -1,0 +1,20 @@
+runtime: nodejs22
+
+handlers:
+  # Serve all files in /static (JavaScript, CSS, etc.) directly from the build/static directory
+  - url: /static
+    static_dir: build/static
+
+  # Serve theme.css directly from the root if it exists in build/themes
+  - url: /themes
+    static_dir: build/themes
+
+  # Serve other assets in the build directory, like images, icons, etc.
+  - url: /(.*\.(ico|png|svg|json|txt))
+    static_files: build/\1
+    upload: build/(.*\.(ico|png|svg|json|txt))
+
+  # Serve index.html for all other paths to enable client-side routing
+  - url: /.*
+    static_files: build/index.html
+    upload: build/index.html
