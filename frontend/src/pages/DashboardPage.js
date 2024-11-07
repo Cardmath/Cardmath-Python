@@ -172,7 +172,7 @@ const DashboardPage = () => {
                     <div className="flex flex-column align-items-center justify-content-center h-screen">
                         <i className="pi pi-wrench text-4xl mb-3"></i>
                         <div className="text-3xl font-bold text-center mb-4">
-                            Our developers are working to release this feature in Q1 2025.
+                            Coming in Q1 2025 - Travel Optimally with Cash and Points
                         </div>
                         <p className="text-lg text-center">
                             Tell us your favorite destinations and when you want to go, and we'll calculate the cheapest, fastest, and most comfortable way to get you there!

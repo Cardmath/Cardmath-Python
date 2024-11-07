@@ -181,56 +181,32 @@ const PreferencesCard = ( {setAlert} ) => {
 
     const sendPreferences = () => {
         const credit_profile_out = { 
-            credit_score: creditScore !== null ? creditScore : null,
-            salary: salary !== null ? salary : null,
-            lifestyle : selectedLifestyle !== null ? selectedLifestyle : null
+            credit_score: creditScore !== '' ? creditScore : null,
+            salary: salary !== '' ? salary : null,
+            lifestyle: selectedLifestyle !== null ? selectedLifestyle : null
         };
-
+    
         const banks_preferences_out = {
             have_banks: selectedHaveBanks !== null ? [...selectedHaveBanks] : null,
             preferred_banks: selectedBanks !== null ? [...selectedBanks] : null,
             avoid_banks: selectedAvoidBanks !== null ? [...selectedAvoidBanks] : null
-        }
-
-        var intersection = findBanksIntersection();
-        console.log(intersection);
-        if (intersection !== null) {
-            setAlert({
-                visible: true,
-                message: 'You cannot avoid and prefer the same bank. Violating Banks: ' + intersection.join(', '),
-                heading: 'Preference Contradiction',
-                type: 'error'
-            })
-            return;
-        }
-
+        };
+    
         const rewards_programs_preferences_out = {
-            preferred_rewards_programs : selectedPointsSystems !== null ? [...selectedPointsSystems] : null,
-            avoid_rewards_programs : selectedAvoidPointsSystems !== null ? [...selectedAvoidPointsSystems] : null
-        }
-
-        var intersection = findAirlinesIntersection();
-        console.log(intersection);
-        if (intersection !== null) {
-            setAlert({
-                visible: true,
-                message: 'You cannot avoid and prefer the same airline. Violating airlines: ' + intersection.join(', '),
-                heading: 'Preference Contradiction',
-                type: 'error'
-            })
-            return;
-        }
-        
+            preferred_rewards_programs: selectedPointsSystems !== null ? [...selectedPointsSystems] : null,
+            avoid_rewards_programs: selectedAvoidPointsSystems !== null ? [...selectedAvoidPointsSystems] : null
+        };
+    
         const consumer_preferences_out = {
             favorite_grocery_stores: selectedGroceries !== null ? [...selectedGroceries] : null,
             favorite_general_goods_stores: selectedShopping !== null ? [...selectedShopping] : null,
-        };        
-
+        };
+    
         const business_preferences_out = {
             business_type: selectedIndustries !== null ? [...selectedIndustries] : null,
             business_size: selectedBusinessSize !== null ? selectedBusinessSize : null
-        }
-
+        };
+    
         fetchWithAuth('http://localhost:8000/ingest_user_preferences', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -243,17 +219,15 @@ const PreferencesCard = ( {setAlert} ) => {
             })
         }).then(() => {
             console.log("Preferences submitted!");
-        }).then( () => {
+        }).then(() => {
             setAlert({
                 visible: false,
                 message: '',
                 heading: '',
                 type: 'error'
-            })    
-        }
-        );
-    }
-        
+            });
+        });
+    };
 
     return (        
         <div className="px-4 md:px-6 lg:px-8 pb-8">

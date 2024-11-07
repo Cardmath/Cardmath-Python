@@ -2,7 +2,7 @@ from creditcard.enums import *
 from database.sql_alchemy_db import Base
 from sqlalchemy.orm import relationship
 from database.auth.user import user_credit_card_association
-from sqlalchemy import Column, String, Float, JSON, Integer
+from sqlalchemy import Column, String, Float, JSON, Integer 
 
 # standard CreditCard object
 class CreditCard(Base):

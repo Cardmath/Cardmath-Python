@@ -147,7 +147,7 @@ async def get_annual_fee(card_description):
 class CreditCardKeywordResponse(BaseModel):
     card_keywords: List[CreditCardKeyword]
 
-async def get_keywords(card_description):
-    prompt = card_keywords_prompt(card_description)
+async def get_keywords(card_description, card_tile : str = ""):
+    prompt = card_keywords_prompt("Card: " + card_tile + "\n" + card_description)
     keywords: CreditCardKeywordResponse = await structure_with_openai(prompt, response_format=card_keywords_response_format(), schema=CreditCardKeywordResponse)
     return keywords.card_keywords

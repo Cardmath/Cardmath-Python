@@ -17,21 +17,34 @@ const PreferencesDisplay = ({ preferences }) => {
 
       {/* Credit Profile */}
       <div className="flex flex-column">
-        <Tooltip target=".credit-profile" position="bottom"/>
-        <div className="credit-profile font-bold p-2 bg-blue-100 border-round" data-pr-tooltip="Your credit profile informs the types of cards recommended.">
+        <Tooltip target=".credit-profile" position="bottom" />
+        <div
+          className="credit-profile font-bold p-2 bg-blue-100 border-round"
+          data-pr-tooltip="Your credit profile informs the types of cards recommended."
+        >
           Credit Profile
         </div>
-        <p>{credit_profile || "No credit profile specified."}</p>
+        {credit_profile ? (
+          <div className="ml-3">
+            <p>Credit Score: {credit_profile.credit_score ?? 'Not specified'}</p>
+            <p>Salary: {credit_profile.salary ?? 'Not specified'}</p>
+            <p>Lifestyle: {credit_profile.lifestyle ?? 'Not specified'}</p>
+          </div>
+        ) : (
+          <p>No credit profile specified.</p>
+        )}
       </div>
 
       {/* Banks Preferences */}
       {banks_preferences && (
         <div className="flex flex-column">
-          <Tooltip target=".banks-preferences" position="bottom"/>
-          <div className="banks-preferences font-bold p-2 bg-blue-100 border-round" data-pr-tooltip="These are your bank preferences used in recommendations.">
+          <Tooltip target=".banks-preferences" position="bottom" />
+          <div
+            className="banks-preferences font-bold p-2 bg-blue-100 border-round"
+            data-pr-tooltip="These are your bank preferences used in recommendations."
+          >
             Banks Preferences
           </div>
-          
           {/* Have Banks */}
           <div className="p-2">
             <div className="text-lg font-bold mb-1">Have Banks</div>
@@ -76,9 +89,12 @@ const PreferencesDisplay = ({ preferences }) => {
 
       {/* Rewards Programs Preferences */}
       {rewards_programs_preferences ? (
-        <div className="flex flex-column ">
-          <Tooltip target=".rewards-preferences" position="bottom"/>
-          <div className="rewards-preferences font-bold p-2 bg-blue-100 border-round" data-pr-tooltip="Specifies your preferences for rewards programs.">
+        <div className="flex flex-column">
+          <Tooltip target=".rewards-preferences" position="bottom" />
+          <div
+            className="rewards-preferences font-bold p-2 bg-blue-100 border-round"
+            data-pr-tooltip="Specifies your preferences for rewards programs."
+          >
             Rewards Programs Preferences
           </div>
 
@@ -117,9 +133,12 @@ const PreferencesDisplay = ({ preferences }) => {
           )}
         </div>
       ) : (
-        <div className="flex flex-column ">
-          <Tooltip target=".rewards-preferences" position="bottom"/>
-          <div className="rewards-preferences font-bold p-2 bg-blue-100 border-round" data-pr-tooltip="Specifies your preferences for rewards programs.">
+        <div className="flex flex-column">
+          <Tooltip target=".rewards-preferences" position="bottom" />
+          <div
+            className="rewards-preferences font-bold p-2 bg-blue-100 border-round"
+            data-pr-tooltip="Specifies your preferences for rewards programs."
+          >
             Rewards Programs Preferences
           </div>
           <p>No rewards programs preferences specified.</p>
@@ -127,18 +146,24 @@ const PreferencesDisplay = ({ preferences }) => {
       )}
 
       {/* Consumer Preferences */}
-      <div className="flex flex-column ">
-        <Tooltip target=".consumer-preferences" position="bottom"/>
-        <div className="consumer-preferences font-bold p-2 bg-blue-100 border-round" data-pr-tooltip="Your consumer-specific card preferences.">
+      <div className="flex flex-column">
+        <Tooltip target=".consumer-preferences" position="bottom" />
+        <div
+          className="consumer-preferences font-bold p-2 bg-blue-100 border-round"
+          data-pr-tooltip="Your consumer-specific card preferences."
+        >
           Consumer Preferences
         </div>
         <p>{consumer_preferences ? JSON.stringify(consumer_preferences) : "No consumer preferences specified."}</p>
       </div>
 
       {/* Business Preferences */}
-      <div className="flex flex-column ">
-        <Tooltip target=".business-preferences" position="bottom"/>
-        <div className="business-preferences font-bold p-2 bg-blue-100 border-round" data-pr-tooltip="Business-specific preferences that guide recommendations.">
+      <div className="flex flex-column">
+        <Tooltip target=".business-preferences" position="bottom" />
+        <div
+          className="business-preferences font-bold p-2 bg-blue-100 border-round"
+          data-pr-tooltip="Business-specific preferences that guide recommendations."
+        >
           Business Preferences
         </div>
         <p>{business_preferences ? JSON.stringify(business_preferences) : "No business preferences specified."}</p>

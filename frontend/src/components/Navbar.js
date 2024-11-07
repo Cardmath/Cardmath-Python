@@ -74,7 +74,7 @@ const Navbar = () => {
                             <Ripple />
                         </a>
                     </li>
-                    <li>
+                    <li onClick={()=>window.location.href ='/contact-us'}>
                         <a className="p-ripple flex px-0 lg:px-5 py-3 hover:text-blue-600 font-medium transition-colors transition-duration-150 cursor-pointer">
                             <span>Contact Us</span>
                             <Ripple />

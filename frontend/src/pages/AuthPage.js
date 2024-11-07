@@ -185,13 +185,7 @@ const AuthPage = ({ userHasAccount }) => {
                         </div>
 
                         <Button label={userHasAccount ? "Login" : "Register"} icon="pi pi-user" className="bg-blue-500 text-white w-full" onClick={handleAuth}/>
-
-                        <Divider align="center" className="my-6">
-                            <span className="text-600 text-sm">OR</span>
-                        </Divider>
-
-                        <Button label="Sign In with Google" icon="pi pi-google" className="w-full p-button-secondary" onClick={handleAuth}/>
-
+                        
                         <div className="mt-6 text-center text-600">
                             Don't have an account? <a href="/register" tabIndex="0" className="font-medium text-blue-500">Sign up</a>
                         </div>

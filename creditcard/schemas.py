@@ -46,7 +46,7 @@ class CardRatingsScrapeSchema(BaseModel):
         sign_on_bonus = await get_sign_on_bonus(self.unparsed_card_attributes)
         annual_fee = await get_annual_fee(self.unparsed_card_attributes)
 
-        keywords = await get_keywords(self.unparsed_card_attributes)
+        keywords = await get_keywords(self.unparsed_card_attributes, name)
         return CreditCardSchema(name=name, 
                           issuer=issuer,
                           benefits=benefits,

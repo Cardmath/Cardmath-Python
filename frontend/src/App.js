@@ -11,6 +11,7 @@ import TeamPage from './pages/TeamPage';
 import PreferencesPage from './pages/PreferencesPage';
 import DashboardPage from './pages/DashboardPage';
 import CreditCardDatabase from './pages/CreditCardDatabase';
+import ContactUsPage from './pages/ContactUsPage';
 
 const App = () => {
     return (
@@ -25,6 +26,7 @@ const App = () => {
                 <Route path="/register" element={<AuthPage userHasAccount={false} />} />
                 <Route path="/team" element={<TeamPage />} />
                 <Route path='/creditcards' element={<CreditCardDatabase />} />
+                <Route path='/contact-us' element={<ContactUsPage />} />
             </Routes>
         </Router>
     );

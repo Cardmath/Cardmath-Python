@@ -21,7 +21,6 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
   const [solutionIndex, setSolutionIndex] = useState(0);
 
   const [preferences, setPreferences] = useState(null);
-
   const [computationLoading, setComputationLoading] = useState(false);
 
   const [timeframe, setTimeframe] = useState(null);
@@ -60,6 +59,14 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
   const netRewardsDifference = (netRewards - netRewardsCurrent).toFixed(2);
 
   const [selectedWalletState, setSelectedWalletState] = useState(selectedWallet);
+  const [cardBonusToggles, setCardBonusToggles] = useState({});
+
+  const handleBonusToggleChange = (cardName, isEnabled) => {
+    setCardBonusToggles((prev) => ({
+      ...prev,
+      [cardName]: isEnabled,
+    }));
+  };
 
   useEffect(() => {
     if (selectedWallet) {
@@ -99,7 +106,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
           body.wallet_override = {
             name: selectedWalletState.name,
             cards: selectedWalletState.cards.map(cc => ({
-              is_new: cc.is_held ? false : true,
+              is_new: cc.is_held ? false : (cardBonusToggles[cc.card.name] || false),
               card: {
                 name: cc.card.name,
                 issuer: cc.card.issuer
@@ -113,13 +120,13 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
         });
+        console.log(JSON.stringify(body));
         let data = await response.json();
         data = data.solutions[0];
         console.log(data)
         setAllTimeSavings(data.total_reward_usd);
         setNetRewardsCurrent(data.net_rewards_usd);
         setTotalRegularRewardsCurrent(data.total_regular_rewards_usd);
-        setCardsHeld(data.cards_used);
       } catch (error) {
         console.error('Error fetching current cards optimal allocation:', error);
       }
@@ -146,7 +153,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
         body.wallet_override = {
           name: selectedWalletState.name,
           cards: selectedWalletState.cards.map(cc => ({
-            is_new: cc.is_held ? false : true,
+            is_new: cc.is_held ? false : (cardBonusToggles[cc.card.name] || false),
             card: {
               name: cc.card.name,
               issuer: cc.card.issuer
@@ -177,6 +184,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
     let data = solutions.solutions[solutionIndex % solutions.solutions.length];
     let timeframe = solutions.timeframe;
 
+    setCardsHeld(data.cards_used);
     setRecommendedCards(data.cards_added);
     setRecommendedCardsBonusTotal(data.total_reward_usd);
 
@@ -317,6 +325,32 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
               />
             </div>
           </div>
+
+          {/* Individual Card Sign-On Bonus Toggles */}
+          <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
+            <p className='font-italic'>
+              Toggle sign-on bonus for each card to decide if it should be included in the calculation.
+            </p>
+            {selectedWalletState && selectedWalletState.cards.map((cc, index) => (
+              <div key={index} className="flex p-2 align-items-center border-round border-dotted border-blue-200 my-2">
+                <div className="mr-2">{cc.card.name} (Issuer: {cc.card.issuer})
+                <InputSwitch
+                  className='ml-2'
+                  checked={cardBonusToggles[cc.card.name] || false}
+                  onChange={(e) => handleBonusToggleChange(cc.card.name, e.value)}
+                />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
+            <p className='font-italic'>
+              Include sign-on bonuses to highlight cards with high short-term value. Disabling this will give a clearer picture of long-term rewards, helping you choose a card that's more beneficial over time.
+            </p>
+            <span id="switch1" className="p-float-label mt-2">Consider Sign on Bonus in Calculation</span>
+            <InputSwitch className="align-self-center" aria-labelledby='switch1' checked={useSignOnBonus} onChange={e => setUseSignOnBonus(e.value)} />
+          </div>
   
           {/* Existing controls */}
           <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
@@ -331,14 +365,6 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
             <p className='font-italic'>
               Since you have <span className='font-bold'>{cardsHeld.length}</span> credit cards in this wallet, and you want to add up to <span className='font-bold'>{toAdd}</span> new credit cards from the recommendation algorithm, we'll recommend you to cancel up to <span className='font-bold'>{Math.max(cardsHeld.length, cardsHeld.length - toAdd)}</span> of your <span className='font-bold'>{cardsHeld.length}</span> cards. Cancelling up to  <span className='font-bold'>{Math.max(cardsHeld.length, cardsHeld.length - toAdd)}</span> of your cards will make room for up to <span className='font-bold'>{toAdd}</span> new ones so that you have a final wallet of <span className='font-bold'>{toUse}</span> credit cards. 
             </p>
-          </div>
-
-          <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
-            <p className='font-italic'>
-              Include sign-on bonuses to highlight cards with high short-term value. Disabling this will give a clearer picture of long-term rewards, helping you choose a card that's more beneficial over time.
-            </p>
-            <span id="switch1" className="p-float-label mt-2">Consider Sign on Bonus in Calculation</span>
-            <InputSwitch className="align-self-center" aria-labelledby='switch1' checked={useSignOnBonus} onChange={e => setUseSignOnBonus(e.value)} />
           </div>
 
           <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
@@ -415,7 +441,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
           </div>
 
           {/* Replaced Sign-On Bonus Table */}
-          <SignOnBonusTable summary={summary} recommendedCards={recommendedCards} useSignOnBonus={useSignOnBonus}/>
+          <SignOnBonusTable summary={summary} heldCards={cardsHeld} cardBonusToggles={cardBonusToggles} recommendedCards={recommendedCards} useSignOnBonus={useSignOnBonus}/>
 
           {/* Spending Plan Table */}
           <SpendingPlanTable spendingPlan={spendingPlan} />

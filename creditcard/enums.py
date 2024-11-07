@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import List
 
 import re
 
@@ -127,6 +128,30 @@ class CreditNeeded(str, Enum):
     GOOD = "Good" # 690-719
     FAIR = "Fair" # 630-689
     POOR = "Bad" # 0-629 
+
+    @staticmethod
+    def get_value(credit_needed) -> float:
+        _values = {
+            CreditNeeded.EXCELLENT: 850,
+            CreditNeeded.GOOD: 719,
+            CreditNeeded.FAIR: 689,
+            CreditNeeded.POOR: 629
+        }
+        return _values.get(credit_needed, 0.0)
+    
+    @classmethod
+    def get_from_user_credit(cls, user_credit) -> List[str]:
+        _values = [
+            (CreditNeeded.EXCELLENT, (720, 850)),
+            (CreditNeeded.GOOD, (690, 719)),
+            (CreditNeeded.FAIR, (630, 689)),
+            (CreditNeeded.POOR, (0, 629))
+        ]
+        result = []
+        for credit_needed, (lower, upper) in _values:
+            if user_credit <= upper:
+                result.append(credit_needed)
+        return result
     
 class PurchaseCategory(str, Enum):
     ACCOMMODATION = "accommodation"
@@ -252,6 +277,7 @@ class CreditCardKeyword(str, Enum):
     student = "Student"
     travel = "Travel"
     rewards_focused = "Rewards-focused"
+    customizable_rewards = "Customizable Rewards"
     low_apr = "Low APR"
     no_annual_fee = "No Annual Fee"
     cashback = "Cashback"

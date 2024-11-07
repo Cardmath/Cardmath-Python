@@ -96,11 +96,11 @@ def reward_category_map_response_format():
                                 },
                                 "reward_unit": {
                                     "type": "string",
-                                    "enum": [reward_unit.value for reward_unit in RewardUnit],
+                                    "enum": [reward_unit.value for reward_unit in RewardUnit if reward_unit != RewardUnit.PERCENT_CASHBACK_USD],
                                 },
                                 "reward_amount": {
                                     "type": "number",
-                                    "description": "The amount of the reward unit."
+                                    "description": "The amount of the reward unit. Please use general category amount if you want to capture default rewards. This number is almost always less than 10, and usually aroudn 1-3."
                                 },
                                 "reward_threshold": {
                                     "type": "object",
@@ -196,7 +196,7 @@ def conditional_sign_on_bonus_response_format():
                                     "purchase_type": {"type": "string", "enum": [purchase_category.value for purchase_category in PurchaseCategory] + [vendor.value for vendor in Vendors]},
                                     "condition_amount": {"type": "number"},
                                     "timeframe": {"type": "number"},
-                                    "reward_type": {"type": "string", "enum": [reward_unit.value for reward_unit in RewardUnit if reward_unit != RewardUnit.PERCENT_CASHBACK_USD]},
+                                    "reward_type": {"type": "string", "enum": [reward_unit.value for reward_unit in RewardUnit if reward_unit != RewardUnit.PERCENT_CASHBACK_USD and reward_unit != RewardUnit.UNKNOWN]},
                                     "reward_amount": {"type": "number"}
                                 },
                                 "required": ["purchase_type", "condition_amount", "timeframe", "reward_type", "reward_amount"],
