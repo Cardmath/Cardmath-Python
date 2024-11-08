@@ -197,6 +197,11 @@ async def edit_user_wallet_endpoint(current_user: Annotated[User, Depends(auth_u
                    wallet: WalletUpdateRequest, db: Session = Depends(get_sync_db)):
     return await teller_endpoints.edit_wallet(request=wallet, current_user=current_user, db=db)
 
+@app.get("/api/is_user_logged_in")
+def is_user_logged_in(current_user: Annotated[User, Depends(auth_utils.get_current_user)]) -> dict:
+    print(f"[INFO] {current_user.email} is logged in")
+    return {"detail": "cardmath_user_authenticated"}
+
 @app.get("/api/issuers")
 def get_issuers():
     return [issuer.value for issuer in Issuer]

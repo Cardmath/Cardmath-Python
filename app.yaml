@@ -13,7 +13,7 @@ env_variables:
   TELLER_CERT: "/home/johannes/Cardmath/teller/certificate.pem"  # Verify access in App Engine
   TELLER_CERT_KEY: "/home/johannes/Cardmath/teller/private_key.pem"  # Verify access in App Engine
   SECRET_KEY: "/home/johannes/Cardmath/teller/private_key.pem"  # Verify access in App Engine
-  ENVIRONMENT: "dev"
+  ENVIRONMENT: "prod"
   DB_NAME: "postgres"
   DB_USER: "cardmathdb"
   DB_PASSWORD: "\\ugU^xkC>,|?h%CQ"

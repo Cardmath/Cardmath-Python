@@ -1,15 +1,38 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { StyleClass } from 'primereact/styleclass';
 import { Ripple } from 'primereact/ripple';
-import { Button } from 'primereact/button'; // Import Button component
+import { Button } from 'primereact/button';
 import "./Navbar.css";
+import { fetchWithAuth } from '../pages/AuthPage';
 
 const Navbar = () => {
     const rootBtnRef6 = useRef(null);
     const btnRef10 = useRef(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+    useEffect(() => {
+        // Check if user is authenticated
+        fetchWithAuth('http://localhost:8000/api/is_user_logged_in', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.detail === "cardmath_user_authenticated") {
+                setIsAuthenticated(true);
+                console.log('User is authenticated');
+            } else {
+                console.log('User is not authenticated');
+                setIsAuthenticated(false);
+            }
+        })
+        .catch(error => {
+            console.error('Error checking authentication:', error);
+            setIsAuthenticated(false);
+        });
+    }, []);
 
-    return (    
+    return (
         <div className="navbar-container bg-gray-900 py-3 px-4 shadow-2 flex align-items-center justify-content-between relative">
             <div className="flex align-items-center cursor-pointer" onClick={() => window.location.href="https://cardmath.ai"}>
                 <img src="logos/svg/Color logo - no background.svg" alt="Image" height="50"/>
@@ -22,7 +45,7 @@ const Navbar = () => {
             </StyleClass>
             <div className="align-items-center flex-grow-1 justify-content-between hidden lg:flex absolute lg:static w-full bg-gray-900 left-0 top-100 px-6 lg:px-0 shadow-2 lg:shadow-none">
                 <section></section>
-                <ul className="list-none p-0 m-0 flex lg:align-items-zcenter text-gray-400 select-none flex-column lg:flex-row">
+                <ul className="list-none p-0 m-0 flex lg:align-items-center text-gray-400 select-none flex-column lg:flex-row">
                     <li>
                         <StyleClass nodeRef={btnRef10} selector="@next" enterClassName="hidden" enterActiveClassName="scalein" leaveToClassName="hidden" leaveActiveClassName="fadeout" hideOnOutsideClick>
                             <a ref={btnRef10} className="p-ripple flex px-0 lg:px-5 py-3 align-items-center hover:text-blue-600 font-medium transition-colors transition-duration-150 cursor-pointer" >
@@ -39,7 +62,7 @@ const Navbar = () => {
                                 </div>
                                 <div className="w-full lg:w-6">
                                     <div className="flex flex-wrap border-bottom-1 border-gray-700 pb-3 mb-3">
-                                        <div className="px-0 lg:px-3 py-3 cursor-pointer  hover:bg-gray-700 transition-duration-150" onClick={() => {window.location.href="https://cardmath.ai/creditcards"}}>
+                                        <div className="px-0 lg:px-3 py-3 cursor-pointer hover:bg-gray-700 transition-duration-150" onClick={() => {window.location.href="https://cardmath.ai/creditcards"}}>
                                             <span className="text-white">All</span>
                                             <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Every single credit card we could find.</p>
                                         </div>
@@ -82,8 +105,17 @@ const Navbar = () => {
                     </li>
                 </ul>
                 <div className="flex justify-content-between lg:block border-top-1 lg:border-top-none border-gray-800 py-3 lg:py-0 mt-3 lg:mt-0">
-                    <Button label="Login" className="hover:bg-green-400 p-button-text text-white font-bold" onClick={()=>window.location.href ='https://cardmath.ai/login'} />
-                    <Button label="Register" className="ml-3 font-bold" onClick={()=>window.location.href ='https://cardmath.ai/register'}/>
+                    {isAuthenticated ? (
+                        <>
+                            <Button label="To Dashboard" className="hover:bg-green-400 p-button-text text-white font-bold" onClick={() => window.location.href ='https://cardmath.ai/dashboard'} />
+                            <Button label="Log out" className="ml-3 font-bold" onClick={() => window.location.href ='https://cardmath.ai/logout'} />
+                        </>
+                    ) : (
+                        <>
+                            <Button label="Login" className="hover:bg-green-400 p-button-text text-white font-bold" onClick={() => window.location.href ='https://cardmath.ai/login'} />
+                            <Button label="Register" className="ml-3 font-bold" onClick={() => window.location.href ='https://cardmath.ai/register'} />
+                        </>
+                    )}
                 </div>
             </div>
         </div>
