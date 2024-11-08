@@ -20,10 +20,6 @@ const CreditCardDBCallToAction = () => {
                         className="px-5 py-3 font-bold mb-3 md:mb-0 mx-4"
                         label="Explore the Database"
                     />
-                    <Button
-                        className="px-5 py-3 font-bold p-button-text mx-4"
-                        label="Our Information Vetting Process"
-                    />
                 </div>
             </div>
 
