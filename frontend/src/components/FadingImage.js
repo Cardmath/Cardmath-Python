@@ -1,18 +1,41 @@
+// FadingImage.jsx
 import React from 'react';
-import './FadingImage.css'; // Import the CSS file
 
-function FadingImage({ src }) {
+function FadingImage({ src, alt, className }) {
     return (
-      <div>
-        <img
-          className="fade-image"
-          src={src} // Dynamically set the image source
-          alt="Fading Effect"
-        />
-      </div>
-    );
-  }
-  
-export default FadingImage;
-  
+        <div>
+            <style>{`
+                .fade-image-container {
+                    width: 100%;
+                    display: flex;
+                    justify-content: center;
+                    padding: 0;
+                }
 
+                .fade-image {
+                    width: auto;
+                    height: 100%;
+                    max-height: 500px;
+                    object-fit: cover;
+                    mask-image: linear-gradient(to left, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+                    -webkit-mask-image: linear-gradient(to left, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+                    animation: fadeIn 2s ease-in-out;
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+            `}</style>
+            <div className="fade-image-container">
+                <img
+                    className={`fade-image ${className}`}
+                    src={src}
+                    alt={alt}
+                />
+            </div>
+        </div>
+    );
+}
+
+export default FadingImage;

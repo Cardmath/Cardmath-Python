@@ -3,7 +3,7 @@ import React from 'react';
 const Hero = () => {
     return (
         <div
-            className="relative p-8 overflow-hidden"
+            className="relative p-4 md:p-8 overflow-hidden"
             style={{
                 backgroundImage: `linear-gradient(
                     90deg,
@@ -57,7 +57,7 @@ const Hero = () => {
             {/* Text content */}
             <div className="text-center my-6 relative" style={{ position: 'relative', zIndex: 2 }}>
                 <div
-                    className="text-6xl text-white font-bold mb-1"
+                    className="font-bold text-4xl md:text-6xl text-white mb-1"
                     style={{
                         textShadow: '1px 1px 5px rgba(0, 0, 0, 0.3)', // Subtle text shadow for readability
                     }}
@@ -65,7 +65,7 @@ const Hero = () => {
                     Cardmath
                 </div>
                 <div
-                    className="text-6xl text-blue-100 font-bold mb-4"
+                    className="font-bold text-4xl md:text-6xl text-blue-100 mb-4"
                     style={{
                         textShadow: '1px 1px 5px rgba(0, 0, 0, 0.3)', // Subtle text shadow for readability
                     }}
@@ -73,7 +73,7 @@ const Hero = () => {
                     We crunch the numbers.
                 </div>
                 <p
-                    className="mt-0 mb-4 line-height-3 text-center mx-auto text-white"
+                    className="mt-0 mb-4 line-height-3 text-center mx-auto text-white text-base md:text-lg px-2 md:px-0"
                     style={{
                         maxWidth: '500px',
                         fontWeight: '600', // Slightly increased font weight for readability

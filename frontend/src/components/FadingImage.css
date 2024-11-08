@@ -1,9 +1,0 @@
-/* App.css */
-.fade-image {
-    width: auto; /* Full width */
-    height: 500px;
-    /* Create the fade effect from left to right */
-    mask-image: linear-gradient(to left, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
-    -webkit-mask-image: linear-gradient(to left, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0)); /* For Webkit-based browsers */
-  }
-  
