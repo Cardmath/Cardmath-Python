@@ -21,17 +21,17 @@ const CreditCardDatabase = () => {
 
     // Fetch enum values from backend API on component mount
     useEffect(() => {
-        fetch("http://localhost:8000/api/issuers")
+        fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com/api/issuers")
             .then(response => response.json())
             .then(data => setIssuers(data.map(item => ({ label: item, value: item }))))
             .catch(error => console.error("Error fetching issuers:", error));
 
-        fetch("http://localhost:8000/api/reward_units")
+        fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com/api/reward_units")
             .then(response => response.json())
             .then(data => setRewardUnits(data.map(item => ({ label: item, value: item }))))
             .catch(error => console.error("Error fetching reward units:", error));
 
-        fetch("http://localhost:8000/api/keywords")
+        fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com/api/keywords")
             .then(response => response.json())
             .then(data => setKeywords(data.map(item => ({ label: item, value: item }))))
             .catch(error => console.error("Error fetching keywords:", error));

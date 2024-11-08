@@ -1,17 +1,24 @@
+import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.schema import CreateTable
 
-SQLALCHEMY_DATABASE_URL_ASYNC = "sqlite+aiosqlite:///./cardmath.db"
-SQLALCHEMY_DATABASE_URL_SYNC = "sqlite:///./cardmath.db"
+# Load environment variables for PostgreSQL connection
+DB_NAME = os.getenv("DB_NAME", "postgres")
+DB_USER = os.getenv("DB_USER", "cardmathdb")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "your_database_password")
+DB_HOST = os.getenv("DB_HOST", "cardmath-llc:us-central1:cardmathdb")  # Use the instance connection name only
 
-async_engine = create_async_engine(SQLALCHEMY_DATABASE_URL_ASYNC, connect_args={"check_same_thread": False})
+# SQLAlchemy database URLs for async and sync connections
+SQLALCHEMY_DATABASE_URL_ASYNC = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}?host=/cloudsql/{DB_HOST}"
+SQLALCHEMY_DATABASE_URL_SYNC = f"postgresql://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}?host=/cloudsql/{DB_HOST}"
 
-sync_engine = create_engine(SQLALCHEMY_DATABASE_URL_SYNC, connect_args={"check_same_thread": False})
-with sync_engine.connect() as connection:
-    connection.execute("PRAGMA journal_mode=WAL;")
+# Create asynchronous and synchronous SQLAlchemy engines
+async_engine = create_async_engine(SQLALCHEMY_DATABASE_URL_ASYNC)
+sync_engine = create_engine(SQLALCHEMY_DATABASE_URL_SYNC)
 
+# Configure session factories for async and sync usage
 AsyncSessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
@@ -25,7 +32,7 @@ SyncSessionLocal = sessionmaker(
     bind=sync_engine
 )
 
-# Base for both sync and async engines
+# Declare base class for models
 Base = declarative_base()
 
 # Async generator for database session (for async use)
@@ -44,17 +51,12 @@ def get_sync_db():
     finally:
         db.close()  # Close the session synchronously
 
-
+# Function to print the SQL schema
 def print_sql_schema(out_name='schema.sql'):
-    # Define the output file path
     output_file = out_name
-
-    # Open the file in write mode
     with open(output_file, 'w') as file:
-        # Write the generated SQL for each table into the file
         for table in Base.metadata.sorted_tables:
             sql = str(CreateTable(table).compile(sync_engine))  # Use the sync engine for schema printing
             file.write(sql)
             file.write("\n\n")  # Add extra newline for separation between tables
-
     print(f"SQL schema has been written to {output_file}")

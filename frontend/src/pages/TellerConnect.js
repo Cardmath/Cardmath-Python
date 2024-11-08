@@ -14,7 +14,7 @@ const TellerConnectComponent = () => {
         var el = document.getElementById("teller-connect-window");
         el.style.display = 'none';
         try {
-            let response = await fetchWithAuth('http://localhost:8000/receive_teller_enrollment', {
+            let response = await fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/receive_teller_enrollment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -28,7 +28,7 @@ const TellerConnectComponent = () => {
                     icon: 'pi pi-exclamation-triangle',
                     accept: () => {
                         setProcessingError(false);
-                        window.location.href = 'http://localhost:3000/dashboard';   
+                        window.location.href = 'https://backend-dot-cardmath-llc.uc.r.appspot.com/dashboard';   
                     },
                     reject: () => {
                         window.location.reload();
@@ -45,7 +45,7 @@ const TellerConnectComponent = () => {
                 icon: 'pi pi-exclamation-triangle',
                 accept: () => {
                     setProcessingError(false);
-                    window.location.href = 'http://localhost:3000/dashboard';   
+                    window.location.href = 'https://cardmath.ai/dashboard';   
                 },
                 reject: () => {
                     window.location.reload();
@@ -57,7 +57,7 @@ const TellerConnectComponent = () => {
         }     
 
         try {
-            let response = await fetchWithAuth('http://localhost:8000/process_new_enrollment', {
+            let response = await fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/process_new_enrollment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ const TellerConnectComponent = () => {
                     message: 'An error occurred while processing the enrollment. Please try again.',
                     accept: () => {
                         setProcessingError(false);
-                        window.location.href = 'http://localhost:3000/dashboard';   
+                        window.location.href = 'https://cardmath.ai/dashboard';   
                     },
                     reject: () => {
                         window.location.reload();
@@ -79,7 +79,7 @@ const TellerConnectComponent = () => {
                 setProcessingError(true);
                 console.log("An error occurred while processing the enrollment. Please try again.");
             }
-            window.location.href = 'http://localhost:3000/dashboard';
+            window.location.href = 'https://cardmath.ai/dashboard';
         } catch (error) {   
             confirmDialog({
                 header: 'Error',
@@ -87,7 +87,7 @@ const TellerConnectComponent = () => {
                 message: 'An error occurred while processing the enrollment. Please try again.',
                 accept: () => {
                     setProcessingError(false);
-                    window.location.href = 'http://localhost:3000/dashboard';   
+                    window.location.href = 'https://cardmath.ai/dashboard';   
                 },
                 reject: () => {
                     window.location.reload();
@@ -117,7 +117,7 @@ const TellerConnectComponent = () => {
                     },
                     onExit: function() {
                         console.log("User closed Teller Connect");
-                        window.location.href = 'http://localhost:3000/dashboard';
+                        window.location.href = 'https://cardmath.ai/dashboard';
                     }
                 });
                 tellerConnect.open();

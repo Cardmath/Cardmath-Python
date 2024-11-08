@@ -18,7 +18,7 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
 
     // Fetch available credit cards when the component mounts
     useEffect(() => {
-        fetch("http://localhost:8000/read_credit_cards_database", {
+        fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ card_details: "all", use_preferences: false })
@@ -70,8 +70,8 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
 
         try {
             const endpoint = editingWallet
-                ? "http://localhost:8000/edit_user_wallet"
-                : "http://localhost:8000/ingest_user_wallet";
+                ? "https://backend-dot-cardmath-llc.uc.r.appspot.com/edit_user_wallet"
+                : "https://backend-dot-cardmath-llc.uc.r.appspot.com/ingest_user_wallet";
             
             const response = await fetchWithAuth(endpoint, {
                 method: 'POST',
@@ -103,7 +103,7 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
     // Delete wallet function
     const deleteWallet = async (walletId) => {
         try {
-            const response = await fetchWithAuth("http://localhost:8000/delete_user_wallet", {
+            const response = await fetchWithAuth("https://backend-dot-cardmath-llc.uc.r.appspot.com/delete_user_wallet", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ wallet_id: walletId })

@@ -11,7 +11,7 @@ const Navbar = () => {
 
     return (    
         <div className="navbar-container bg-gray-900 py-3 px-4 shadow-2 flex align-items-center justify-content-between relative">
-            <div className="flex align-items-center cursor-pointer" onClick={() => window.location.href="http://localhost:3000/"}>
+            <div className="flex align-items-center cursor-pointer" onClick={() => window.location.href="https://cardmath.ai"}>
                 <img src="logos/svg/Color logo - no background.svg" alt="Image" height="50"/>
             </div>
             <StyleClass nodeRef={rootBtnRef6} selector="@next" enterClassName="hidden" leaveToClassName="hidden" hideOnOutsideClick>
@@ -39,7 +39,7 @@ const Navbar = () => {
                                 </div>
                                 <div className="w-full lg:w-6">
                                     <div className="flex flex-wrap border-bottom-1 border-gray-700 pb-3 mb-3">
-                                        <div className="px-0 lg:px-3 py-3 cursor-pointer  hover:bg-gray-700 transition-duration-150" onClick={() => {window.location.href="http://localhost:3000/creditcards"}}>
+                                        <div className="px-0 lg:px-3 py-3 cursor-pointer  hover:bg-gray-700 transition-duration-150" onClick={() => {window.location.href="https://cardmath.ai/creditcards"}}>
                                             <span className="text-white">All</span>
                                             <p className="text-sm text-gray-400 mt-2 mb-0 line-height-3">Every single credit card we could find.</p>
                                         </div>

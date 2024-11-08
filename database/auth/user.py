@@ -50,10 +50,10 @@ class Enrollment(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id'))
     access_token = Column(String, nullable=False)
-    enrollment_id = Column(String, nullable=False)
+    enrollment_id = Column(String, nullable=False)  # No unique constraint needed here
     institution_name = Column(String, nullable=False)
     signatures = Column(JSON, nullable=False)
-    last_updated = Column(Date, nullable=False) # Last updated time in minutes
+    last_updated = Column(Date, nullable=False)  # Last updated time in minutes
     user = relationship("User", back_populates="enrollments")
     
     accounts = relationship("Account", back_populates="enrollment")
@@ -62,7 +62,7 @@ class Account(Base):
     __tablename__ = 'accounts'
     
     id = Column(String, primary_key=True, index=True)  # Account ID from API Response
-    enrollment_id = Column(String, ForeignKey('enrollments.enrollment_id'), nullable=False)
+    enrollment_id = Column(String, ForeignKey('enrollments.id'), nullable=False)  # Reference enrollments.id
     institution_name = Column(String, nullable=False)
     institution_id = Column(String, nullable=False)
     type = Column(String, nullable=False)

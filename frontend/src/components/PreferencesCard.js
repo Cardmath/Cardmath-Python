@@ -13,7 +13,7 @@ const PreferencesCard = ( {setAlert} ) => {
     useEffect(() => {
         const fetchUserPreferences = async () => {
             try {
-                const response = await fetchWithAuth('http://localhost:8000/read_user_preferences', {
+                const response = await fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/read_user_preferences', {
                     method: 'POST',  
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({}),
@@ -207,7 +207,7 @@ const PreferencesCard = ( {setAlert} ) => {
             business_size: selectedBusinessSize !== null ? selectedBusinessSize : null
         };
     
-        fetchWithAuth('http://localhost:8000/ingest_user_preferences', {
+        fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

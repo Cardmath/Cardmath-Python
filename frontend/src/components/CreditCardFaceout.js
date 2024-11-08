@@ -6,7 +6,7 @@ export default function CreditCardFaceouts({ issuer, name, annualFeeRange, prima
     const [creditCards, setCreditCards] = useState([]);
 
     useEffect(() => {
-        fetch("http://localhost:8000/read_credit_cards_database", {
+        fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com/read_credit_cards_database", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ card_details: "all", use_preferences: false })

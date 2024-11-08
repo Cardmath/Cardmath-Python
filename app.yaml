@@ -1,0 +1,30 @@
+runtime: python39  # or python311 if you prefer the latest version
+
+# Name of the service
+service: backend  # Specify the service name (e.g., backend or api)
+
+# Entry point to start the application
+entrypoint: gunicorn -w 4 -k uvicorn.workers.UvicornWorker app:app  # Adjust as needed
+
+# Environment variables
+env_variables:
+  PYTHONPATH: "/workspace"
+  OPENAI_API_KEY: "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"
+  TELLER_CERT: "/home/johannes/Cardmath/teller/certificate.pem"  # Verify access in App Engine
+  TELLER_CERT_KEY: "/home/johannes/Cardmath/teller/private_key.pem"  # Verify access in App Engine
+  SECRET_KEY: "/home/johannes/Cardmath/teller/private_key.pem"  # Verify access in App Engine
+  ENVIRONMENT: "dev"
+  DB_NAME: "postgres"
+  DB_USER: "cardmathdb"
+  DB_PASSWORD: "\\ugU^xkC>,|?h%CQ"
+  DB_HOST: "/cardmath-llc:us-central1:cardmathdb"
+
+# Machine type
+instance_class: F2  # Adjust based on expected load
+
+# Scaling configuration
+automatic_scaling:
+  target_cpu_utilization: 0.65
+  target_throughput_utilization: 0.75
+  min_instances: 1
+  max_instances: 5

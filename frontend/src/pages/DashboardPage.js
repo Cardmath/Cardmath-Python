@@ -24,7 +24,7 @@ const DashboardPage = () => {
     // Fetch wallets function
     const fetchWallets = () => {
         setLoading(true);
-        fetchWithAuth('http://localhost:8000/read_user_wallets', {
+        fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/read_user_wallets', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         })
@@ -55,7 +55,7 @@ const DashboardPage = () => {
     };
 
     useEffect(() => {
-        fetchWithAuth('http://localhost:8000/compute_categories_moving_averages', {
+        fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/compute_categories_moving_averages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -80,7 +80,7 @@ const DashboardPage = () => {
     }, []);
 
     useEffect(() => {
-        fetchWithAuth('http://localhost:8000/read_heavy_hitters', {
+        fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/read_heavy_hitters', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -120,7 +120,7 @@ const DashboardPage = () => {
                                     <Ripple />
                                 </a>
                             </li>
-                            <li onClick={() => window.location.href="http://localhost:3000/preferences"}>
+                            <li onClick={() => window.location.href="https://cardmath.ai/preferences"}>
                                 <a className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-transparent hover:border-300 transition-duration-150 transition-colors">
                                     <i className="pi pi-heart-fill mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
                                     <span className="font-medium inline text-base lg:text-xs lg:block">Preferences</span>

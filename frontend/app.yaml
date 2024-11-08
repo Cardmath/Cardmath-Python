@@ -10,9 +10,9 @@ handlers:
     static_dir: build/themes
 
   # Serve other assets in the build directory, like images, icons, etc.
-  - url: /(.*\.(ico|png|svg|json|txt))
+  - url: /(.*\.(ico|png|svg|json|txt|jpg|jpeg|webp))
     static_files: build/\1
-    upload: build/(.*\.(ico|png|svg|json|txt))
+    upload: build/(.*\.(ico|png|svg|json|txt|jpg|jpeg|webp))
 
   # Serve index.html for all other paths to enable client-side routing
   - url: /.*

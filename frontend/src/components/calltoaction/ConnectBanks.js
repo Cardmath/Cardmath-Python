@@ -10,7 +10,7 @@ const ConnectBanks = () => {
                 <div className="py-3 px-5 flex flex-column align-items-start">
                     <div className="text-900 font-medium mb-2 text-xl">Connect Your Bank Account</div>
                     <p className="mt-0 mb-4 p-0 line-height-3">Teller Connect enables users to securely access their bank accounts by providing a robust API that adheres to the highest security standards, ensuring data encryption and safe transmission of sensitive information. By leveraging OAuth-based authentication, Teller Connect maintains user privacy and mitigates risks associated with traditional bank integrations.</p>
-                    <a href="http://localhost:3000/connect">
+                    <a href="https://cardmath.ai/connect">
                         <Button  label="Proceed" className="mt-auto" />
                     </a>
                 </div>

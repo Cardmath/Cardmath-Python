@@ -18,7 +18,7 @@ const AuthPage = ({ userHasAccount }) => {
     const [usernameValid , setUsernameValid] = useState(false);
     const [alert, setAlert] = useState({visible: false, message: '', heading : '', type: 'error'});
 
-    var endpoint = userHasAccount ? 'http://localhost:8000/token' : 'http://localhost:8000/register';  
+    var endpoint = userHasAccount ? 'https://backend-dot-cardmath-llc.uc.r.appspot.com/token' : 'https://backend-dot-cardmath-llc.uc.r.appspot.com/register';  
 
     const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&,.])[A-Za-z\d@$!%*?&,.]{8,}$/;
     const isEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
