@@ -29,7 +29,7 @@ const CreditCardDBCallToAction = () => {
 
             {/* Image above text on small screens, to the right on large screens */}
             <div className="w-full md:w-6 mb-4 md:mb-0">
-                <FadingImage src="/cta-2.jpeg" alt="Credit Card" className="w-full" />
+                <FadingImage src="/cta-2.jpeg" alt="Credit Card" className="w-full pt-4" />
             </div>
 
             
