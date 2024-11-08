@@ -389,7 +389,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
               Your preferences inform which credit cards we input to our recommendation algorithm. If you haven't set your preferences yet, you can do so by clicking the button below.
             </p>
             {preferences && <PreferencesDisplay preferences={preferences} />}
-            <Button onClick={() => window.location.href="/preferences"} className='w-full mt-5' label="Set Preferences" />
+            <Button onClick={() => window.location.href="https://cardmath.ai/preferences"} className='w-full mt-5' label="Set Preferences" />
           </div>
 
           

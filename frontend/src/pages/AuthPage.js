@@ -104,9 +104,9 @@ const AuthPage = ({ userHasAccount }) => {
         }).then(data => {
             localStorage.setItem('cardmath_access_token', data.access_token);
             if (userHasAccount) {
-                window.location.href = '/preferences';
+                window.location.href = 'https://cardmath.ai/preferences';
             } else {
-                window.location.href = '/preferences';
+                window.location.href = 'https://cardmath.ai/preferences';
             }
         }).catch(error => {
             console.error('There was an error!', error)

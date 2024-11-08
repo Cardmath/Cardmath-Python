@@ -68,13 +68,13 @@ const Navbar = () => {
                             <Ripple />
                         </a>
                     </li>
-                    <li onClick={()=>window.location.href ='/team'}>
+                    <li onClick={()=>window.location.href ='https://cardmath.ai/team'}>
                         <a className="p-ripple flex px-0 lg:px-5 py-3 hover:text-blue-600 font-medium transition-colors transition-duration-150 cursor-pointer">
                             <span>Our Team </span>
                             <Ripple />
                         </a>
                     </li>
-                    <li onClick={()=>window.location.href ='/contact-us'}>
+                    <li onClick={()=>window.location.href ='https://cardmath.ai/contact-us'}>
                         <a className="p-ripple flex px-0 lg:px-5 py-3 hover:text-blue-600 font-medium transition-colors transition-duration-150 cursor-pointer">
                             <span>Contact Us</span>
                             <Ripple />
@@ -82,8 +82,8 @@ const Navbar = () => {
                     </li>
                 </ul>
                 <div className="flex justify-content-between lg:block border-top-1 lg:border-top-none border-gray-800 py-3 lg:py-0 mt-3 lg:mt-0">
-                    <Button label="Login" className="hover:bg-green-400 p-button-text text-white font-bold" onClick={()=>window.location.href ='/login'} />
-                    <Button label="Register" className="ml-3 font-bold" onClick={()=>window.location.href ='/register'}/>
+                    <Button label="Login" className="hover:bg-green-400 p-button-text text-white font-bold" onClick={()=>window.location.href ='https://cardmath.ai/login'} />
+                    <Button label="Register" className="ml-3 font-bold" onClick={()=>window.location.href ='https://cardmath.ai/register'}/>
                 </div>
             </div>
         </div>

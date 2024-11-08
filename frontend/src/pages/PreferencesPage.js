@@ -11,8 +11,8 @@ const PreferencesPage = () => {
         <div className='h-screen w-full bg-gray-900' >
             <Alert visible={alert.visible} message={alert.message} type={alert.type} heading={alert.heading} setVisible={(visible) => setAlert({ ...alert, visible })}/>
             <SimpleSection sectionTitle="Preferences"
-            tellerConnectButtonLabel={"Connect Banks with: "} tellerConnectButtonOnClick={() => window.location.href = '/connect'}
-            dasboardButtonLabel="To Dashboard" dasboardButtonOnClick={() => window.location.href = '/dashboard'}/>
+            tellerConnectButtonLabel={"Connect Banks with: "} tellerConnectButtonOnClick={() => window.location.href = 'https://cardmath.ai/connect'}
+            dasboardButtonLabel="To Dashboard" dasboardButtonOnClick={() => window.location.href = 'https://cardmath.ai/dashboard'}/>
             <PreferencesCard setAlert={setAlert}/>
             <Footer />
         </div>
