@@ -6,7 +6,7 @@ const CreditCardDBCallToAction = () => {
     return (
         <div className="bg-gray-900 pb-2 md:pl-8 md:pr-1 lg:pl-9 flex flex-column md:flex-row align-items-center">
             {/* Text content on the left side for large screens, below the image on small screens */}
-            <div className="lg:ml-8 text-center md:text-left w-full md:w-6">
+            <div className="lg:ml-4 text-center md:text-left w-full md:w-6 lg:mr-4">
                 <div className="font-bold text-3xl md:text-6xl mb-2">
                     <div className="text-blue-300">Transparent</div>
                     <div className="text-white">Database of Credit Cards</div>
