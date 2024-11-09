@@ -12,25 +12,40 @@ const Navbar = () => {
 
     useEffect(() => {
         // Check if user is authenticated
-        fetchWithAuth('http://localhost:8000/api/is_user_logged_in', {
+        fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/is_user_logged_in', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.detail === "cardmath_user_authenticated") {
-                setIsAuthenticated(true);
-                console.log('User is authenticated');
-            } else {
-                console.log('User is not authenticated');
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else if (response.status === 401) {
+                console.warn('User is not authenticated');
                 setIsAuthenticated(false);
+                return null;
+            } else {
+                console.error('Error checking authentication status');
+                setIsAuthenticated(false);
+                return null;
             }
         })
-        .catch(error => {
-            console.error('Error checking authentication:', error);
+        .then(data => {
+            if (data && data.detail === "cardmath_user_authenticated") {
+                setIsAuthenticated(true);
+                console.log('User is authenticated');
+            }
+        })
+        .catch(err => {
+            console.error('Network related Fetch error', err);
             setIsAuthenticated(false);
         });
     }, []);
+
+    // Logout functionality
+    const handleLogout = () => {
+        localStorage.removeItem('cardmath_access_token'); // Remove token
+        setIsAuthenticated(false); // Update state to reflect logged-out status
+    };
 
     return (
         <div className="navbar-container bg-gray-900 py-3 px-4 shadow-2 flex align-items-center justify-content-between relative">
@@ -108,7 +123,7 @@ const Navbar = () => {
                     {isAuthenticated ? (
                         <>
                             <Button label="To Dashboard" className="hover:bg-green-400 p-button-text text-white font-bold" onClick={() => window.location.href ='https://cardmath.ai/dashboard'} />
-                            <Button label="Log out" className="ml-3 font-bold" onClick={() => window.location.href ='https://cardmath.ai/logout'} />
+                            <Button label="Log out" className="ml-3 font-bold" onClick={handleLogout} />
                         </>
                     ) : (
                         <>
