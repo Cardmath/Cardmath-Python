@@ -6,13 +6,12 @@ from sqlalchemy import insert
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema
 from typing import List, Optional
-
 from datetime import datetime
 
 def get_user(db: Session, user_id: int) -> Optional[User]:
     return db.query(User).filter(User.id == user_id).first()
 
-def get_user_by_username(db: Session, username: str) -> Optional[UserInDB]:
+def get_user_by_email(db: Session, username: str) -> Optional[UserInDB]:
     return db.query(UserInDB).filter(User.username == username).first()
 
 def get_users(db: Session, skip: int = 0, limit: int = 10) -> List[User]:
@@ -38,6 +37,19 @@ def create_user(db: Session, user: UserCreate) -> UserInDB:
 def get_password_hash(password: str) -> str:
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     return pwd_context.hash(password)
+
+def update_user_password(db: Session, email: str, new_password: str) -> None:
+    """
+    Update the password of the user with the given email.
+    """
+    user = get_user_by_email(db, email)
+    if not user:
+        raise ValueError("User not found")
+    
+    hashed_password = get_password_hash(new_password)
+    user.hashed_password = hashed_password
+    db.commit()
+    db.refresh(user)
 
 async def update_user_enrollment(db: Session, enrollment_schema: AccessTokenSchema, user_id: int) -> Optional[Enrollment]:
     user = get_user(db=db, user_id=user_id)

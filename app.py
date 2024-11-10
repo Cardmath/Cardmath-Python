@@ -27,6 +27,7 @@ from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, Categori
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
+from auth.recovery import request_password_recovery, PasswordResetForm, reset_password
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
 import teller.endpoints as teller_endpoints
@@ -102,7 +103,7 @@ async def register_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_sync_db)
 ) -> Token:
-    if auth_crud.get_user_by_username(db, form_data.username) is not None:
+    if auth_crud.get_user_by_email(db, form_data.username) is not None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,           
             detail="Username is already taken",
@@ -207,6 +208,14 @@ def is_user_logged_in(current_user: Annotated[User, Depends(auth_utils.get_curre
 def create_checkout_session_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                    request: CheckoutSessionRequest) -> CheckoutSessionResponse:
     return create_checkout_session(current_user=current_user, request=request)
+
+@app.post("/password-recovery-email/")
+async def request_password_recovery_endpoint(user: User = Depends(auth_utils.get_current_user)):
+    return await request_password_recovery(user=user)
+
+@app.post("/reset-password-with-token/")
+async def reset_password_endpoint(form_data: PasswordResetForm, db: Session = Depends(get_sync_db)):
+    return await reset_password(token=form_data.token, new_password=form_data.new_password, db=db)
 
 @app.get("/api/issuers")
 def get_issuers():

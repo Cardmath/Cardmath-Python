@@ -1,5 +1,5 @@
 from auth.schemas import User, TokenData
-from database.auth.crud import get_user_by_username 
+from database.auth.crud import get_user_by_email 
 from database.sql_alchemy_db import get_sync_db
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
@@ -38,7 +38,7 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 def authenticate_user(username: str, password: str, db: Session = Depends(get_sync_db)):
-    user = get_user_by_username(db, username)
+    user = get_user_by_email(db, username)
     if not user:
         return False
     
@@ -62,7 +62,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
         token_data = TokenData(username=username)
     except InvalidTokenError:
         raise credentials_exception
-    user = get_user_by_username(db, username=token_data.username)
+    user = get_user_by_email(db, username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
@@ -73,3 +73,4 @@ async def get_current_active_user(
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
