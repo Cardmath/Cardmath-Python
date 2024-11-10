@@ -10,6 +10,7 @@ from creditcard.endpoints.parse import ParseRequest, ParseResponse
 from creditcard.endpoints.read_database import CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
 from creditcard.endpoints.read_database import read_credit_cards_database
 from creditcard.schemas import *
+from payments.stripe_checkout_session import create_checkout_session, CheckoutSessionRequest, CheckoutSessionResponse
 from database.creditcard import creditcard
 from database.sql_alchemy_db import sync_engine, async_engine, get_async_db, get_sync_db, print_sql_schema
 from datetime import timedelta
@@ -201,6 +202,11 @@ async def edit_user_wallet_endpoint(current_user: Annotated[User, Depends(auth_u
 def is_user_logged_in(current_user: Annotated[User, Depends(auth_utils.get_current_user)]) -> dict:
     print(f"[INFO] {current_user.email} is logged in")
     return {"detail": "cardmath_user_authenticated"}
+
+@app.post("/create_checkout_session")
+def create_checkout_session_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
+                   request: CheckoutSessionRequest) -> CheckoutSessionResponse:
+    return create_checkout_session(current_user=current_user, request=request)
 
 @app.get("/api/issuers")
 def get_issuers():

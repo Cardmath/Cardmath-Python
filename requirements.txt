@@ -60,6 +60,7 @@ soupsieve==2.6
 sqlacodegen==2.3.0.post1
 SQLAlchemy==1.4.54
 starlette==0.38.5
+stripe==11.2.0
 style==1.1.0
 timeframe==1.1.0
 tomli==2.0.1
