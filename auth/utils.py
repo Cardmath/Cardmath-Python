@@ -17,7 +17,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # openssl rand -hex 32
 SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 90
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
