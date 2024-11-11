@@ -193,7 +193,7 @@ def conditional_sign_on_bonus_response_format():
                             "items": {
                                 "type": "object",
                                 "properties": {
-                                    "purchase_type": {"type": "string", "enum": [purchase_category.value for purchase_category in PurchaseCategory] + [vendor.value for vendor in Vendors]},
+                                    "purchase_type": {"type": "string", "enum": [purchase_category.value for purchase_category in PurchaseCategory if purchase_category != PurchaseCategory.UNKNOWN] + [vendor.value for vendor in Vendors if vendor != Vendors.UNKNOWN]},
                                     "condition_amount": {"type": "number"},
                                     "timeframe": {"type": "number"},
                                     "reward_type": {"type": "string", "enum": [reward_unit.value for reward_unit in RewardUnit if reward_unit != RewardUnit.PERCENT_CASHBACK_USD and reward_unit != RewardUnit.UNKNOWN]},
