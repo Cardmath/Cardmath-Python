@@ -18,7 +18,7 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
 
     // Fetch available credit cards when the component mounts
     useEffect(() => {
-        fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com", {
+        fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com/read_credit_cards_database", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ card_details: "all", use_preferences: false })

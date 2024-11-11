@@ -64,16 +64,14 @@ async def read_credit_cards_database(
             if avoid_rewards_programs and len(avoid_rewards_programs) > 0:
                 query = query.filter(~CreditCard.primary_reward_unit.in_(avoid_rewards_programs))
 
-
-
             # Check if business preferences are set
             if len(business_type) > 0 or len(business_size) > 0:
                 # Include cards with either "Business" or "Small Business" keywords
                 print(f"[INFO] Business preferences: {business_type}, {business_size}")
                 query = query.filter(
                     or_(
-                        CreditCard.keywords.contains(CreditCardKeyword.business.value),
-                        CreditCard.keywords.contains(CreditCardKeyword.small_business.value)
+                        CreditCard.keywords.contains([CreditCardKeyword.business.value]),
+                        CreditCard.keywords.contains([CreditCardKeyword.small_business.value])
                     )
                 )
             else:
@@ -81,12 +79,10 @@ async def read_credit_cards_database(
                 # Exclude both "Business" and "Small Business" cards
                 query = query.filter(
                     and_(
-                        ~CreditCard.keywords.contains(CreditCardKeyword.business.value),
-                        ~CreditCard.keywords.contains(CreditCardKeyword.small_business.value)
+                        ~CreditCard.keywords.contains([CreditCardKeyword.business.value]),
+                        ~CreditCard.keywords.contains([CreditCardKeyword.small_business.value])
                     )
                 )
-
-
 
             credit_cards = query.limit(request.max_num).all()
             print(f"[INFO] Number of credit cards: {len(credit_cards)}")
@@ -98,9 +94,9 @@ async def read_credit_cards_database(
             # Exclude both "Business" and "Small Business" cards
             credit_cards = db.query(CreditCard).filter(
                 and_(
-                    ~CreditCard.keywords.contains(CreditCardKeyword.business.value),
-                    ~CreditCard.keywords.contains(CreditCardKeyword.small_business.value),
-                    ~CreditCard.keywords.contains(CreditCardKeyword.customizable_rewards.value)
+                    ~CreditCard.keywords.contains([CreditCardKeyword.business.value]),
+                    ~CreditCard.keywords.contains([CreditCardKeyword.small_business.value]),
+                    ~CreditCard.keywords.contains([CreditCardKeyword.customizable_rewards.value])
                 )
             ).limit(request.max_num).all()
             return CreditCardsDatabaseResponse(
