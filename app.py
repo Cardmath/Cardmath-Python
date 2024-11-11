@@ -209,11 +209,11 @@ def create_checkout_session_endpoint(current_user: Annotated[User, Depends(auth_
                    request: CheckoutSessionRequest) -> CheckoutSessionResponse:
     return create_checkout_session(current_user=current_user, request=request)
 
-@app.post("/password-recovery-email/")
+@app.post("/password-recovery-email")
 async def request_password_recovery_endpoint(user: User = Depends(auth_utils.get_current_user)):
     return await request_password_recovery(user=user)
 
-@app.post("/reset-password-with-token/")
+@app.post("/reset-password")
 async def reset_password_endpoint(form_data: PasswordResetForm, db: Session = Depends(get_sync_db)):
     return await reset_password(token=form_data.token, new_password=form_data.new_password, db=db)
 

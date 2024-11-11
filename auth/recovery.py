@@ -2,7 +2,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from fastapi import HTTPException
-from database.auth.user import User  
+from database.auth.user import User, UserInDB  
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
@@ -13,6 +13,7 @@ import jwt
 PASSWORD_RESET_TOKEN_EXPIRE_MINUTES = 60
 
 class PasswordResetForm(BaseModel):
+    token: str
     new_password: str = Field(..., min_length=8)
 
 def create_password_reset_token(email: str):
@@ -25,7 +26,7 @@ def create_password_reset_token(email: str):
 def verify_password_reset_token(token: str):
     try:
         payload = jwt.decode(token, os.getenv("SECRET_KEY", "your_secret_key"), algorithms=["HS256"])
-        return payload.get("sub")
+        return payload.get("sub")  # Return email (sub) if token is valid
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=400, detail="Token has expired")
     except jwt.InvalidTokenError:
@@ -59,20 +60,25 @@ def send_reset_email(email: str, reset_link: str):
         raise HTTPException(status_code=500, detail="Failed to send email")
 
 async def request_password_recovery(user: User):
-    # Generate token with user's username (email) embedded in the payload
-    token = create_password_reset_token(user.username)
+    token = create_password_reset_token(user.username)  # Username is assumed to be the email
     reset_link = f"https://cardmath.ai/reset-password?token={token}"
-    
-    # Send reset email using user's username as the email address
     send_reset_email(user.username, reset_link)
-
     return {"msg": "Password reset link sent to the registered email address"}
 
-async def reset_password(user, new_password: str, db: Session):
-    # Hash and update the new password
+async def reset_password(token: str, new_password: str, db: Session):
+    # Verify token and retrieve the email
+    email = verify_password_reset_token(token)
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+    # Fetch the user by email
+    user: UserInDB = db.query(UserInDB).filter(UserInDB.username == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Update password
     hashed_password = get_password_hash(new_password)
     user.hashed_password = hashed_password
     db.commit()
     db.refresh(user)
-
     return {"msg": "Password has been reset successfully"}

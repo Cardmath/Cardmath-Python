@@ -12,6 +12,7 @@ import PreferencesPage from './pages/PreferencesPage';
 import DashboardPage from './pages/DashboardPage';
 import CreditCardDatabase from './pages/CreditCardDatabase';
 import ContactUsPage from './pages/ContactUsPage';
+import ResetPassword from './pages/ResetPasswordPage';
 
 const App = () => {
     return (
@@ -27,6 +28,7 @@ const App = () => {
                 <Route path="/team" element={<TeamPage />} />
                 <Route path='/creditcards' element={<CreditCardDatabase />} />
                 <Route path='/contact-us' element={<ContactUsPage />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
             </Routes>
         </Router>
     );
