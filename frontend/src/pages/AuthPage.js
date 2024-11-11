@@ -91,7 +91,7 @@ const AuthPage = ({ userHasAccount }) => {
             console.error('There was an error!', error)
         });
     };
-
+    
     const handlePasswordResetRequest = () => {
         if (!usernameValid) {
             setAlert({
@@ -102,14 +102,11 @@ const AuthPage = ({ userHasAccount }) => {
             });
             return;
         }
-
-        const formData = new URLSearchParams();
-        formData.append('email', username);
-
+    
         fetch(passwordRecoveryEndpoint, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: username })        
         }).then(response => {
             if (response.ok) {
                 setAlert({
@@ -135,7 +132,7 @@ const AuthPage = ({ userHasAccount }) => {
                 heading: 'Request Error'
             });
         });
-    };
+    };    
 
     const register_footer = (
         <div className='pt-2'>
