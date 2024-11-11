@@ -27,7 +27,7 @@ from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, Categori
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
-from auth.recovery import request_password_recovery, PasswordResetForm, reset_password
+from auth.recovery import request_password_recovery, PasswordResetForm, reset_password, PasswordResetRequest
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
 import teller.endpoints as teller_endpoints
@@ -210,8 +210,8 @@ def create_checkout_session_endpoint(current_user: Annotated[User, Depends(auth_
     return create_checkout_session(current_user=current_user, request=request)
 
 @app.post("/password-recovery-email")
-async def request_password_recovery_endpoint(user: User = Depends(auth_utils.get_current_user)):
-    return await request_password_recovery(user=user)
+async def request_password_recovery_endpoint(request: PasswordResetRequest, db: Session = Depends(get_sync_db)):
+    return await request_password_recovery(email=request.email, db=db)
 
 @app.post("/reset-password")
 async def reset_password_endpoint(form_data: PasswordResetForm, db: Session = Depends(get_sync_db)):

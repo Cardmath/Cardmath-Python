@@ -16,6 +16,9 @@ class PasswordResetForm(BaseModel):
     token: str
     new_password: str = Field(..., min_length=8)
 
+class PasswordResetRequest(BaseModel):
+    email: str
+
 def create_password_reset_token(email: str):
     payload = {
         "sub": email,
@@ -59,10 +62,18 @@ def send_reset_email(email: str, reset_link: str):
         print(e)
         raise HTTPException(status_code=500, detail="Failed to send email")
 
-async def request_password_recovery(user: User):
-    token = create_password_reset_token(user.username)  # Username is assumed to be the email
+async def request_password_recovery(email: str, db: Session):
+    # Find user by email
+    user = db.query(UserInDB).filter(UserInDB.username == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Create password reset token
+    token = create_password_reset_token(email)
     reset_link = f"https://cardmath.ai/reset-password?token={token}"
-    send_reset_email(user.username, reset_link)
+    
+    # Send reset email
+    send_reset_email(email, reset_link)
     return {"msg": "Password reset link sent to the registered email address"}
 
 async def reset_password(token: str, new_password: str, db: Session):
