@@ -47,10 +47,9 @@ class Wallet(Base):
 class Enrollment(Base):
     __tablename__ = 'enrollments'
     
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, nullable=False)  # No unique constraint needed here
     user_id = Column(Integer, ForeignKey('users.id'))
     access_token = Column(String, nullable=False)
-    enrollment_id = Column(String, nullable=False)  # No unique constraint needed here
     institution_name = Column(String, nullable=False)
     signatures = Column(JSON, nullable=False)
     last_updated = Column(Date, nullable=False)  # Last updated time in minutes

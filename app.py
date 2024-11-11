@@ -31,37 +31,29 @@ from auth.recovery import request_password_recovery, PasswordResetForm, reset_pa
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
 import teller.endpoints as teller_endpoints
+from pathlib import Path
 
 import logging
 
-SAFE_LOCAL_DOWNLOAD_SPOT = "/home/johannes/Cardmath/Cardmath-Python/server_download_location/cardratings.html"
-
+DEFAULT_DOWNLOAD_DIR = Path("/tmp") if os.getenv("GAE_ENV", "") == "standard" else Path.home() / "Cardmath" / "./server_download_location"
+SAFE_LOCAL_DOWNLOAD_SPOT = DEFAULT_DOWNLOAD_DIR / "cardratings.html"
+DEFAULT_DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 creditcard.Base.metadata.create_all(bind=sync_engine)
+pkl_file_path = Path(__file__).parent / "server_download_location" / "20241109_002033_cardratings_dict.pkl"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     for db in get_sync_db():
-        try :
-            download(request=DownloadRequest(url = "https://www.cardratings.com/credit-card-list.html",
-                    file_path = SAFE_LOCAL_DOWNLOAD_SPOT,
-                    force_download = False,
-                    user_agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0"))
-        except Exception as e:
-            print(e, "Error downloading cards!")
-        
-        try :
-            extract(request=ExtractRequest(file_path=SAFE_LOCAL_DOWNLOAD_SPOT,
-                    return_json = False,
-                    max_items_to_extract = 100,
-                    save_to_db=True),
-                    db=db)
-        except Exception as e:
-            print(e, "Error extracting cards!")
-        
-        await parse(request=ParseRequest(return_json = False,
-            max_items_to_parse = 0,
-            save_to_db=True),
-            db = db)
+        await parse(
+            request=ParseRequest(
+                return_json=False,
+                max_items_to_parse=0,
+                save_to_db=False,
+                from_pkl=False,
+                pkl_file_path=str(pkl_file_path)
+            ),
+            db=db
+        )
     yield
 
 app = FastAPI(lifespan=lifespan)

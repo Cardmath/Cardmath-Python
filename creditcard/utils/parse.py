@@ -89,8 +89,6 @@ class ConditionalSignOnBonus(BaseModel):
 class ConditionalSignOnBonusResponse(BaseModel):
     conditional_sign_on_bonus : List[ConditionalSignOnBonus]
 
-    model_config = ConfigDict(from_attributes=True)
-
 async def get_sign_on_bonus(card_description : str):
     prompt = conditional_sign_on_bonus_prompt(card_description)
     response : ConditionalSignOnBonusResponse = await structure_with_openai(prompt=prompt, response_format=conditional_sign_on_bonus_response_format(), schema=ConditionalSignOnBonusResponse)
@@ -98,11 +96,11 @@ async def get_sign_on_bonus(card_description : str):
 
 class APR(BaseModel):
     apr : float
-    type : APRType
-
+    apr_type : APRType
+    
     model_config = ConfigDict(from_attributes=True)
 
-    @field_validator('apr')
+    @field_validator('apr', mode="before")
     def apr_must_be_reasonable(cls, v):
         if v < 0 or v > 100:
             raise ValueError('APR must be positive and less than 100 to be reasonable')
@@ -114,11 +112,14 @@ class APRResponse(BaseModel):
 async def get_apr(card_description):
     prompt = apr_prompt(card_description)
     apr: APRResponse = await structure_with_openai(prompt=prompt, response_format=apr_response_format(), schema=APRResponse)
-    return TypeAdapter(List[APR]).dump_python(apr.apr_list)
+    print(f"APR: {apr.apr_list}")
+    return apr.apr_list
 
 class AnnualFee(BaseModel):
     fee_usd : float
     waived_for : int
+
+    model_config = ConfigDict(from_attributes=True)
 
     @field_validator('fee_usd')
     def fee_usd_must_be_reasonable(cls, v):
@@ -132,12 +133,8 @@ class AnnualFee(BaseModel):
             raise ValueError('Waived for must be positive to be reasonable')
         return v
 
-    model_config = ConfigDict(from_attributes=True)
-
 class AnnualFeeResponse(BaseModel):
     annual_fee: AnnualFee
-
-    model_config = ConfigDict(from_attributes=True)
 
 async def get_annual_fee(card_description):
     prompt = annual_fee_prompt(card_description)

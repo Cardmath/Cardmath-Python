@@ -3,11 +3,13 @@ import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
 import Footer from '../components/Footer';
+import Navbar from '../components/Navbar';
 
 const ContactUsPage = () => {
     return (
-        <div className="surface-section">
-            <div className="grid grid-nogutter">
+        <div>
+            <Navbar />
+            <div className="surface-section grid grid-nogutter">
                 {/* Left Section with Gradient */}
                 <div
                     className="col-12 md:col-6 p-8"

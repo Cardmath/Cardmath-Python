@@ -238,13 +238,13 @@ def apr_response_format():
                                     "type": "number",
                                     "description": "APR must be a positive value less than 100"
                                 },
-                                "type": {
+                                "apr_type": {
                                     "type": "string",
                                     "enum": [apr_type.value for apr_type in APRType],
                                     "description": "The type of APR"
                                 }
                             },
-                            "required": ["apr", "type"],
+                            "required": ["apr", "apr_type"],
                             "additionalProperties": False,
                         }
                     }

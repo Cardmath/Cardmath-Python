@@ -41,7 +41,6 @@ class CardRatingsScrapeSchema(BaseModel):
         credit_needed = get_credit_needed(self.unparsed_credit_needed)
         reward_category_map = await get_reward_category_map(self.unparsed_card_attributes)
         primary_reward_unit = get_primary_reward_unit(reward_category_map)
-        
         apr = await get_apr(self.unparsed_card_attributes)
         sign_on_bonus = await get_sign_on_bonus(self.unparsed_card_attributes)
         annual_fee = await get_annual_fee(self.unparsed_card_attributes)

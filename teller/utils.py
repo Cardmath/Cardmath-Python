@@ -66,7 +66,7 @@ async def read_user_new_enrollment(user: User, db: Session) -> Enrollment:
     return enrollments
 
 async def read_enrollment_accounts(enrollment: Enrollment, db: Session) -> List[Account]:
-    accounts : List[Account] = db.query(Account).filter(Account.enrollment_id == enrollment.enrollment_id).all()
+    accounts : List[Account] = db.query(Account).filter(Account.enrollment_id == enrollment.id).all()
     return accounts
 
 def is_credit_card_account(account: Account) -> bool:
@@ -80,10 +80,6 @@ async def get_account_credit_cards(account: Account, db: Session) -> List[Credit
         
     return db.query(CreditCard).filter(CreditCard.name == account.name 
                                        and account.institution_name == CreditCard.issuer).all()
-
-# TODO Optimize this query
-async def read_enrollment_transactions(enrollment: Enrollment, db: Session) -> List[Transaction]:
-    return db.query(Transaction).filter(Transaction.enrollment_id == enrollment.enrollment_id).all()
 
 class Teller:
     def __init__(self):
