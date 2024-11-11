@@ -74,12 +74,13 @@ class HeavyHitterSchema(BaseModel):
             return percentage_str
         else:
             raise ValueError('must be a percentage')
-        
+    
     @field_validator("category", mode="before")
     @classmethod
     def category_is_valid(cls, v):
-        if v not in enums.PurchaseCategory:
-            v = "unknown"
+        # Check if the provided value `v` is a valid PurchaseCategory value
+        if v not in {category.value for category in enums.PurchaseCategory}:
+            v = enums.PurchaseCategory.UNKNOWN
         return v
 
 class HeavyHittersResponse(BaseModel):

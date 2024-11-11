@@ -60,7 +60,7 @@ class TwoPassHeavyHitters:
         # TODO: Iterate over exact_counts, and if a vendor is present, remove the associated vendor value from the category total
         for key, value in list(exact_counts.items()):
             # Check if the key is a known vendor
-            if key in enums.Vendors:
+            if key in {vendor.value for vendor in enums.Vendors}:
                 # Get the associated category for the vendor
                 category = enums.Vendors.get_category(key)
                 
@@ -134,10 +134,10 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
         vendors = 0
         for hh, (percent, amount) in hh.items():
             print(f"Heavy Hitter: {hh}, percent: {percent}, amount: {amount}")
-            if hh in enums.Vendors:
+            if hh in {vendor.value for vendor in enums.Vendors}:
                 out_hh.append(HeavyHitterSchema(type=VENDOR_CONST, name=hh, category=enums.Vendors.get_category(hh), percent=percent, amount=amount))
                 vendors += 1
-            elif hh in enums.PurchaseCategory:
+            elif hh in {category.value for category in enums.PurchaseCategory}:
                 out_hh.append(HeavyHitterSchema(type=CATEGORY_CONST, category=hh, percent=percent, amount=amount))
                 categories += 1
         print(f"[INFO] Found {vendors} vendors and {categories} categories in heavy hitters.")  

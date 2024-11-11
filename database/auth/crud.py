@@ -55,9 +55,9 @@ async def update_user_enrollment(db: Session, enrollment_schema: AccessTokenSche
     user = get_user(db=db, user_id=user_id)
     
     db_enrollment = Enrollment(
+        id=enrollment_schema.enrollment.id,
         user_id=user_id,
         access_token=enrollment_schema.accessToken,
-        enrollment_id=enrollment_schema.enrollment.id,
         institution_name=enrollment_schema.enrollment.institution.name,
         signatures=enrollment_schema.signatures,
         last_updated=datetime.now()

@@ -71,12 +71,14 @@ class TransactionDetailsSchema(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    # TODO LOG THIS
+  
     @field_validator('category', mode="before")
     @classmethod
     def category_is_valid(cls, v):
-        if v not in enums.PurchaseCategory:
-            v = "unknown"
+        try:
+            enums.PurchaseCategory(v)
+        except ValueError:
+            v = enums.PurchaseCategory.UNKNOWN
         return v
 
 class TransactionSchema(BaseModel):
