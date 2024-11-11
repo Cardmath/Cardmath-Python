@@ -8,6 +8,7 @@ import { Password } from 'primereact/password';
 import { Checkbox } from 'primereact/checkbox';
 import React, { useState } from 'react';
 import Alert from '../components/Alert';
+import TermsOfUseDialog from '../components/TermsOfUseDialog';
 
 const AuthPage = ({ userHasAccount }) => {
     const [username, setUsername] = useState('');
@@ -17,6 +18,7 @@ const AuthPage = ({ userHasAccount }) => {
     const [usernameValid, setUsernameValid] = useState(false);
     const [alert, setAlert] = useState({ visible: false, message: '', heading: '', type: 'error' });
     const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+    const [showTermsDialog, setShowTermsDialog] = useState(false); // New state for Terms dialog visibility
 
     const authEndpoint = userHasAccount 
         ? 'https://backend-dot-cardmath-llc.uc.r.appspot.com/token' 
@@ -35,10 +37,11 @@ const AuthPage = ({ userHasAccount }) => {
         setUsername(newUsername);
         setUsernameValid(isEmailRegex.test(newUsername));
     };
+
+
     const handleAuth = () => {
         if (!userHasAccount && !passwordValid) {
-            console.log('Password is invalid');
-            setAlert({visible: true, 
+            setAlert({ visible: true, 
                 message: 'Password must be at least 8 characters long, include at least one uppercase letter, one lowercase letter, one digit, and one special character (@$!%*?&).',
                 type: 'error',
                 heading: 'Invalid Password'});
@@ -46,50 +49,52 @@ const AuthPage = ({ userHasAccount }) => {
         }
 
         if (!usernameValid) {
-            console.log('Email is invalid');
-            setAlert({visible: true, 
+            setAlert({ visible: true, 
                 message: "Please enter a valid email address. Make sure it includes an '@' and a valid domain (e.g., example@domain.com).",
                 type: 'error',
                 heading: 'Invalid Email'});
             return;
         }
 
+        if (!userHasAccount) {
+            setShowTermsDialog(true);
+            return;
+        }
+
+        performAuth();
+    };
+
+    const performAuth = () => {
         const formData = new URLSearchParams();
         formData.append('username', username);
         formData.append('password', password);
+
         fetch(authEndpoint, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: formData
         }).then(response => {
             if (response.ok) {
                 return response.json();
-            } else if (response.status == 401) {
-                if (!userHasAccount) {
-                    setAlert({visible: true, 
-                        message: 'Email already in use: An account is already associated with this email address. Please log in or use a different email to create a new account.',
-                        type: 'error',
-                        heading: 'Email already in use'})
-                } else {
-                    setAlert({visible: true, 
-                        message: 'Incorrect email or password: Please check your email and password and try again.',
-                        type: 'error',
-                        heading: 'Incorrect Credentials'})
-                }
+            } else {
+                handleAuthError(response);
+                throw new Error('Network response was not ok.');
             }
-            throw new Error('Network response was not ok.');
         }).then(data => {
             localStorage.setItem('cardmath_access_token', data.access_token);
-            if (userHasAccount) {
-                window.location.href = 'https://cardmath.ai/preferences';
-            } else {
-                window.location.href = 'https://cardmath.ai/preferences';
-            }
+            window.location.href = 'https://cardmath.ai/preferences';
         }).catch(error => {
-            console.error('There was an error!', error)
+            console.error('There was an error!', error);
         });
+    };
+
+    const handleAuthError = (response) => {
+        if (response.status === 401) {
+            const message = userHasAccount 
+                ? 'Incorrect email or password: Please check your email and password and try again.'
+                : 'Email already in use: An account is already associated with this email address. Please log in or use a different email.';
+            setAlert({ visible: true, message, type: 'error', heading: 'Authentication Error' });
+        }
     };
     
     const handlePasswordResetRequest = () => {
@@ -115,7 +120,7 @@ const AuthPage = ({ userHasAccount }) => {
                     type: 'success',
                     heading: 'Email Sent'
                 });
-                setForgotPasswordMode(false);  // Reset to login mode after sending the request
+                setForgotPasswordMode(false);
             } else {
                 setAlert({
                     visible: true,
@@ -246,6 +251,17 @@ const AuthPage = ({ userHasAccount }) => {
                             </div>
 
                             <Button label={userHasAccount ? "Login" : "Register"} icon="pi pi-user" className="bg-blue-500 text-white w-full" onClick={handleAuth}/>
+                            
+                            {/* Terms of Use dialog */}
+                            {showTermsDialog && (
+                                <TermsOfUseDialog
+                                    pdfUrl="/Cardmath, LLC - Terms of Use.docx.pdf"
+                                    onConfirm={() => {
+                                        setShowTermsDialog(false);
+                                        performAuth();  // Proceed with authentication after terms are accepted
+                                    }}
+                                />
+                            )}
                         </>
                     )}
 

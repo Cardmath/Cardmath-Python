@@ -9,6 +9,16 @@ handlers:
   - url: /themes
     static_dir: build/themes
 
+  # Serve PDF files from the root of the build directory
+  - url: /(.*\.pdf)
+    static_files: build/\1
+    upload: build/(.*\.pdf)
+
+  # Serve favicon, manifest, and other root-level assets directly
+  - url: /(favicon\.ico|manifest\.json|robots\.txt)
+    static_files: build/\1
+    upload: build/(favicon\.ico|manifest\.json|robots\.txt)
+
   # Serve other assets in the build directory, like images, icons, etc.
   - url: /(.*\.(ico|png|svg|json|txt|jpg|jpeg|webp))
     static_files: build/\1
