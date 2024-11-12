@@ -25,6 +25,8 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     full_name = Column(String, nullable=True)
     disabled = Column(Boolean, default=False)
+    
+    subscription = relationship("Subscription", uselist=False, back_populates="user")
     enrollments = relationship("Enrollment", back_populates="user")
     credit_cards = relationship("CreditCard", secondary=user_credit_card_association, back_populates="users")
     preferences = relationship("Preferences", uselist=False)
@@ -74,3 +76,15 @@ class Account(Base):
     
     enrollment = relationship("Enrollment", back_populates="accounts")
     transactions = relationship("Transaction", back_populates="account", lazy='dynamic')
+
+class Subscription(Base):
+    __tablename__ = 'subscriptions'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    status = Column(String, nullable=False)  # e.g., 'free', 'limited', 'unlimited'
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=True)  # Nullable if not applicable to free tier
+    remaining_computations = Column(Integer, nullable=True)  # Set for limited plans
+    
+    user = relationship("User", back_populates="subscription")

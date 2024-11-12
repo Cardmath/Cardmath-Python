@@ -1,6 +1,7 @@
 from auth.schemas import UserCreate
-from database.auth.user import User, UserInDB, Enrollment, Account, Wallet, wallet_card_association
+from database.auth.user import User, UserInDB, Enrollment, Account, Wallet, Subscription, wallet_card_association
 from database.creditcard.creditcard import CreditCard
+from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from sqlalchemy import insert
 from sqlalchemy.orm import Session
@@ -109,3 +110,64 @@ async def update_user_with_credit_cards(db: Session, credit_cards: List[CreditCa
     db.commit()
     db.refresh(user)
     return user
+
+def create_subscription(db: Session, user_id: int, status: str, duration_days: Optional[int] = 30, computations: Optional[int] = None) -> Subscription:
+    """
+    Create a new subscription for a user with given status, duration, and computation limit.
+    """
+    # Set the end date based on duration (e.g., 30 days by default)
+    start_date = datetime.now().date()
+    end_date = start_date + timedelta(days=duration_days) if duration_days else None
+
+    subscription = Subscription(
+        user_id=user_id,
+        status=status,
+        start_date=start_date,
+        end_date=end_date,
+        remaining_computations=computations
+    )
+    db.add(subscription)
+    db.commit()
+    db.refresh(subscription)
+    return subscription
+
+def get_subscription_by_user_id(db: Session, user_id: int) -> Optional[Subscription]:
+    """
+    Retrieve the subscription for a specific user.
+    """
+    return db.query(Subscription).filter(Subscription.user_id == user_id).first()
+
+def update_subscription_status(db: Session, user_id: int, status: str, computations: Optional[int] = None) -> Optional[Subscription]:
+    """
+    Update the subscription status and optionally the number of computations for a user.
+    """
+    subscription = get_subscription_by_user_id(db, user_id)
+    if not subscription:
+        return None
+
+    subscription.status = status
+    if computations is not None:
+        subscription.remaining_computations = computations
+    db.commit()
+    db.refresh(subscription)
+    return subscription
+
+def decrement_computation_count(db: Session, user_id: int) -> Optional[Subscription]:
+    """
+    Decrement the computation count for a user’s subscription, if applicable.
+    """
+    subscription = get_subscription_by_user_id(db, user_id)
+    if subscription and subscription.remaining_computations is not None and subscription.remaining_computations > 0:
+        subscription.remaining_computations -= 1
+        db.commit()
+        db.refresh(subscription)
+    return subscription
+
+def delete_subscription(db: Session, user_id: int) -> None:
+    """
+    Delete a subscription for a user, if it exists.
+    """
+    subscription = get_subscription_by_user_id(db, user_id)
+    if subscription:
+        db.delete(subscription)
+        db.commit()

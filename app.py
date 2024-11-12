@@ -10,7 +10,7 @@ from creditcard.endpoints.parse import ParseRequest, ParseResponse
 from creditcard.endpoints.read_database import CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
 from creditcard.endpoints.read_database import read_credit_cards_database
 from creditcard.schemas import *
-from payments.stripe_checkout_session import create_checkout_session, CheckoutSessionRequest, CheckoutSessionResponse
+from payments.stripe_checkout_session import create_checkout_session, CheckoutSessionRequest, CheckoutSessionResponse, stripe_webhook
 from database.creditcard import creditcard
 from database.sql_alchemy_db import sync_engine, async_engine, get_async_db, get_sync_db, print_sql_schema
 from datetime import timedelta
@@ -197,9 +197,14 @@ def is_user_logged_in(current_user: Annotated[User, Depends(auth_utils.get_curre
     return {"detail": "cardmath_user_authenticated"}
 
 @app.post("/create_checkout_session")
-def create_checkout_session_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
-                   request: CheckoutSessionRequest) -> CheckoutSessionResponse:
-    return create_checkout_session(current_user=current_user, request=request)
+def create_checkout_session_endpoint(request: CheckoutSessionRequest,
+                                     current_user: User = Depends(auth_utils.get_current_user),
+                                     db = Depends(get_sync_db)) -> CheckoutSessionResponse:
+    return create_checkout_session(db=db, current_user=current_user, request=request)
+
+@app.post("/stripe-webhook")
+def stripe_webhook_endpoint(request: Request , db: Session = Depends(get_sync_db)):
+    return stripe_webhook(request=request, db=db)
 
 @app.post("/password-recovery-email")
 async def request_password_recovery_endpoint(request: PasswordResetRequest, db: Session = Depends(get_sync_db)):

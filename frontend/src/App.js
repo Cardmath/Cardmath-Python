@@ -13,6 +13,7 @@ import DashboardPage from './pages/DashboardPage';
 import CreditCardDatabase from './pages/CreditCardDatabase';
 import ContactUsPage from './pages/ContactUsPage';
 import ResetPassword from './pages/ResetPasswordPage';
+import UsagePlanPage from './pages/UsagePlanPage';
 
 const App = () => {
     return (
@@ -29,6 +30,7 @@ const App = () => {
                 <Route path='/creditcards' element={<CreditCardDatabase />} />
                 <Route path='/contact-us' element={<ContactUsPage />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/usage-plan" element={<UsagePlanPage />} />
             </Routes>
         </Router>
     );
