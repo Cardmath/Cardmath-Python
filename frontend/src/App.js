@@ -13,14 +13,12 @@ import DashboardPage from './pages/DashboardPage';
 import CreditCardDatabase from './pages/CreditCardDatabase';
 import ContactUsPage from './pages/ContactUsPage';
 import ResetPassword from './pages/ResetPasswordPage';
-import UsagePlanPage from './pages/UsagePlanPage';
-import VerifyEmailPage from './pages/VerifyEmailPage';
+import RegistrationFlowPage from './pages/RegistrationFlowPage';
 
 const App = () => {
     return (
         <Router>
             <Routes>
-                <Route path="/verify-email" element={<VerifyEmailPage />} />
                 <Route path="/" element={<LandingPageComponent />}/>
                 <Route path="/connect" element={<TellerConnectComponent />} />
                 <Route path="/dashboard" element={ <DashboardPage /> } />
@@ -32,7 +30,7 @@ const App = () => {
                 <Route path='/creditcards' element={<CreditCardDatabase />} />
                 <Route path='/contact-us' element={<ContactUsPage />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/usage-plan" element={<UsagePlanPage />} />
+                <Route path="/registration-steps" element={<RegistrationFlowPage />} />
             </Routes>
         </Router>
     );
