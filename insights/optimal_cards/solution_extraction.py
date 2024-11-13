@@ -121,9 +121,6 @@ def extract_solution(model, request: OptimalCardsAllocationRequest, rmatrix: RMa
 
     net_rewards_usd = total_regular_rewards_usd + total_sign_on_bonus_usd - total_annual_fees_usd
 
-    if (request.to_add > 0) :
-        print("HERE IISJWEOIFJOWIEJFOWIEJFEJOFW")
-        print(total_sign_on_bonus_usd)
     return OptimalCardsAllocationSolution(
         timeframe=rmatrix.timeframe,
         total_reward_usd=total_reward_usd,
@@ -134,6 +131,6 @@ def extract_solution(model, request: OptimalCardsAllocationRequest, rmatrix: RMa
         total_reward_allocation=selected_cards,
         summary=summary,
         spending_plan=spending_plan,
-        cards_used=cards_used,  # Number of categories
+        cards_used=cards_used,
         cards_added=cards_added
     )
