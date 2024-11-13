@@ -21,7 +21,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 10) -> List[User]:
 def get_account_by_id(db: Session, account_id: str) -> Optional[Account]:
     return db.query(Account).filter(Account.id == account_id).first()
 
-def create_user(db: Session, user: UserCreate) -> UserInDB:
+def create_user(db: Session, user: UserCreate):
     hashed_password = get_password_hash(user.password)
     db_user = UserInDB(
         username=user.username,
@@ -33,6 +33,15 @@ def create_user(db: Session, user: UserCreate) -> UserInDB:
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    subscription = Subscription(
+        user_id=db_user.id,
+        status='unverified',
+        start_date=None,
+        end_date=None
+    )
+    db.add(subscription)
+    db.commit()
+    db.refresh(subscription)
     return db_user
 
 def get_password_hash(password: str) -> str:
@@ -137,7 +146,7 @@ def get_subscription_by_user_id(db: Session, user_id: int) -> Optional[Subscript
     """
     return db.query(Subscription).filter(Subscription.user_id == user_id).first()
 
-def update_subscription_status(db: Session, user_id: int, status: str, computations: Optional[int] = None) -> Optional[Subscription]:
+def update_subscription_status(db: Session, user_id: int, status: str) -> Optional[Subscription]:
     """
     Update the subscription status and optionally the number of computations for a user.
     """
@@ -146,21 +155,8 @@ def update_subscription_status(db: Session, user_id: int, status: str, computati
         return None
 
     subscription.status = status
-    if computations is not None:
-        subscription.remaining_computations = computations
     db.commit()
     db.refresh(subscription)
-    return subscription
-
-def decrement_computation_count(db: Session, user_id: int) -> Optional[Subscription]:
-    """
-    Decrement the computation count for a user’s subscription, if applicable.
-    """
-    subscription = get_subscription_by_user_id(db, user_id)
-    if subscription and subscription.remaining_computations is not None and subscription.remaining_computations > 0:
-        subscription.remaining_computations -= 1
-        db.commit()
-        db.refresh(subscription)
     return subscription
 
 def delete_subscription(db: Session, user_id: int) -> None:

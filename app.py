@@ -27,7 +27,7 @@ from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, Categori
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
-from auth.recovery import request_password_recovery, PasswordResetForm, reset_password, PasswordResetRequest
+from auth.recovery import request_password_recovery, PasswordResetForm, reset_password, PasswordResetRequest, create_email_verification_token, send_verification_email, verify_email
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
 import teller.endpoints as teller_endpoints
@@ -106,12 +106,22 @@ async def register_for_access_token(
                 full_name=form_data.username,
                 disabled=False,
                 password=form_data.password)
-    auth_crud.create_user(db, user)
+    db_user = auth_crud.create_user(db, user)
+    
+    token = create_email_verification_token(user.email)
+    verification_link = f"http://localhost:3000/verify-email?token={token}"
+    
+    send_verification_email(user.email, verification_link)
+    
     access_token_expires = timedelta(minutes=auth_utils.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth_utils.create_access_token(
         data={"sub": form_data.username}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
+
+@app.get("/verify-email")
+async def verify_email_endpoint(token: str, db: Session = Depends(get_sync_db)):
+    return await verify_email(token=token, db=db)
 
 @app.post("/process_new_enrollment")
 async def process_new_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],

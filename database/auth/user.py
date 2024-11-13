@@ -82,9 +82,9 @@ class Subscription(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    status = Column(String, nullable=False)  # e.g., 'free', 'limited', 'unlimited'
-    start_date = Column(Date, nullable=False)
-    end_date = Column(Date, nullable=True)  # Nullable if not applicable to free tier
-    remaining_computations = Column(Integer, nullable=True)  # Set for limited plans
+    
+    status = Column(String, nullable=False)  # e.g., 'unverified', 'verified-unpaid',  'limited', 'unlimited'
+    start_date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
     
     user = relationship("User", back_populates="subscription")

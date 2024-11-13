@@ -14,11 +14,13 @@ import CreditCardDatabase from './pages/CreditCardDatabase';
 import ContactUsPage from './pages/ContactUsPage';
 import ResetPassword from './pages/ResetPasswordPage';
 import UsagePlanPage from './pages/UsagePlanPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 
 const App = () => {
     return (
         <Router>
             <Routes>
+                <Route path="/verify-email" element={<VerifyEmailPage />} />
                 <Route path="/" element={<LandingPageComponent />}/>
                 <Route path="/connect" element={<TellerConnectComponent />} />
                 <Route path="/dashboard" element={ <DashboardPage /> } />
