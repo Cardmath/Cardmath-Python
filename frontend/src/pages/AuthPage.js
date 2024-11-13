@@ -82,7 +82,11 @@ const AuthPage = ({ userHasAccount }) => {
             }
         }).then(data => {
             localStorage.setItem('cardmath_access_token', data.access_token);
-            window.location.href = 'https://cardmath.ai/preferences';
+            if (!userHasAccount) {
+                window.location.href = 'https://cardmath.ai/usage-plan';    
+            } else {
+                window.location.href = 'https://cardmath.ai/dashboard';
+            }
         }).catch(error => {
             console.error('There was an error!', error);
         });

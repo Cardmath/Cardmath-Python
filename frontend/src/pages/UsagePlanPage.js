@@ -64,31 +64,17 @@ export default function PricingPage() {
 
     return (
         <div className="bg-gray-800 min-h-screen text-white">
-            <Navbar />
-            <div className="px-4 py-8 md:px-6 lg:px-8 bg-no-repeat bg-cover" style={{ background: 'url("/demo/images/blocks/pricing/pricing-4.svg")' }}>
-                <div className="flex flex-wrap">
-                    <div className="w-full lg:w-6 lg:pr-8">
-                        <div className="text-white font-bold text-6xl mb-4">Pricing</div>
-                        <div className="text-gray-400 text-xl line-height-3 mb-4 lg:mb-0">Choose the plan that fits your needs and enjoy access to advanced features.</div>
-                    </div>
+            <div className="px-4 py-6 md:px-6 lg:px-8 bg-no-repeat bg-cover" style={{ background: 'url("/demo/images/blocks/pricing/pricing-4.svg")' }}>
+                <div className="flex flex-column align-items-start justify-content-start">
+                    <img src="/logos/svg/Color logo - no background.svg" alt="Logo" className='flex max-w-30rem' />
+                    <div className="flex pt-6 pb-2 text-white font-bold text-6xl">Pricing</div>
                 </div>
 
+                <div className="text-gray-400 text-xl line-height-3 mb-4 lg:mb-0">Unlock Cardmath's full power with two flexible options. Both the Flex and Unlimited plans give you unlimited access to our platform's advanced credit card optimization features. Maximize your savings and travel rewards every day, worry-free. Start with Flex to try it out, or go Unlimited to get the best value and start optimizing your spending today. </div>
                 <div className="flex flex-wrap mt-5 -mx-3">
-                    {/* Free Plan */}
-                    <div className="w-full lg:w-4 p-3">
-                        <div className="shadow-2 p-3 h-full bg-gray-700 text-white" style={{ borderRadius: '6px' }}>
-                            <div className="font-medium text-xl mb-5">Free Forever</div>
-                            <div className="font-bold text-5xl mb-5">Free</div>
-                            <button type="button" onClick={() => window.location.href = 'https://cardmath.ai/register'} className="p-ripple font-medium appearance-none border-none p-2 text-white bg-primary hover:bg-primary-dark p-component lg:w-full border-rounded cursor-pointer transition-colors transition-duration-150" style={{ borderRadius: '6px' }}>
-                                <span>Create Account</span>
-                                <Ripple />
-                            </button>
-                            <p className="text-sm text-gray-300 line-height-3 mb-0 mt-5">3 computations per month. No consideration of sign on bonus.</p>
-                        </div>
-                    </div>
 
                     {/* Monthly Plan */}
-                    <div className="w-full lg:w-4 p-3">
+                    <div className="w-full lg:w-6 p-3">
                         <div className="shadow-2 p-3 h-full bg-gray-700 text-white" style={{ borderRadius: '6px' }}>
                             <div className="font-medium text-xl mb-5 text-white">Monthly - Flex</div>
                             <div className="flex align-items-center mb-5">
@@ -96,28 +82,28 @@ export default function PricingPage() {
                                 <span className="font-medium text-gray-400 ml-2">per month</span>
                             </div>
                             <Button label="Proceed Monthly" onClick={() => handleCheckout("limited")} icon="pi pi-arrow-right" iconPos="right" className="lg:w-full font-medium p-2 text-white" style={{ backgroundColor: '#007ad9', borderRadius: '6px' }} />
-                            <p className="text-sm text-gray-300 line-height-3 mb-0 mt-5">10 computations per month. Consider the sign on bonus of each card. Access to our advanced travel features.</p>
+                            <p className="text-sm text-gray-300 line-height-3 mb-0 mt-5">Perfect for exploring the platform's benefits, with no long-term commitment. Enjoy all the features for just $10 per month.</p>
                         </div>
                     </div>
 
                     {/* Yearly Plan */}
-                    <div className="w-full lg:w-4 p-3">
+                    <div className="w-full lg:w-6 p-3">
                         <div className="shadow-2 p-3 h-full flex flex-column bg-gray-700 text-white" style={{ borderRadius: '6px' }}>
                             <div className="flex flex-row justify-content-between mb-5 align-items-center">
                                 <div className="text-white text-xl font-medium">Yearly - Unlimited</div>
-                                <span className="bg-orange-500 text-white font-semibold px-2 py-1 border-round">🎉 Save 50%</span>
+                                <span className="bg-orange-500 text-white font-semibold px-2 py-1 border-round">🎉 Save 50% Annually Compared to Flex</span>
                             </div>
                             <div className="flex align-items-center mb-5">
                                 <span className="text-white font-bold text-5xl">$60</span>
                                 <span className="font-medium text-gray-400 ml-2">per year</span>
                             </div>
                             <Button label="Proceed Yearly" onClick={() => handleCheckout("unlimited")} icon="pi pi-arrow-right" iconPos="right" className="lg:w-full font-medium p-2 text-white" style={{ backgroundColor: '#007ad9', borderRadius: '6px' }} />
-                            <p className="text-sm text-gray-300 line-height-3 mb-0 mt-5">Unlimited computations. Consider the sign on bonus of each card. Access to our advanced travel features.</p>
+                            <p className="text-sm text-gray-300 line-height-3 mb-0 mt-5">Designed for committed users who want ongoing access to every tool and feature, all at a reduced rate of $60 per year.</p>
                         </div>
                     </div>
                 </div>
+                <Button label="Go Back" onClick={() => window.location.href = 'https://cardmath.ai/'} className="p-button-lg p-button-rounded p-button-secondary" icon="pi pi-arrow-left" iconPos="left" />
             </div>
-            <Footer />
         </div>
     );
 }
