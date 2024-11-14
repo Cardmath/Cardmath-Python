@@ -29,10 +29,8 @@ const UsagePlanComponent = ({ onBack }) => {
                     icon: 'pi pi-exclamation-triangle',
                     accept: () => {
                         setProcessingError(false);
-                        window.location.href = 'https://cardmath.ai/dashboard';
                     },
                     reject: () => {
-                        window.location.reload();
                         setProcessingError(false);
                     },
                 });
@@ -128,17 +126,6 @@ const UsagePlanComponent = ({ onBack }) => {
                         </p>
                     </div>
                 </div>
-            </div>
-
-            {/* Back Button */}
-            <div className="mt-4">
-                <Button
-                    label="Go Back"
-                    onClick={onBack}
-                    className="p-button-lg p-button-rounded p-button-secondary"
-                    icon="pi pi-arrow-left"
-                    iconPos="left"
-                />
             </div>
         </div>
     );

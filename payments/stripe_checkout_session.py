@@ -20,6 +20,9 @@ class Product(str, Enum):
 class CheckoutSessionRequest(BaseModel):    
     product: Product
 
+class CheckoutSessionIDRequest(BaseModel):
+    session_id: str
+
 class CheckoutSessionResponse(BaseModel):
     url: str
 
@@ -38,7 +41,6 @@ PRODUCT_PRICE_AMOUNTS = {
     Product.unlimited: 6000,
     Product.limited: 3000
 }
-
 def create_checkout_session(db: Session, current_user: User, request: CheckoutSessionRequest) -> CheckoutSessionResponse:
     if request.product == Product.free:
         raise HTTPException(status_code=400, detail="Free tier does not require checkout.")
@@ -61,16 +63,15 @@ def create_checkout_session(db: Session, current_user: User, request: CheckoutSe
         )
         price_id = price.id
     
-    # Create the checkout session with the price ID
     session = stripe.checkout.Session.create(
         line_items=[{
             'price': price_id,
             'quantity': 1,
         }],
         mode='subscription',
-        success_url=f'https://cardmath.ai/dashboard',
-        cancel_url='https://cardmath.ai/dashboard',
-        customer_email=current_user.email  # optional: links customer to Stripe account
+        success_url=f'https://cardmath.ai/registration-steps?session_id={{CHECKOUT_SESSION_ID}}',
+        cancel_url='https://cardmath.ai/registration-steps?payment_status=cancelled',
+        customer_email=current_user.email
     )
 
     return CheckoutSessionResponse(url=session.url)
@@ -118,3 +119,14 @@ def handle_subscription_upgrade(db: Session, user_id: int, product: Product):
         update_subscription_status(db, user_id=user_id, status="unlimited", computations=None)
     elif product == Product.limited:
         update_subscription_status(db, user_id=user_id, status="limited", computations=10)
+
+def get_checkout_session(request: CheckoutSessionIDRequest):
+    try:
+        session = stripe.checkout.Session.retrieve(request.session_id)
+        payment_status = session.payment_status  # 'paid', 'unpaid', or 'no_payment_required'
+        
+        return {
+            "payment_status": payment_status
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

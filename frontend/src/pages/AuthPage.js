@@ -13,12 +13,13 @@ import TermsOfUseDialog from '../components/TermsOfUseDialog';
 const AuthPage = ({ userHasAccount }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState(''); // New state variable
     const [checked3, setChecked3] = useState(false);
     const [passwordValid, setPasswordValid] = useState(false);
     const [usernameValid, setUsernameValid] = useState(false);
     const [alert, setAlert] = useState({ visible: false, message: '', heading: '', type: 'error' });
     const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
-    const [showTermsDialog, setShowTermsDialog] = useState(false); // New state for Terms dialog visibility
+    const [showTermsDialog, setShowTermsDialog] = useState(false); // For Terms dialog visibility
 
     const authEndpoint = userHasAccount 
         ? 'https://backend-dot-cardmath-llc.uc.r.appspot.com/token' 
@@ -33,11 +34,14 @@ const AuthPage = ({ userHasAccount }) => {
         setPasswordValid(strongPasswordRegex.test(newPassword));
     };
 
+    const handleConfirmPasswordChange = (newPassword) => {
+        setConfirmPassword(newPassword);
+    };
+
     const handleUsernameChange = (newUsername) => {
         setUsername(newUsername);
         setUsernameValid(isEmailRegex.test(newUsername));
     };
-
 
     const handleAuth = () => {
         if (!userHasAccount && !passwordValid) {
@@ -57,6 +61,16 @@ const AuthPage = ({ userHasAccount }) => {
         }
 
         if (!userHasAccount) {
+            // Check if passwords match
+            if (password !== confirmPassword) {
+                setAlert({
+                    visible: true,
+                    message: 'Passwords do not match. Please make sure both passwords are identical.',
+                    type: 'error',
+                    heading: 'Password Mismatch',
+                });
+                return;
+            }
             setShowTermsDialog(true);
             return;
         }
@@ -145,7 +159,7 @@ const AuthPage = ({ userHasAccount }) => {
 
     const register_footer = (
         <div className='pt-2'>
-            <b>Pick a Strong password</b>
+            <b>Pick a Strong Password</b>
             <ul>
                 <li>Password must be at least 8 characters long</li>
                 <li>Include at least one uppercase letter</li>
@@ -171,7 +185,7 @@ const AuthPage = ({ userHasAccount }) => {
             <Alert visible={alert.visible} message={alert.message} type={alert.type} heading={alert.heading} setVisible={(visible) => setAlert({ ...alert, visible })}/>
             <div className="flex flex-wrap lg:flex-nowrap p-4">
                 <div className="w-full lg:w-6 p-4 lg:p-7" style={{ backgroundColor: 'rgba(255,255,255,.7)' }}>
-                    <img src="logos/svg/Black logo - no background.svg" alt="Cardmath Logo" height="50" className="mb-6" />
+                <img src="logos/svg/Black logo - no background.svg" alt="Cardmath Logo" height="50" className="mb-6" />
                     <div className="text-xl text-black-alpha-90 font-medium mb-3">Welcome to Cardmath</div>
                     <p className="text-black-alpha-50 line-height-3 mt-0 mb-6">
                         Choose your credit card more intelligently by matching it to your spending habits and lifestyle needs.
@@ -232,7 +246,7 @@ const AuthPage = ({ userHasAccount }) => {
                         <>
                             <label htmlFor="password" className="block text-900 font-medium mb-2">Password</label>
                             <Password
-                                footer={register_footer}
+                                footer={userHasAccount ? null : register_footer}
                                 tabIndex={0}
                                 value={password}
                                 feedback={!userHasAccount}
@@ -244,14 +258,34 @@ const AuthPage = ({ userHasAccount }) => {
                                 toggleMask
                             />
 
+                            {/* Confirm Password Field for Registration */}
+                            {!userHasAccount && (
+                                <>
+                                    <label htmlFor="confirmPassword" className="block text-900 font-medium mb-2">Confirm Password</label>
+                                    <Password
+                                        tabIndex={0}
+                                        value={confirmPassword}
+                                        feedback={false}
+                                        id="confirmPassword"
+                                        type="text"
+                                        placeholder="Confirm Password"
+                                        className="w-full mb-4"
+                                        onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+                                        toggleMask
+                                    />
+                                </>
+                            )}
+
                             <div className="flex align-items-center justify-content-between mb-6">
                                 <div className="flex align-items-center">
                                     <Checkbox id="rememberme3" className="mr-2" checked={checked3} onChange={(e) => setChecked3(e.checked)} />
                                     <label htmlFor="rememberme3">Remember me</label>
                                 </div>
-                                <a onClick={() => setForgotPasswordMode(true)} className="font-medium no-underline ml-2 text-blue-500 text-right cursor-pointer">
-                                    Forgot password?
-                                </a>
+                                {userHasAccount && (
+                                    <a onClick={() => setForgotPasswordMode(true)} className="font-medium no-underline ml-2 text-blue-500 text-right cursor-pointer">
+                                        Forgot password?
+                                    </a>
+                                )}
                             </div>
 
                             <Button label={userHasAccount ? "Login" : "Register"} icon="pi pi-user" className="bg-blue-500 text-white w-full" onClick={handleAuth}/>
@@ -275,7 +309,11 @@ const AuthPage = ({ userHasAccount }) => {
 
                     {!forgotPasswordMode && (
                         <div className="mt-6 text-center text-600">
-                            Don't have an account? <a href="/register" tabIndex="0" className="font-medium text-blue-500">Sign up</a>
+                            {userHasAccount ? (
+                                <>Don't have an account? <a href="/register" tabIndex="0" className="font-medium text-blue-500">Sign up</a></>
+                            ) : (
+                                <>Already have an account? <a href="/login" tabIndex="0" className="font-medium text-blue-500">Login</a></>
+                            )}
                         </div>
                     )}
                 </div>

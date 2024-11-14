@@ -20,9 +20,9 @@ const VerifyEmailComponent = ({ onSuccess }) => {
         if (!token) {
             setAlert({
                 visible: true,
-                message: 'Verification token is missing.',
-                type: 'error',
-                heading: 'Error',
+                message: 'Check your email for the verification link.',
+                type: 'info',
+                heading: 'Verification Email Sent',
             });
             return;
         }
@@ -86,7 +86,7 @@ const VerifyEmailComponent = ({ onSuccess }) => {
     };
     return (
         <div className='flex flex-column'>
-            <div className="flex pt-6 pb-2 text-white font-bold text-6xl">Verify Your Email</div>
+            <div className="flex pt-6 pb-4 text-white font-bold text-6xl">Verify Your Email</div>
             <Alert
                 visible={alert.visible}
                 message={alert.message}
@@ -95,17 +95,12 @@ const VerifyEmailComponent = ({ onSuccess }) => {
                 setVisible={(visible) => setAlert({ ...alert, visible })}
             />
             <div className="w-4 mt-4">
-                {alert.visible && alert.type === 'info' && (
-                    <p>Please wait while we verify your email...</p>
-                )}
-                {alert.visible && alert.type === 'error' && (
-                    <Button
-                        className="p-button p-component p-button-danger"
-                        onClick={() => window.location.reload()}
+                <Button
+                        className="p-button p-component"
+                        onClick={() => retryVerification()}
                         label="Retry Verification"
                         size='large'
                     />
-                )}
             </div>
         </div>
     );
