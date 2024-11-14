@@ -189,10 +189,10 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
             <div id="teller-connect"></div>
             {!showSpinner && !processingError && (
                 <div className="flex flex-column align-items-center">
-                    <p>
+                    <p className='text-2xl'>
                         Cardmath utilizes Teller Connect to securely link users' bank accounts, ensuring that only transaction data is accessed. Teller Connect is a client-side UI component that facilitates the connection between users' financial accounts and applications like Cardmath. It manages credential validation, multi-factor authentication, account selection, and error handling for various financial institutions. 
                     </p> 
-                    <p>
+                    <p className='text-2xl'>
                         By integrating Teller Connect, Cardmath ensures that sensitive financial information is handled securely and that users have control over their data. Cardmath commits to never selling user data to third parties, and users retain full rights to their information, deciding how it is utilized.
                     </p>
                     <Button

@@ -79,6 +79,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
     const moveToNextTab = () => {
         const currentIndex = tabOrder.indexOf(activeTab);
         if (currentIndex < tabOrder.length - 1) {
+            sendPreferences();
             setActiveTab(tabOrder[currentIndex + 1]);
         }
     };
@@ -86,6 +87,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
     const moveToPreviousTab = () => {
         const currentIndex = tabOrder.indexOf(activeTab);
         if (currentIndex > 0) {
+            sendPreferences();
             setActiveTab(tabOrder[currentIndex - 1]);
         } else {
             // If on the first tab, call onBack to go to the previous step
@@ -435,7 +437,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         label="Save and Continue"
                                         icon="pi pi-arrow-right"
                                         iconPos="right"
-                                        onClick={sendPreferences}
+                                        onClick={moveToNextTab}
                                     />
                                 </div>
                             </div>
@@ -501,7 +503,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         label="Save and Continue"
                                         icon="pi pi-arrow-right"
                                         iconPos="right"
-                                        onClick={sendPreferences}
+                                        onClick={moveToNextTab}
                                     />
                                 </div>
                             </div>
@@ -556,7 +558,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         label="Save and Continue"
                                         icon="pi pi-arrow-right"
                                         iconPos="right"
-                                        onClick={sendPreferences}
+                                        onClick={moveToNextTab}
                                     />
                                 </div>
                             </div>
@@ -613,7 +615,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         label="Save and Continue"
                                         icon="pi pi-arrow-right"
                                         iconPos="right"
-                                        onClick={sendPreferences}
+                                        onClick={moveToNextTab}
                                     />
                                 </div>
                             </div>
