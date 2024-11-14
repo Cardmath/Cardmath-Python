@@ -39,7 +39,7 @@ class Wallet(Base):
     __tablename__ = 'wallets'
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     user = relationship("User", back_populates="wallets")
     name = Column(String, nullable=False)
     last_edited = Column(Date, nullable=False)
