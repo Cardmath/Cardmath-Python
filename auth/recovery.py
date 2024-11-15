@@ -44,14 +44,14 @@ def send_verification_email(email: str, verification_link: str):
     message = MIMEMultipart()
     message["From"] = smtp_email
     message["To"] = email
-    message["Subject"] = "Email Verification Required"
+    message["Subject"] = "Cardmath - Email Verification Required"
     
     body = f"""
     <p>Hi,</p>
-    <p>Thank you for registering with us. Please verify your email by clicking the link below:</p>
+    <p>Thank you for registering with Cardmath! Please verify your email by clicking the link below:</p>
     <p><a href="{verification_link}">Verify your email</a></p>
-    <p>If you did not register for this account, please ignore this email or contact support.</p>
-    <p>Best regards,<br>Your Support Team</p>
+    <p>If you did not register for this account, please ignore this email or contact support by replying to this email.</p>
+    <p>Best regards,<br>Cardmath Support</p>
     """
     message.attach(MIMEText(body, "html"))
 
@@ -121,14 +121,14 @@ def send_reset_email(email: str, reset_link: str):
     message = MIMEMultipart()
     message["From"] = smtp_email
     message["To"] = email
-    message["Subject"] = "Password Reset Request"
+    message["Subject"] = "Cardmath - Password Reset Request"
     
     body = f"""
     <p>Hi,</p>
     <p>To reset your password, click the link below:</p>
     <p><a href="{reset_link}">Reset your password</a></p>
-    <p>If you did not request a password reset, please ignore this email or contact support.</p>
-    <p>Best regards,<br>CardMath Support Team</p>
+    <p>If you did not request a password reset, please ignore this email or contact support by relying to this email.</p>
+    <p>Best regards,<br>Cardmath Support</p>
     """
     message.attach(MIMEText(body, "html"))
 

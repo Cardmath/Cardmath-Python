@@ -1,6 +1,16 @@
 runtime: nodejs22
 
 handlers:
+  # Serve favicon explicitly
+  - url: /favicon\.ico
+    static_files: build/favicon.ico
+    upload: build/favicon.ico
+
+  # Serve manifest, robots.txt, and other root-level assets directly
+  - url: /(manifest\.json|robots\.txt)
+    static_files: build/\1
+    upload: build/(manifest\.json|robots\.txt)
+
   # Serve all files in /static (JavaScript, CSS, etc.) directly from the build/static directory
   - url: /static
     static_dir: build/static
@@ -13,11 +23,6 @@ handlers:
   - url: /(.*\.pdf)
     static_files: build/\1
     upload: build/(.*\.pdf)
-
-  # Serve favicon, manifest, and other root-level assets directly
-  - url: /(favicon\.ico|manifest\.json|robots\.txt)
-    static_files: build/\1
-    upload: build/(favicon\.ico|manifest\.json|robots\.txt)
 
   # Serve other assets in the build directory, like images, icons, etc.
   - url: /(.*\.(ico|png|svg|json|txt|jpg|jpeg|webp))

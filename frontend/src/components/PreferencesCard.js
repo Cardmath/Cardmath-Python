@@ -336,7 +336,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                     <div className="bg-gray-300 col-8 fadein animation-duration-100 p-5 shadow-2 border-round">
                         <div className="text-900 font-medium text-xl mt-3">Credit Profile</div>
                         <Divider></Divider>
-                        <div className="flex-auto block gap-5 flex-column-reverse font-light text-lg text-500 md:flex-row">
+                        <div className="flex-auto block gap-5 flex-column-reverse font-light text-lg text-gray-900 md:flex-row">
                             Our service doesn’t require a credit check, so your credit score won’t be affected.
                             Explore our offerings with confidence, knowing your credit remains untouched.
                             Don’t know your credit score? We recommend checking it through sites like:
@@ -370,13 +370,13 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                 .
                             </div>
                         </div>
-                        <div className="flex gap-5 flex-column-reverse text-lg text-500 sm:flex-row">
+                        <div className="flex gap-5 flex-column-reverse text-lg text-gray-900 sm:flex-row">
                             <div className="flex-auto p-fluid">
                                 <div className="pt-5">
                                     <FloatLabel>
                                         <label
                                             htmlFor="creditScore"
-                                            className="block text-medium text-900 mb-2"
+                                            className="block text-lg text-gray-900 text-900 mb-2"
                                         >
                                             Approximate Credit Score
                                         </label>
@@ -398,7 +398,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                     <FloatLabel>
                                         <label
                                             htmlFor="salary"
-                                            className="block text-medium text-900 mb-2"
+                                            className="block text-lg text-gray-900 text-900 mb-2"
                                         >
                                             Approximate Salary (USD)
                                         </label>
@@ -417,7 +417,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                     </FloatLabel>
                                 </div>
                                 <div className="mb-4 mb-2">
-                                    <label className="block text-medium mb-2">Lifestyle</label>
+                                    <label className="block text-lg text-gray-900 mb-2">Lifestyle</label>
                                     <Dropdown
                                         className="p-1 w-6"
                                         value={selectedLifestyle}
@@ -449,14 +449,14 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                     <div className="bg-gray-300 col-8 fadein animation-duration-100 p-5 shadow-2 border-round">
                         <div className="text-900 font-medium text-xl mt-3">Favorite Banks</div>
                         <Divider></Divider>
-                        <div className="font-light text-lg text-500 mb-3">
+                        <div className="font-light text-lg text-gray-900 mb-3">
                             Tell us your preferred banks (and ones to avoid) for tailored credit card
                             recommendations!
                         </div>
                         <div className="flex gap-5 flex-column-reverse md:flex-row">
                             <div className="flex-auto p-fluid">
                                 <div className="mb-4">
-                                    <label className="block text-medium mb-2">
+                                    <label className="block text-lg text-gray-900 mb-2">
                                         Banks you have Accounts with
                                     </label>
                                     <MultiSelect
@@ -469,7 +469,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                     />
                                 </div>
                                 <div className="mb-4">
-                                    <label className="block text-medium mb-2">Preferred Banks</label>
+                                    <label className="block text-lg text-gray-900 mb-2">Preferred Banks</label>
                                     <MultiSelect
                                         value={selectedBanks}
                                         onChange={(e) => setSelectedBanks(e.value)}
@@ -480,7 +480,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                     />
                                 </div>
                                 <div className="mb-4">
-                                    <label htmlFor="avoidBanks" className="block text-medium mb-2">
+                                    <label htmlFor="avoidBanks" className="block text-lg text-gray-900 mb-2">
                                         Banks to Avoid
                                     </label>
                                     <MultiSelect
@@ -515,14 +515,14 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                     <div className="bg-gray-300 col-8 fadein animation-duration-100 p-5 shadow-2 border-round">
                         <div className="text-900 font-medium text-xl mt-3">Rewards Programs</div>
                         <Divider></Divider>
-                        <div className="font-light text-lg text-500 mb-3">
+                        <div className="font-light text-lg text-gray-900 mb-3">
                             Pick your preferred points systems (and ones to avoid) for tailored credit
                             card recommendations!
                         </div>
                         <div className="flex gap-5 flex-column-reverse md:flex-row">
                             <div className="flex-auto p-fluid">
                                 <div className="mb-4">
-                                    <label className="block text-medium mb-2">
+                                    <label className="block text-base text-gray-900 mb-2">
                                         Preferred Rewards Programs
                                     </label>
                                     <MultiSelect
@@ -535,7 +535,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                     />
                                 </div>
                                 <div className="mb-4">
-                                    <label htmlFor="avoidRewards" className="block text-medium mb-2">
+                                    <label htmlFor="avoidRewards" className="block text-lg text-gray-900 mb-2">
                                         Rewards Programs to Avoid
                                     </label>
                                     <MultiSelect
@@ -572,14 +572,14 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                             Shopping & Dining Preferences
                         </div>
                         <Divider></Divider>
-                        <div className="font-light text-lg text-500 mb-3">
+                        <div className="font-light text-lg text-gray-900 mb-3">
                             Share your dining and shopping preferences, and we’ll find the right card to
                             match your taste!
                         </div>
                         <div className="flex gap-5 flex-column-reverse md:flex-row">
                             <div className="flex-auto p-fluid">
                                 <div className="mb-4">
-                                    <label className="block text-medium mb-2">
+                                    <label className="block text-lg text-gray-900 mb-2">
                                         Favorite Grocery Stores
                                     </label>
                                     <MultiSelect
@@ -592,7 +592,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                     />
                                 </div>
                                 <div className="mb-4">
-                                    <label htmlFor="shopping" className="block text-medium mb-2">
+                                    <label htmlFor="shopping" className="block text-lg text-gray-900 mb-2">
                                         Favorite General Goods Stores
                                     </label>
                                     <MultiSelect
@@ -627,14 +627,14 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                     <div className="bg-gray-300 col-8 fadein animation-duration-100 p-5 shadow-2 border-round">
                         <div className="text-900 font-medium text-xl mt-3">Business Needs</div>
                         <Divider></Divider>
-                        <div className="font-light text-lg text-500 mb-3">
+                        <div className="font-light text-lg text-gray-900 mb-3">
                             Tell us your business needs, and we’ll find the card that works as hard as you
                             do!
                         </div>
                         <div className="flex gap-5 flex-column-reverse md:flex-row">
                             <div className="flex-auto p-fluid">
                                 <div className="mb-4">
-                                    <label className="block text-medium mb-2">
+                                    <label className="block text-lg text-gray-900 mb-2 ">
                                         How Big is Your Business
                                     </label>
                                     <Dropdown
@@ -646,7 +646,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                     />
                                 </div>
                                 <div className="mb-4">
-                                    <label htmlFor="industries" className="block text-medium mb-2">
+                                    <label htmlFor="industries" className="block text-lg text-gray-900 mb-2">
                                         What Industries Does Your Business Operate In
                                     </label>
                                     <MultiSelect

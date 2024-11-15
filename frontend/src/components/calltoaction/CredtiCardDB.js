@@ -11,14 +11,15 @@ const CreditCardDBCallToAction = () => {
                     <div className="text-blue-300">Transparent</div>
                     <div className="text-white">Database of Credit Cards</div>
                 </div>
-                <div className="text-gray-300 mb-4 px-4 md:px-0">
+                <div className="text-gray-300 text-xl mb-4 px-4 md:px-0">
                     We maintain a complete database of Credit Cards, and we pay you if you upload your Credit Card agreements!
                 </div>
                 <div className="flex flex-column md:flex-row justify-content-center md:justify-content-start align-items-center">
                     <Button
                         onClick={() => window.location.href = "https://cardmath.ai/creditcards"}
-                        className="px-5 py-3 font-bold mb-3 md:mb-0 mx-4"
+                        className="px-5 py-3 font-bold mb-3"
                         label="Explore the Database"
+                        size='large'
                     />
                 </div>
             </div>

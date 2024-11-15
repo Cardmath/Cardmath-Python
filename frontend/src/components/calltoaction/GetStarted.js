@@ -11,8 +11,8 @@ const GetStartedCallToAction = () => {
             </div>
 
             {/* Text content on the right side for large screens, below the image on small screens */}
-            <div className="text-center lg:text-left md:text-left lg:ml-8 w-full md:w-6 p-4 md:p-0">
-                <div className="text-white font-bold text-3xl md:text-6xl mb-2 md:mb-3">
+            <div className="text-center text-xl lg:text-left md:text-left lg:ml-8 w-full md:w-6 p-4 md:p-0">
+                <div className="text-white font-bold text-3xl md:text-6xl">
                     Ready to find
                 </div>
                 <div className="text-green-300 font-bold text-3xl md:text-6xl mb-4 md:mb-6">
@@ -21,7 +21,7 @@ const GetStartedCallToAction = () => {
                 <div className="text-gray-200 font-medium mb-4 md:mb-6">
                     Connect a bank account for free to earn more with what you spend.
                 </div>
-                <Button label="Get Started" className="bg-green-300 text-gray-900 font-bold px-5 py-3" />
+                <Button size="large" label="Get Started" className="bg-green-300 text-gray-900 font-bold px-5 py-3" />
             </div>
         </div>
     );

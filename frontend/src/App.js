@@ -13,6 +13,8 @@ import CreditCardDatabase from './pages/CreditCardDatabase';
 import ContactUsPage from './pages/ContactUsPage';
 import ResetPassword from './pages/ResetPasswordPage';
 import RegistrationFlowPage from './pages/RegistrationFlowPage';
+import ArticleDetailPage from './components/articles/ArticleDetailPage';
+import BlogPage from './pages/BlogPage';
 
 const App = () => {
     return (
@@ -29,6 +31,8 @@ const App = () => {
                 <Route path='/contact-us' element={<ContactUsPage />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/registration-steps" element={<RegistrationFlowPage />} />
+                <Route path="/articles/:id" element={<ArticleDetailPage/>} />
+                <Route path="/blog" element={<BlogPage/>} />
             </Routes>
         </Router>
     );
