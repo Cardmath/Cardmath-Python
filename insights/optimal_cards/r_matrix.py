@@ -123,6 +123,24 @@ async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocat
         else:
             annual_fee_values[idx] = 0.0
 
+    annual_statement_credits = [0.0] * C
+    for idx in range(C):
+        if idx >= wallet_size:
+            card = ccs_added[idx - wallet_size]
+        else:
+            card = ccs_used[idx]
+
+        total_credit = 0.0
+        # Compute annual statement credits
+        if card.statement_credit:
+            for statement_credit in card.statement_credit:
+                if statement_credit.timeframe_months > 0:
+                    periods_per_year = 12 / statement_credit.timeframe_months
+                    credit_per_period = statement_credit.credit_amount * statement_credit.max_uses * RewardUnit.get_value(statement_credit.unit)
+                    annual_credit = periods_per_year * credit_per_period
+                    total_credit += annual_credit
+        
+        annual_statement_credits[idx] = total_credit
 
     return RMatrixDetails(
         R=R,
@@ -132,6 +150,7 @@ async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocat
         to_use = request.to_use,
         ccs_used=ccs_used,
         annual_fees=annual_fee_values,
+        annual_statement_credits=annual_statement_credits,
         timeframe=heavy_hitters_response.timeframe,
         categories=categories,
         card_names=card_names,

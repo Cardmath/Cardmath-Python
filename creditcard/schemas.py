@@ -44,8 +44,9 @@ class CardRatingsScrapeSchema(BaseModel):
         apr = await get_apr(self.unparsed_card_attributes)
         sign_on_bonus = await get_sign_on_bonus(self.unparsed_card_attributes)
         annual_fee = await get_annual_fee(self.unparsed_card_attributes)
-
+        statement_credit = await get_statement_credit(self.unparsed_card_attributes, card_tile=name)
         keywords = await get_keywords(self.unparsed_card_attributes, name)
+
         return CreditCardSchema(name=name, 
                           issuer=issuer,
                           benefits=benefits,
@@ -54,6 +55,7 @@ class CardRatingsScrapeSchema(BaseModel):
                           sign_on_bonus=sign_on_bonus,
                           apr=apr,
                           annual_fee=annual_fee,
+                          statement_credit=statement_credit,
                           primary_reward_unit=primary_reward_unit,
                           keywords=keywords)
         
@@ -75,6 +77,7 @@ class CreditCardSchema(BaseModel):
     apr : List[APR]
     sign_on_bonus : Optional[List[ConditionalSignOnBonus]] = None
     annual_fee: Optional[AnnualFee] = None
+    statement_credit: List[PeriodicStatementCredit]
     primary_reward_unit: RewardUnit
     keywords: List[CreditCardKeyword]
 
@@ -135,6 +138,7 @@ class CreditCardSchema(BaseModel):
                           apr=TypeAdapter(List[APR]).dump_python(self.apr),
                           annual_fee = self.annual_fee.model_dump(),
                           keywords= TypeAdapter(List[CreditCardKeyword]).dump_python(self.keywords),
+                          statement_credit=TypeAdapter(List[PeriodicStatementCredit]).dump_python(self.statement_credit),
                           primary_reward_unit=self.primary_reward_unit)
 
 class CreditCardsFilter(BaseModel):

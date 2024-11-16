@@ -51,7 +51,10 @@ async def parse(request: ParseRequest, db: Session) -> ParseResponse:
     cc_schema_error_count = 0
     cc_orm_error_count = 0
 
-    for extracted_cc in extracted_ccs:
+    for idx, extracted_cc in enumerate(extracted_ccs):
+        if (idx + 1) > request.max_items_to_parse:
+            break
+        
         total_attempts += 1
         try:
             parsed_cc = await extracted_cc.credit_card_schema()

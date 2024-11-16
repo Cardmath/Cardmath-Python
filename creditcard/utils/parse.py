@@ -112,7 +112,6 @@ class APRResponse(BaseModel):
 async def get_apr(card_description):
     prompt = apr_prompt(card_description)
     apr: APRResponse = await structure_with_openai(prompt=prompt, response_format=apr_response_format(), schema=APRResponse)
-    print(f"APR: {apr.apr_list}")
     return apr.apr_list
 
 class AnnualFee(BaseModel):
@@ -148,3 +147,29 @@ async def get_keywords(card_description, card_tile : str = ""):
     prompt = card_keywords_prompt("Card: " + card_tile + "\n" + card_description)
     keywords: CreditCardKeywordResponse = await structure_with_openai(prompt, response_format=card_keywords_response_format(), schema=CreditCardKeywordResponse)
     return keywords.card_keywords
+
+class PeriodicStatementCredit(BaseModel): 
+    credit_amount: float # in dollars
+    unit: RewardUnit 
+    categories: List[PurchaseCategory] # purchase categories where the statement credit can be used
+    vendors: List[Vendors] # stores where the statement credit can be used
+    timeframe_months: int
+    max_uses: int
+
+    description: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator('timeframe_months', mode="before")
+    def timeframe_must_be_reasonable(cls, v):
+        if v < 0:
+            raise ValueError('Timeframe must be positive to be reasonable')
+        return v
+
+class PeriodicStatementCreditResponse(BaseModel):
+    periodic_statement_credit: List[PeriodicStatementCredit]
+
+async def get_statement_credit(card_description, card_tile : str = ""):
+    prompt = statement_credit_prompt("Card: " + card_tile + "\n" + card_description)
+    periodic_statement_credit_response: PeriodicStatementCreditResponse = await structure_with_openai(prompt, response_format=periodic_statement_credit_response_format(), schema=PeriodicStatementCreditResponse)
+    return periodic_statement_credit_response.periodic_statement_credit

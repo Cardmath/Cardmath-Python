@@ -330,3 +330,83 @@ def card_keywords_response_format():
                 "strict": True
             },
         }
+
+def statement_credit_prompt(card_attributes):
+    return f"""
+    Your task is to extract any and all annual statement credits described in the following credit card details.
+    Note that statement credits which are associated with sign-on bonuses are not considered statement credits.
+    We have a separate sign on bonus object, and you should ignore sign on bonuses for this object. It is fine if the list is empty. 
+
+    Here is the text describing a credit card that you need to analyze:
+    "{card_attributes}"
+
+    """
+
+def periodic_statement_credit_response_format():
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "periodic_statement_credit_response",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "periodic_statement_credit": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "credit_amount": {"type": "number"},
+                                "unit": {
+                                    "type": "string",
+                                    "enum": [
+                                        unit.value for unit in RewardUnit if unit != RewardUnit.UNKNOWN and unit != RewardUnit.PERCENT_CASHBACK_USD
+                                    ],
+                                    "description": "The unit of the statement credit, usually dollars",
+                                },
+                                "categories": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": [
+                                            category.value
+                                            for category in PurchaseCategory
+                                            if category != PurchaseCategory.UNKNOWN
+                                        ],
+                                    },
+                                    "description": "Purchase Categories that the statement credit can be spent on.",    
+                                },
+                                "vendors": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": [
+                                            vendor.value
+                                            for vendor in Vendors
+                                            if vendor != Vendors.UNKNOWN
+                                        ],
+                                    },
+                                    "description": "Vendors that the statement credit can be spent at.",
+                                },
+                                "timeframe_months": {"type": "integer", "description": "Number of months the credit is valid for, before it disappears. MUST BE GREATER THAN ZERO."},
+                                "max_uses": {"type": "integer", "description": "Number of times the credit can be used"},
+                                "description": {"type": "string", "description": "Human readable description of the statement credit (amount, condition, timeframe, etc.)"},
+                            },
+                            "required": [
+                                "credit_amount",
+                                "unit",
+                                "categories",
+                                "vendors",
+                                "timeframe_months",
+                                "max_uses",
+                                "description",
+                            ],
+                            "additionalProperties": False,
+                        },
+                    },
+                },
+                "required": ["periodic_statement_credit"],
+                "additionalProperties": False,
+            },
+            "strict": True,
+        },
+    }

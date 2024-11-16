@@ -5,21 +5,34 @@ from pyscipopt import Model, quicksum
 from typing import Dict, Tuple
 
 import creditcard.enums as enums
+import logging
 import numpy as np
 
-
-def initialize_model(rmatrix: RMatrixDetails):
+def initialize_model(rmatrix: RMatrixDetails, credit_values: np.ndarray):
     model = Model("credit_card_selection")
 
     C, H = rmatrix.R.shape
     x = {(i, j): model.addVar(vtype="C", lb=0.0, name=f"x[{i},{j}]") for i in range(C) for j in range(H)}
     z = {i: model.addVar(vtype="B", name=f"z[{i}]") for i in range(C)}
 
-    """Add constraints to ensure total spending in each category does not exceed projected spending."""
+    # Define auxiliary variables for statement credit reductions
+    credit_reduction = {(i, j): model.addVar(vtype="C", lb=0.0, name=f"credit_reduction[{i},{j}]") for i in range(C) for j in range(H)}
 
+    # Link auxiliary variables to statement credits
+    for i in range(C):
+        for j in range(H):
+            model.addCons(
+                credit_reduction[(i, j)] <= credit_values[i, j] * z[i],
+                name=f"CreditReductionBound[{i},{j}]"
+            )
+
+    # Adjust spending constraints using auxiliary variables
     H_vector: np.array = rmatrix.heavy_hitter_vector
-
     for j in range(H):
+        model.addCons(
+            quicksum(x[(i, j)] for i in range(C)) - quicksum(credit_reduction[(i, j)] for i in range(C)) >= 0,
+            name=f"NonNegativeSpending_Category_{j}"
+        )
         model.addCons(
             quicksum(x[(i, j)] for i in range(C)) <= H_vector[j],
             name=f"TotalSpending_Category_{j}"
@@ -30,15 +43,14 @@ def initialize_model(rmatrix: RMatrixDetails):
         for j in range(H):
             model.addCons(x[(i, j)] <= M * z[i], name=f"Linking_{i}_{j}")
 
-    """Add constraints for the maximum number of cards allowed to be used and added."""
+    # Add constraints for the maximum number of cards allowed to be used and added
     wallet_indices = list(range(rmatrix.wallet_size))
     eligible_indices = list(range(rmatrix.wallet_size, rmatrix.wallet_size + len(rmatrix.ccs_added)))
     
     model.addCons(quicksum(z[i] for i in wallet_indices) <= rmatrix.to_use, name="MaxHeldCards")
     model.addCons(quicksum(z[i] for i in eligible_indices) <= rmatrix.to_add, name="MaxAddedCards")
         
-    return model, x, z
-
+    return model, x, z, credit_reduction
 
 def add_linking_constraints(model: Model, rmatrix : RMatrixDetails, x: Dict[Tuple[int, int], Model], z: Dict[int, Model]):
     """Link spending variables (x) with binary usage variables (z) using a large constant M."""
@@ -124,6 +136,49 @@ def consider_annual_fee(model: Model, z: Dict[int, Model], rmatrix: RMatrixDetai
         objective_terms.append(-annual_fee * z[i])
     return objective_terms
 
+def precompute_credit_values(rmatrix: RMatrixDetails) -> np.ndarray:
+    """
+    Precompute the annualized statement credit values for each card-category pair.
+
+    Args:
+        rmatrix (RMatrixDetails): Contains the reward matrix and associated metadata.
+
+    Returns:
+        np.ndarray: A 2D array of annualized statement credit values for each card and category.
+    """
+    logging.info("Starting precomputation of annualized statement credit values.")
+    
+    C, H = rmatrix.R.shape
+    credit_values = np.zeros((C, H))
+
+    for i in range(C):
+        card = None
+        wallet_size = rmatrix.wallet_size
+        if i >= wallet_size:
+            card = rmatrix.ccs_added[i - wallet_size]
+        else:
+            card = rmatrix.ccs_used[i]
+            
+        for j in range(H):
+            category = rmatrix.categories[j]
+            statement_credits = card.statement_credit
+            
+            # Calculate the credit value for this card-category pair
+            credit_values[i, j] = sum(
+                sc.credit_amount * min(sc.max_uses, calculate_timeframe_months(rmatrix.timeframe) / sc.timeframe_months) * calculate_timeframe_years(rmatrix.timeframe) * (12 / sc.timeframe_months)
+                for sc in statement_credits
+                if not sc.categories or category in sc.categories 
+            )
+            
+            logging.debug(
+                f"Card: {card.name}, Category: {category}, "
+                f"Statement Credits Applied: {len(statement_credits)}, "
+                f"Credit Value: {credit_values[i, j]}"
+            )
+
+    logging.info("Completed precomputation of statement credit values.")
+    return credit_values
+
 def consider_sign_on_bonus(model: Model, x: Dict[Tuple[int, int], Model], z: Dict[int, Model], rmatrix: RMatrixDetails):
     '''
     Outputs s_il dict
@@ -187,16 +242,28 @@ def consider_sign_on_bonus(model: Model, x: Dict[Tuple[int, int], Model], z: Dic
 
 def setup_model(request: OptimalCardsAllocationRequest, rmatrix: RMatrixDetails) -> Model:
     """Initialize the model, add decision variables, constraints, and objective terms."""
-    # initialization
-    model, x, z = initialize_model(rmatrix=rmatrix)
+    # Precompute credit values for statement credits
+    credit_values = precompute_credit_values(rmatrix=rmatrix)
 
+    # Initialize model
+    model, x, z, credit_reduction = initialize_model(rmatrix=rmatrix, credit_values=credit_values)
+
+    # Add terms for rewards, annual fees, and statement credits
     y_vars, rc_terms = consider_reward_category(model=model, x=x, rmatrix=rmatrix)
     annual_fee_terms = consider_annual_fee(model=model, z=z, rmatrix=rmatrix)
+
+    # Add statement credits directly to the objective
+    statement_credit_terms = [
+        credit_reduction[(i, j)]
+        for i in range(rmatrix.R.shape[0])
+        for j in range(rmatrix.R.shape[1])
+    ]
 
     s_il, sob_terms = {}, []
     if request.use_sign_on_bonus:    
         s_il, sob_terms = consider_sign_on_bonus(model=model, x=x, z=z, rmatrix=rmatrix)
     
-    model.setObjective(quicksum(annual_fee_terms + sob_terms + rc_terms), "maximize")
+    # Set the objective function
+    model.setObjective(quicksum(annual_fee_terms + sob_terms + rc_terms + statement_credit_terms), "maximize")
     
-    return model, x, z, s_il
+    return model, x, z, s_il, credit_reduction

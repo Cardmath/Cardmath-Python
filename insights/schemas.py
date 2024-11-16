@@ -160,6 +160,7 @@ class OptimalCardsAllocationRequest(BaseModel):
     timeframe: Optional[MonthlyTimeframe] = None
     use_sign_on_bonus: bool = False
     return_cards_used: Optional[bool] = False
+    use_all_wallet_cards: Optional[bool] = False
     return_cards_added: Optional[bool] = False
 
 class CardsUseSummary(BaseModel):
@@ -186,6 +187,7 @@ class OptimalCardsAllocationSolution(BaseModel):
     total_reward_usd: float
     total_regular_rewards_usd: float
     total_sign_on_bonus_usd: float
+    total_statement_credits_usd: float
     total_annual_fees_usd: float
     net_rewards_usd: float
 
@@ -212,6 +214,7 @@ class RMatrixDetails(BaseModel):
 
     card_sob_data: dict
     annual_fees: List[float]
+    annual_statement_credits: List[float]
     
     timeframe: MonthlyTimeframe
     categories: List[str]

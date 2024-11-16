@@ -100,6 +100,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
             end_month: moment(selectedDate[1]).startOf('month').format('YYYY-MM-DD')
           } : null,
           return_cards_used: true,
+          use_all_wallet_cards: true,
         };
 
         if (selectedWalletState) {
@@ -127,6 +128,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
         setAllTimeSavings(data.total_reward_usd);
         setNetRewardsCurrent(data.net_rewards_usd);
         setTotalRegularRewardsCurrent(data.total_regular_rewards_usd);
+        setTotalAnnualFeesCurrent(data.total_annual_fees_usd);
       } catch (error) {
         console.error('Error fetching current cards optimal allocation:', error);
       }
@@ -404,7 +406,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
               <div className="text-3xl pb-2 text-center">Your Held Cards</div>
               {cardsHeld.length === 0 ? (
                 <Card title="No Credit Cards detected" className="w-9 py-3 bg-pink-200 border-3 shadow-2 surface-border border-round">
-                  <p className="m-0">We couldn't detect any credit cards associated with your account.</p>
+                  <p className="m-0">We couldn't detect any credit cards associated with this wallet.</p>
                 </Card>
               ) : (
                 <Carousel

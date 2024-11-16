@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 async def optimize_credit_card_selection_milp(db: Session, user: User, request: OptimalCardsAllocationRequest) -> OptimalCardsAllocationResponse:
     # Step 1: Compute the reward matrix
     rmatrix: RMatrixDetails = await compute_r_matrix(db=db, user=user, request=request)
-    model, x, z, s_il = setup_model(request=request, rmatrix=rmatrix)
+    model, x, z, s_il, credit_reduction = setup_model(request=request, rmatrix=rmatrix)
     
     solutions = []
     for i in range(request.num_solutions):
@@ -24,7 +24,8 @@ async def optimize_credit_card_selection_milp(db: Session, user: User, request: 
             rmatrix=rmatrix,
             x=x,
             z=z,
-            s_il=s_il
+            s_il=s_il, 
+            credit_reduction=credit_reduction
         )
         
         # Don't send duplicate solutions
