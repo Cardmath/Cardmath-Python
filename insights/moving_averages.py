@@ -7,34 +7,52 @@ from typing import List
 
 import pandas as pd
 import teller.utils as teller_utils
+import logging
 
-async def compute_categories_moving_averages(request: CategoriesMovingAveragesRequest, user: User, db: Session) -> CategoriesMovingAveragesResponse:  
+async def compute_categories_moving_averages(
+    request: CategoriesMovingAveragesRequest, 
+    user: User, 
+    db: Session
+) -> CategoriesMovingAveragesResponse:  
 
-    accounts: List[Account] = [] 
+    # Initialize Teller client and fetch accounts
     teller_client = teller_utils.Teller() 
-    accounts: List[Account] = await teller_client.get_list_enrollments_accounts(enrollments=user.enrollments, db=db)
+    accounts: List[Account] = await teller_client.get_list_enrollments_accounts(
+        enrollments=user.enrollments, 
+        db=db
+    )
 
     if len(accounts) == 0:
-        print(f"[INFO] No accounts found for user {user.id}")
+        logging.warning(f"No accounts found for user {user.id}")
         return CategoriesMovingAveragesResponse(vendors=[], categories=[])
 
-    all_transactions = []
-    for account in accounts:
-        account_transactions: List[Transaction] = []
-        if request.account_ids == "all" or account.id in request.account_ids :
-            query = account.transactions
-            if isinstance(request.date_range, tuple) and len(request.date_range) == 2:
-                query.filter(Transaction.date.between(request.date_range[0], request.date_range[1]) and Transaction.status == "posted")
+    # Initialize transaction list
+    all_transactions: List[Transaction] = []
 
-        account_transactions = query.all()
+    for account in accounts:
+        if request.account_ids != "all" and account.id not in request.account_ids:
+            logging.debug(f"Skipping account {account.id}")
+            continue
+
+        query = account.transactions.filter(
+            Transaction.type.notin_(["ach", "transfer", "withdrawal", "atm", "deposit", "wire", "interest", "digital_payment"])
+        )
+        
+        if isinstance(request.date_range, tuple) and len(request.date_range) == 2:
+            query = query.filter(Transaction.date.between(request.date_range[0], request.date_range[1]))
+
+        query = query.filter(Transaction.status == "posted")
+
+        account_transactions: List[Transaction] = query.all()
         
         if len(account_transactions) == 0:
-            print(f"[WARNING] No transactions found for account {account.id}")
-        else :
-            print(f"[INFO] Found {len(account_transactions)} transactions for account {account.id}")
+            logging.warning(f"No transactions found for account {account.id}")
+        else:
+            logging.debug(f"Found {len(account_transactions)} transactions for account {account.id}")
         
+        # Add to the aggregate list
         all_transactions.extend(account_transactions)
-    
+
     # Parse the List of transactions into a pandas dataframe 
     df = pd.DataFrame([ TransactionSchema.model_validate(transaction).model_dump() for transaction in all_transactions])
 
@@ -79,5 +97,5 @@ async def compute_categories_moving_averages(request: CategoriesMovingAveragesRe
         moving_averages_series.append(MovingAveragesSeries(name=category, moving_average=category_df['moving_average'].to_list()))
 
     # Return the results as a CategoriesMovingAveragesResponse
-    print(f"[INFO] Found {len(moving_averages_series)} categories")
+    logging.debug(f"Found {len(moving_averages_series)} categories")
     return CategoriesMovingAveragesResponse(dates=results.index.to_list(), categories=moving_averages_series)
