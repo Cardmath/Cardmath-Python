@@ -35,18 +35,6 @@ class CCEligibleTransactionsResponse(BaseModel):
 def get_user_cc_eligible_transactions(accounts: List[Account], date_range: Optional[Tuple[str, str]] = None) -> CCEligibleTransactionsResponse:
     """
     Retrieve credit card eligible transactions for a user's accounts using the specified filter.
-
-    Args:
-        accounts (List[Account]): List of user accounts.
-        date_range (Optional[Tuple[str, str]]): Optional start and end dates for filtering transactions.
-
-    Returns:
-        Dict: A dictionary containing the list of eligible transactions and the oldest and newest transaction dates.
-            {
-                "transactions": List[Transaction],
-                "oldest_date": Optional[str],
-                "newest_date": Optional[str]
-            }
     """
     ineligible_types = ["ach", "transfer", "withdrawal", "atm", "deposit", "wire", "interest", "digital_payment"]
     all_transactions = []
