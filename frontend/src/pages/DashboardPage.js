@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Ripple } from 'primereact/ripple';
 import { fetchWithAuth } from './AuthPage';
+import { Tooltip } from 'primereact/tooltip';
 import HeavyHitterPieChart from '../components/HeavyHitterPieChart';
 import ChartSlider from "../components/LineChart/LineChartWrapper";
 import ConnectBanks from '../components/calltoaction/ConnectBanks';
@@ -154,7 +155,8 @@ const DashboardPage = () => {
                             selectedWallet={selectedWallet} 
                             wallets={wallets} 
                         />
-                        <CategorizationMeter progressSummary={categorizationProgressSummary} />                        
+                        <Tooltip className='w-3' target=".categorization-meter" position="bottom"/>
+                        <CategorizationMeter className="categorization-meter" data-pr-tooltip="In order to make recommendations, we need your transactions to be categorized. Non-Eligible transactions cannot be made with credit cards. Examples of Non-Eligible transactions are: ATM withdrawals, ACH transfers, etc. . You may have to wait for our systems categorize your transactions." progressSummary={categorizationProgressSummary} />                        
                         <div className="grid align-content-end py-2">
                             <div className="col-5 shadow-2 surface-card border-round">
                                 {heavyHittersCategories.length > 0 && <HeavyHitterPieChart heavyHitters={heavyHittersCategories} dateRange={dateRange} />}
