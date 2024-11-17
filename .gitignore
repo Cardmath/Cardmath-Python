@@ -10,3 +10,5 @@ bin
 **/*venv*/
 milp_debug.lp
 **/*teller_keys*/
+**/*cloudsql_keys*/
+*.pem
