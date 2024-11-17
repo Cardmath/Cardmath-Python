@@ -82,11 +82,17 @@ class HeavyHitterSchema(BaseModel):
         if v not in {category.value for category in enums.PurchaseCategory}:
             v = enums.PurchaseCategory.UNKNOWN
         return v
+    
+class CategorizationProgressSummary(BaseModel):
+    categorized_cc_eligible_count: int
+    uncategorized_cc_eligible_count: int
+    non_cc_eligible_count: int
 
 class HeavyHittersResponse(BaseModel):
     total: Optional[int] = None
     heavyhitters: List[HeavyHitterSchema]
     timeframe: MonthlyTimeframe
+    categorization_progress_summary: CategorizationProgressSummary
 
     @field_validator("total")
     @classmethod

@@ -1,8 +1,8 @@
 from collections import defaultdict
 from database.auth.user import Account
 from database.auth.user import User
-from database.teller.transactions import Transaction, Counterparty
-from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema, VENDOR_CONST, CATEGORY_CONST
+from database.teller.transactions import Transaction
+from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema, VENDOR_CONST, CATEGORY_CONST, CategorizationProgressSummary
 from insights.schemas import MonthlyTimeframe
 from insights.utils import get_user_cc_eligible_transactions, CCEligibleTransactionsResponse
 from pydantic import TypeAdapter
@@ -120,8 +120,7 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
                 out_hh.append(HeavyHitterSchema(type=CATEGORY_CONST, category=hh, percent=percent, amount=amount))
                 categories += 1
         logging.debug(f"[INFO] Found {vendors} vendors and {categories} categories in heavy hitters.")  
-        return HeavyHittersResponse(heavyhitters=out_hh, timeframe=MonthlyTimeframe(start_month=cc_eligible_txns_response.oldest_date, end_month=cc_eligible_txns_response.newest_date))
-
+        return HeavyHittersResponse(heavyhitters=out_hh, timeframe=MonthlyTimeframe(start_month=cc_eligible_txns_response.oldest_date, end_month=cc_eligible_txns_response.newest_date), categorization_progress_summary=cc_eligible_txns_response.categorization_progress_summary)
 
 def get_transaction_category_and_vendor(transaction: Union[Transaction, TransactionSchema]) -> Union[tuple[enums.Vendors, enums.PurchaseCategory], enums.PurchaseCategory]:
     transaction = TransactionSchema.model_validate(transaction)

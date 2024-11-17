@@ -6,6 +6,7 @@ import ChartSlider from "../components/LineChart/LineChartWrapper";
 import ConnectBanks from '../components/calltoaction/ConnectBanks';
 import OptimalAllocationSavingsCard from '../components/OptimalAllocationSavingsCard';
 import WalletDisplay from '../components/WalletDisplay';
+import CategorizationMeter from '../components/CategorizationMeter';
 
 const DashboardPage = () => {
     const [pageView, setPageView] = useState('home');
@@ -18,6 +19,12 @@ const DashboardPage = () => {
     const [isMovingAveragesReady, setIsMovingAveragesReady] = useState(false);
     const [heavyHittersCategories, setHeavyHittersCategories] = useState([]);
     const [dateRange, setDateRange] = useState([null, null]);
+
+    const [categorizationProgressSummary, setCategorizationProgressSummary] = useState({
+        categorized_cc_eligible_count: 0,
+        uncategorized_cc_eligible_count: 0,
+        non_cc_eligible_count: 0
+    });
 
     const [selectedWallet, setSelectedWallet] = useState(null);
 
@@ -87,8 +94,14 @@ const DashboardPage = () => {
                 account_ids: "all",
                 date_range: dateRange
             })
-        }).then(response => response.json())
-            .then(data => setHeavyHittersCategories(data.heavyhitters))
+        })
+            .then(response => response.json())
+            .then(data => {
+                setHeavyHittersCategories(data.heavyhitters);
+                if (data.categorization_progress_summary) {
+                    setCategorizationProgressSummary(data.categorization_progress_summary);
+                }
+            })
             .catch(error => console.log(error));
     }, [dateRange]);
 
@@ -141,6 +154,7 @@ const DashboardPage = () => {
                             selectedWallet={selectedWallet} 
                             wallets={wallets} 
                         />
+                        <CategorizationMeter progressSummary={categorizationProgressSummary} />                        
                         <div className="grid align-content-end py-2">
                             <div className="col-5 shadow-2 surface-card border-round">
                                 {heavyHittersCategories.length > 0 && <HeavyHitterPieChart heavyHitters={heavyHittersCategories} dateRange={dateRange} />}

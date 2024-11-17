@@ -1,9 +1,9 @@
-from insights.schemas import MonthlyTimeframe, OptimalCardsAllocationSolution
+from insights.schemas import MonthlyTimeframe, OptimalCardsAllocationSolution, CategorizationProgressSummary
 from database.auth.user import Account
 from typing import List, Optional, Tuple, Dict
 from database.teller.transactions import Transaction
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy.orm import Query
+from sqlalchemy.orm import Query    
 
 import datetime
 
@@ -29,8 +29,9 @@ class CCEligibleTransactionsResponse(BaseModel):
     transactions: List[Transaction]
     oldest_date: Optional[datetime.date]
     newest_date: Optional[datetime.date]
+    categorization_progress_summary: CategorizationProgressSummary
 
-    model_config = ConfigDict(arbitrary_types_allowed=True) 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 def get_user_cc_eligible_transactions(accounts: List[Account], date_range: Optional[Tuple[str, str]] = None) -> CCEligibleTransactionsResponse:
     """
@@ -38,15 +39,29 @@ def get_user_cc_eligible_transactions(accounts: List[Account], date_range: Optio
     """
     ineligible_types = ["ach", "transfer", "withdrawal", "atm", "deposit", "wire", "interest", "digital_payment"]
     all_transactions = []
+    categorized_cc_eligible_count = 0
+    uncategorized_cc_eligible_count = 0
+    non_cc_eligible_count = 0
 
     for account in accounts:
-        query: Query = account.transactions.filter(Transaction.type.notin_(ineligible_types))
+        # Filter out ineligible transactions
+        query: Query = account.transactions
 
         if date_range:
             query = query.filter(Transaction.date.between(date_range[0], date_range[1]))
 
         account_transactions = query.all()
-        all_transactions.extend(account_transactions)
+
+        for transaction in account_transactions:
+            transaction_category = transaction.details.category if transaction.details else None
+            if transaction.type in ineligible_types:
+                non_cc_eligible_count += 1
+            elif transaction_category not in ["general", "unknown", None]:
+                categorized_cc_eligible_count += 1
+                all_transactions.append(transaction)
+            elif transaction_category in ["general", "unknown", None]:
+                uncategorized_cc_eligible_count += 1
+                all_transactions.append(transaction)
 
     # Extract oldest and newest transaction dates
     if all_transactions:
@@ -57,4 +72,13 @@ def get_user_cc_eligible_transactions(accounts: List[Account], date_range: Optio
         oldest_date = None
         newest_date = None
 
-    return CCEligibleTransactionsResponse(transactions=all_transactions, oldest_date=oldest_date, newest_date=newest_date)
+    return CCEligibleTransactionsResponse(
+        transactions=all_transactions,
+        oldest_date=oldest_date,
+        newest_date=newest_date,
+        categorization_progress_summary=CategorizationProgressSummary(
+            categorized_cc_eligible_count=categorized_cc_eligible_count,
+            uncategorized_cc_eligible_count=uncategorized_cc_eligible_count,
+            non_cc_eligible_count=non_cc_eligible_count
+        )
+    )
