@@ -1,13 +1,13 @@
 from database.auth.user import Account, User
-from database.teller.transactions import Transaction
 from insights.schemas import MovingAveragesSeries, CategoriesMovingAveragesRequest, CategoriesMovingAveragesResponse
+from insights.utils import get_user_cc_eligible_transactions
 from sqlalchemy.orm import Session
 from teller.schemas import TransactionSchema
 from typing import List
 
+import logging
 import pandas as pd
 import teller.utils as teller_utils
-import logging
 
 async def compute_categories_moving_averages(
     request: CategoriesMovingAveragesRequest, 
@@ -26,35 +26,18 @@ async def compute_categories_moving_averages(
         logging.warning(f"No accounts found for user {user.id}")
         return CategoriesMovingAveragesResponse(vendors=[], categories=[])
 
-    # Initialize transaction list
-    all_transactions: List[Transaction] = []
+    # Use the utility function to retrieve eligible transactions
+    date_range = request.date_range if isinstance(request.date_range, tuple) and len(request.date_range) == 2 else None
+    result = get_user_cc_eligible_transactions(accounts, date_range)
+    all_transactions = result.transactions
+    oldest_date = result.oldest_date
+    newest_date = result.newest_date
 
-    for account in accounts:
-        if request.account_ids != "all" and account.id not in request.account_ids:
-            logging.debug(f"Skipping account {account.id}")
-            continue
-
-        query = account.transactions.filter(
-            Transaction.type.notin_(["ach", "transfer", "withdrawal", "atm", "deposit", "wire", "interest", "digital_payment"])
-        )
-        
-        if isinstance(request.date_range, tuple) and len(request.date_range) == 2:
-            query = query.filter(Transaction.date.between(request.date_range[0], request.date_range[1]))
-
-        query = query.filter(Transaction.status == "posted")
-
-        account_transactions: List[Transaction] = query.all()
-        
-        if len(account_transactions) == 0:
-            logging.warning(f"No transactions found for account {account.id}")
-        else:
-            logging.debug(f"Found {len(account_transactions)} transactions for account {account.id}")
-        
-        # Add to the aggregate list
-        all_transactions.extend(account_transactions)
+    logging.info(f"Found {len(all_transactions)} total transactions.")
+    logging.info(f"Oldest transaction date: {oldest_date}, Newest transaction date: {newest_date}")
 
     # Parse the List of transactions into a pandas dataframe 
-    df = pd.DataFrame([ TransactionSchema.model_validate(transaction).model_dump() for transaction in all_transactions])
+    df = pd.DataFrame([TransactionSchema.model_validate(transaction).model_dump() for transaction in all_transactions])
 
     # Step 1: Filter transactions to only include the desired types
     df = df[df['type'].isin(['card_payment', 'digital_payment', 'bill_payment', 'fee'])]

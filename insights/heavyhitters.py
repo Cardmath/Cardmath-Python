@@ -4,13 +4,16 @@ from database.auth.user import User
 from database.teller.transactions import Transaction, Counterparty
 from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema, VENDOR_CONST, CATEGORY_CONST
 from insights.schemas import MonthlyTimeframe
+from insights.utils import get_user_cc_eligible_transactions, CCEligibleTransactionsResponse
 from pydantic import TypeAdapter
 from sqlalchemy.orm import Session
 from teller.schemas import TransactionSchema
 from typing import List
 from typing import Union
+
 import creditcard.enums as enums
 import teller.utils as teller_utils
+import logging
 
 class TwoPassHeavyHitters:
     def __init__(self, k, key=None, value=None):
@@ -91,57 +94,33 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
         teller_client = teller_utils.Teller() 
         accounts: List[Account] = await teller_client.get_list_enrollments_accounts(enrollments=user.enrollments, db=db)
         
-        start_date=None
-        end_date = None
-        if request.timeframe:
-            start_date = request.timeframe.start_month
-            end_date = request.timeframe.end_month
-
         if len(accounts) == 0:
-            print(f"[INFO] No accounts found for user {user.id}")
+            logging.info(f"[INFO] No accounts found for user {user.id}")
             return HeavyHittersResponse(vendors=[], heavyhitters=[])
         
+        date_range = None
+        if request.timeframe:
+            date_range = (request.timeframe.start_month, request.timeframe.end_month)
+
+        cc_eligible_txns_response: CCEligibleTransactionsResponse = get_user_cc_eligible_transactions(accounts, date_range)
         
-        all_transactions: List[TransactionSchema] = []
-        for account in accounts:
-            if request.account_ids != "all" and account.id not in request.account_ids:
-                print(f"[INFO] Skipping account {account.id}")
-                continue
-            
-            transactions: List[Transaction] = []
-            if (request.account_ids == "all") or (account.id in request.account_ids):
-                query = account.transactions.filter(Transaction.type.notin_(["ach", "transfer", "withdrawal", "atm", "deposit", "wire", "interest", "digital_payment"]))
-                if request.timeframe:
-                    query = query.filter(Transaction.date.between(request.timeframe.start_month, request.timeframe.end_month))
-                if not start_date or not end_date:
-                    start_date = query.order_by(Transaction.date.asc()).first().date
-                    end_date = query.order_by(Transaction.date.desc()).first().date
-                    query = query.filter(Transaction.date.between(start_date, end_date))
-                transactions = query.all()
-            if len(transactions) == 0:
-                print(f"[WARNING] No transactions found for account {account.id}")
-            else :
-                print(f"[INFO] Found {len(transactions)} transactions for account {account.id}")
-            
-            all_transactions.extend(TypeAdapter(List[TransactionSchema]).validate_python(transactions))
-        
-        print(f"[INFO] Found {len(all_transactions)} total transactions.")
+        logging.debug(f"Found {len(cc_eligible_txns_response.transactions)} total transactions for user {user.email}.")
         hh_two_pass = TwoPassHeavyHitters(k=200, key=get_transaction_category_and_vendor, value=get_transaction_amount)
-        hh: dict[str, tuple] = hh_two_pass.heavy_hitters(all_transactions)
+        hh: dict[str, tuple] = hh_two_pass.heavy_hitters(cc_eligible_txns_response.transactions)
 
         out_hh = []
         categories = 0
         vendors = 0
         for hh, (percent, amount) in hh.items():
-            print(f"Heavy Hitter: {hh}, percent: {percent}, amount: {amount}")
+            logging.debug(f"Heavy Hitter: {hh}, percent: {percent}, amount: {amount}")
             if hh in {vendor.value for vendor in enums.Vendors}:
                 out_hh.append(HeavyHitterSchema(type=VENDOR_CONST, name=hh, category=enums.Vendors.get_category(hh), percent=percent, amount=amount))
                 vendors += 1
             elif hh in {category.value for category in enums.PurchaseCategory}:
                 out_hh.append(HeavyHitterSchema(type=CATEGORY_CONST, category=hh, percent=percent, amount=amount))
                 categories += 1
-        print(f"[INFO] Found {vendors} vendors and {categories} categories in heavy hitters.")  
-        return HeavyHittersResponse(heavyhitters=out_hh, timeframe=MonthlyTimeframe(start_month=start_date, end_month=end_date))
+        logging.debug(f"[INFO] Found {vendors} vendors and {categories} categories in heavy hitters.")  
+        return HeavyHittersResponse(heavyhitters=out_hh, timeframe=MonthlyTimeframe(start_month=cc_eligible_txns_response.oldest_date, end_month=cc_eligible_txns_response.newest_date))
 
 
 def get_transaction_category_and_vendor(transaction: Union[Transaction, TransactionSchema]) -> Union[tuple[enums.Vendors, enums.PurchaseCategory], enums.PurchaseCategory]:
