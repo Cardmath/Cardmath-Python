@@ -1,4 +1,4 @@
-from creditcard.schemas import CreditCardSchema, RewardCategoryRelation, CardLookupSchema
+from creditcard.schemas import CreditCardSchema, RewardCategoryRelation, CardLookupSchema, CreditCardRecommendationSchema
 from datetime import date
 from pydantic import BaseModel
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
@@ -168,6 +168,7 @@ class OptimalCardsAllocationRequest(BaseModel):
     return_cards_used: Optional[bool] = False
     use_all_wallet_cards: Optional[bool] = False
     return_cards_added: Optional[bool] = False
+    return_cards_dropped: Optional[bool] = False
 
 class CardsUseSummary(BaseModel):
     name: str 
@@ -201,8 +202,9 @@ class OptimalCardsAllocationSolution(BaseModel):
     summary: Optional[List[CardsUseSummary]] = None
     spending_plan: Optional[List[SpendingPlanItem]] = None
 
-    cards_used: Optional[List[CreditCardSchema]] = None
-    cards_added: Optional[List[CreditCardSchema]] = None
+    cards_used: Optional[List[CreditCardRecommendationSchema]] = None
+    cards_added: Optional[List[CreditCardRecommendationSchema]] = None
+    cards_dropped: Optional[List[CreditCardRecommendationSchema]] = None
 
 class OptimalCardsAllocationResponse(BaseModel):
     timeframe: MonthlyTimeframe

@@ -140,6 +140,26 @@ class CreditCardSchema(BaseModel):
                           keywords= TypeAdapter(List[CreditCardKeyword]).dump_python(self.keywords),
                           statement_credit=TypeAdapter(List[PeriodicStatementCredit]).dump_python(self.statement_credit),
                           primary_reward_unit=self.primary_reward_unit)
+    
+class CreditCardRecommendationSchema(CreditCardSchema):
+    status: CardAction
+
+    @classmethod
+    def from_credit_card_schema(cls, schema: CreditCardSchema, status: CardAction):
+        return cls(
+            name=schema.name,
+            issuer=schema.issuer,
+            reward_category_map=schema.reward_category_map,
+            benefits=schema.benefits,
+            credit_needed=schema.credit_needed,
+            apr=schema.apr,
+            sign_on_bonus=schema.sign_on_bonus,
+            annual_fee=schema.annual_fee,
+            statement_credit=schema.statement_credit,
+            primary_reward_unit=schema.primary_reward_unit,
+            keywords=schema.keywords,
+            status=status
+        )
 
 class CreditCardsFilter(BaseModel):
     id_in_db : Optional[List[int]]

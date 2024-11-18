@@ -292,3 +292,8 @@ class CreditCardKeyword(str, Enum):
     dining = "Dining"
     small_business = "Small Business"
     intro_apr = "Intro APR"
+
+class CardAction(str, Enum):
+    keep = "Keep this card"
+    cancel = "Cancel this card"
+    add = "Add this card"

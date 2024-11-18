@@ -35,6 +35,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
   const [useSignOnBonus, setUseSignOnBonus] = useState(false);
 
   const [cardsHeld, setCardsHeld] = useState([]);
+  const [cardsDrop, setCardsDrop] = useState([]);
   const [recommendedCards, setRecommendedCards] = useState([]);
 
   const [recommendedCardsBonusTotal, setRecommendedCardsBonusTotal] = useState(0);
@@ -148,6 +149,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
         } : null,          
         return_cards_added: true,
         return_cards_used: true,
+        return_cards_dropped: true,
         save_to_db: false
       };
 
@@ -188,6 +190,8 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
 
     setCardsHeld(data.cards_used);
     setRecommendedCards(data.cards_added);
+    setCardsDrop(data.cards_dropped);
+    
     setRecommendedCardsBonusTotal(data.total_reward_usd);
 
     setTimeframe(timeframe);
@@ -410,7 +414,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
                 </Card>
               ) : (
                 <Carousel
-                  value={cardsHeld}
+                  value={cardsHeld.concat(cardsDrop)}
                   numVisible={1}
                   numScroll={1}
                   itemTemplate={(e) => <CreditCardItemTemplate sizingCss="w-full" cardData={e} />}

@@ -2,6 +2,7 @@ from copy import deepcopy
 from creditcard.schemas import RewardCategoryRelation
 from insights.optimal_cards.r_matrix import RMatrixDetails
 from insights.schemas import OptimalCardsAllocationSolution, CardsUseSummary, SpendingPlanItem, OptimalCardsAllocationRequest
+from creditcard.schemas import CreditCardRecommendationSchema, CreditCardSchema
 
 import creditcard.enums as enums
 import logging 
@@ -30,7 +31,7 @@ def extract_solution(model, request: OptimalCardsAllocationRequest, rmatrix: RMa
     cards_added = []
     if request.return_cards_added:
         cards_added = [
-            rmatrix.ccs_added[idx - rmatrix.wallet_size]
+            CreditCardRecommendationSchema.from_credit_card_schema(CreditCardSchema.model_validate(rmatrix.ccs_added[idx - rmatrix.wallet_size]), status=enums.CardAction.add)
             for idx in selected_cards
             if idx in eligible_indices
         ]
@@ -39,10 +40,19 @@ def extract_solution(model, request: OptimalCardsAllocationRequest, rmatrix: RMa
     cards_used = []
     if request.return_cards_used:
         cards_used = [
-            rmatrix.ccs_used[idx]
+            CreditCardRecommendationSchema.from_credit_card_schema(CreditCardSchema.model_validate(rmatrix.ccs_used[idx]), status=enums.CardAction.keep)
             for idx in selected_cards
             if ((idx in wallet_indices) or request.use_all_wallet_cards)
         ]
+
+    cards_dropped = []
+    if request.return_cards_dropped:
+        cards_dropped = [
+            CreditCardRecommendationSchema.from_credit_card_schema(CreditCardSchema.model_validate(rmatrix.ccs_used[idx]), status=enums.CardAction.cancel)
+            for idx in wallet_indices
+            if idx not in selected_cards
+        ]
+        print(f"[INFO] {len(cards_dropped)} cards dropped of {len(wallet_indices)} in wallet")
 
     # Prepare summary and spending plan
     summary = []
@@ -148,5 +158,6 @@ def extract_solution(model, request: OptimalCardsAllocationRequest, rmatrix: RMa
         summary=summary,
         spending_plan=spending_plan,
         cards_used=cards_used,
-        cards_added=cards_added
+        cards_added=cards_added,
+        cards_dropped=cards_dropped
     )
