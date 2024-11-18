@@ -156,7 +156,7 @@ const DashboardPage = () => {
                             wallets={wallets} 
                         />
                         <Tooltip className='w-3' target=".categorization-meter" position="bottom"/>
-                        <CategorizationMeter className="categorization-meter" data-pr-tooltip="In order to make recommendations, we need your transactions to be categorized. Non-Eligible transactions cannot be made with credit cards. Examples of Non-Eligible transactions are: ATM withdrawals, ACH transfers, etc. . You may have to wait for our systems categorize your transactions." progressSummary={categorizationProgressSummary} />                        
+                        <CategorizationMeter className="categorization-meter" data-pr-tooltip="  Non-Eligible transactions cannot be made with credit cards. Examples of Non-Eligible transactions are: ATM withdrawals, ACH transfers, etc. . You may have to wait for our systems categorize your transactions." progressSummary={categorizationProgressSummary} />                        
                         <div className="grid align-content-end py-2">
                             <div className="col-5 shadow-2 surface-card border-round">
                                 {heavyHittersCategories.length > 0 && <HeavyHitterPieChart heavyHitters={heavyHittersCategories} dateRange={dateRange} />}
