@@ -8,6 +8,8 @@ import ConnectBanks from '../components/calltoaction/ConnectBanks';
 import OptimalAllocationSavingsCard from '../components/OptimalAllocationSavingsCard';
 import WalletDisplay from '../components/WalletDisplay';
 import CategorizationMeter from '../components/CategorizationMeter';
+import PreferencesCard from '../components/PreferencesCard';
+import Alert from '../components/Alert';
 
 const DashboardPage = () => {
     const [pageView, setPageView] = useState('home');
@@ -28,6 +30,8 @@ const DashboardPage = () => {
     });
 
     const [selectedWallet, setSelectedWallet] = useState(null);
+
+    const [alert, setAlert] = useState({visible: false, message: '', heading : '', type: 'error'});
 
     // Fetch wallets function
     const fetchWallets = () => {
@@ -134,10 +138,17 @@ const DashboardPage = () => {
                                     <Ripple />
                                 </a>
                             </li>
-                            <li onClick={() => window.location.href="https://cardmath.ai/preferences"}>
-                                <a className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-transparent hover:border-300 transition-duration-150 transition-colors">
+                            <li onClick={() => setPageView('preferences')}>
+                                <a className={`p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center ${pageView === 'preferences' ? 'text-cyan-600 border-left-2 border-cyan-600' : 'text-600 border-transparent hover:border-300'} transition-duration-150 transition-colors`}>
                                     <i className="pi pi-heart-fill mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
                                     <span className="font-medium inline text-base lg:text-xs lg:block">Preferences</span>
+                                    <Ripple />
+                                </a>
+                            </li>
+                            <li onClick={() => setPageView('settings')}>
+                                <a className="p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center text-600 border-transparent hover:border-300 transition-duration-150 transition-colors">
+                                    <i className="pi pi-cog mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
+                                    <span className="font-medium inline text-base lg:text-xs lg:block">Settings</span>
                                     <Ripple />
                                 </a>
                             </li>
@@ -193,6 +204,19 @@ const DashboardPage = () => {
                         <p className="text-lg text-center">
                             Tell us your favorite destinations and when you want to go, and we'll calculate the cheapest, fastest, and most comfortable way to get you there!
                         </p>
+                    </div>
+                )}
+
+                {pageView === 'preferences' && (
+                    <div className="p-4 gap-4 surface-ground">
+                        <Alert 
+                            visible={alert.visible} 
+                            message={alert.message} 
+                            type={alert.type} 
+                            heading={alert.heading} 
+                            setVisible={(visible) => setAlert({ ...alert, visible })}
+                        />
+                        <PreferencesCard setAlert={setAlert}/>
                     </div>
                 )}
             </div>
