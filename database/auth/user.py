@@ -5,15 +5,15 @@ from sqlalchemy.orm import relationship
 user_credit_card_association = Table(
     'user_credit_card_association',
     Base.metadata,
-    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
-    Column('credit_card_id', Integer, ForeignKey('credit_cards.id'), primary_key=True)
+    Column('user_id', Integer, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True),
+    Column('credit_card_id', Integer, ForeignKey('credit_cards.id', ondelete='CASCADE'), primary_key=True)
 )
 
 wallet_card_association = Table(
     'wallet_new_card_association',
     Base.metadata,
-    Column('wallet_id', Integer, ForeignKey('wallets.id'), primary_key=True),
-    Column('credit_card_id', Integer, ForeignKey('credit_cards.id'), primary_key=True),
+    Column('wallet_id', Integer, ForeignKey('wallets.id', ondelete='CASCADE'), primary_key=True),
+    Column('credit_card_id', Integer, ForeignKey('credit_cards.id', ondelete='CASCADE'), primary_key=True),
     Column('is_held', Boolean, default=False, nullable=False, primary_key=False)
 )
 
@@ -26,11 +26,11 @@ class User(Base):
     full_name = Column(String, nullable=True)
     disabled = Column(Boolean, default=False)
     
-    subscription = relationship("Subscription", uselist=False, back_populates="user")
-    enrollments = relationship("Enrollment", back_populates="user")
+    subscription = relationship("Subscription", uselist=False, back_populates="user", cascade="all, delete-orphan")
+    enrollments = relationship("Enrollment", back_populates="user", cascade="all, delete-orphan")
     credit_cards = relationship("CreditCard", secondary=user_credit_card_association, back_populates="users")
-    preferences = relationship("Preferences", uselist=False)
-    wallets = relationship("Wallet", back_populates="user")
+    preferences = relationship("Preferences", uselist=False, cascade="all, delete-orphan")
+    wallets = relationship("Wallet", back_populates="user", cascade="all, delete-orphan")
 
 class UserInDB(User):
     hashed_password = Column(String, nullable=False)
@@ -39,7 +39,7 @@ class Wallet(Base):
     __tablename__ = 'wallets'
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     user = relationship("User", back_populates="wallets")
     name = Column(String, nullable=False)
     last_edited = Column(Date, nullable=False)
@@ -49,21 +49,21 @@ class Wallet(Base):
 class Enrollment(Base):
     __tablename__ = 'enrollments'
     
-    id = Column(String, primary_key=True, nullable=False)  # No unique constraint needed here
-    user_id = Column(Integer, ForeignKey('users.id'))
+    id = Column(String, primary_key=True, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
     access_token = Column(String, nullable=False)
     institution_name = Column(String, nullable=False)
     signatures = Column(JSON, nullable=False)
-    last_updated = Column(Date, nullable=False)  # Last updated time in minutes
+    last_updated = Column(Date, nullable=False)
     user = relationship("User", back_populates="enrollments")
     
-    accounts = relationship("Account", back_populates="enrollment")
+    accounts = relationship("Account", back_populates="enrollment", cascade="all, delete-orphan")    
     
 class Account(Base):
     __tablename__ = 'accounts'
     
-    id = Column(String, primary_key=True, index=True)  # Account ID from API Response
-    enrollment_id = Column(String, ForeignKey('enrollments.id'), nullable=False)  # Reference enrollments.id
+    id = Column(String, primary_key=True, index=True)
+    enrollment_id = Column(String, ForeignKey('enrollments.id', ondelete='CASCADE'), nullable=False)
     institution_name = Column(String, nullable=False)
     institution_id = Column(String, nullable=False)
     type = Column(String, nullable=False)
@@ -75,15 +75,15 @@ class Account(Base):
     status = Column(String, nullable=False)
     
     enrollment = relationship("Enrollment", back_populates="accounts")
-    transactions = relationship("Transaction", back_populates="account", lazy='dynamic')
+    transactions = relationship("Transaction", back_populates="account", cascade="all, delete-orphan")
 
 class Subscription(Base):
     __tablename__ = 'subscriptions'
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     
-    status = Column(String, nullable=False)  # e.g., 'unverified', 'verified-unpaid',  'limited', 'unlimited'
+    status = Column(String, nullable=False)
     start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
     

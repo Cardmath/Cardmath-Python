@@ -234,6 +234,10 @@ async def request_password_recovery_endpoint(request: PasswordResetRequest, db: 
 async def reset_password_endpoint(form_data: PasswordResetForm, db: Session = Depends(get_sync_db)):
     return await reset_password(token=form_data.token, new_password=form_data.new_password, db=db)
 
+@app.post("/delete-user-data")
+async def delete_user_data_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], db: Session = Depends(get_sync_db)):
+    return auth_crud.delete_user_data(user=current_user, db=db)
+
 @app.get("/api/issuers")
 def get_issuers():
     return [issuer.value for issuer in Issuer]

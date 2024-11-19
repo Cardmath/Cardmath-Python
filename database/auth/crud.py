@@ -167,3 +167,13 @@ def delete_subscription(db: Session, user_id: int) -> None:
     if subscription:
         db.delete(subscription)
         db.commit()
+
+def delete_user_data(user: User, db: Session):
+    # Fetch and delete all enrollments associated with the user
+    enrollments = db.query(Enrollment).filter(Enrollment.user_id == user.id).all()
+    
+    for enrollment in enrollments:
+        db.delete(enrollment)
+    
+    db.commit()
+    return {"msg": "User data deleted"}
