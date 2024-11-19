@@ -10,6 +10,7 @@ import WalletDisplay from '../components/WalletDisplay';
 import CategorizationMeter from '../components/CategorizationMeter';
 import PreferencesCard from '../components/PreferencesCard';
 import Alert from '../components/Alert';
+import SettingsPage from './SettingsPage';
 
 const DashboardPage = () => {
     const [pageView, setPageView] = useState('home');
@@ -219,6 +220,8 @@ const DashboardPage = () => {
                         <PreferencesCard setAlert={setAlert}/>
                     </div>
                 )}
+                
+                {pageView === 'settings' && <SettingsPage />}
             </div>
         </div>
     );
