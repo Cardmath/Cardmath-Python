@@ -28,7 +28,7 @@ async def compute_categories_moving_averages(
 
     # Use the utility function to retrieve eligible transactions
     date_range = request.date_range if isinstance(request.date_range, tuple) and len(request.date_range) == 2 else None
-    result = get_user_cc_eligible_transactions(accounts, date_range)
+    result = get_user_cc_eligible_transactions(db, accounts, date_range)
     all_transactions = result.transactions
     oldest_date = result.oldest_date
     newest_date = result.newest_date

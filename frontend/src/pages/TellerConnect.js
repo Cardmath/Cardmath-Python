@@ -9,6 +9,7 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
     const [showSpinner, setShowSpinner] = useState(false);
     const [processingError, setProcessingError] = useState(false);
     const [tellerConnectReady, setTellerConnectReady] = useState(false);
+    const [scriptLoadError, setScriptLoadError] = useState(false);
     const tellerConnectRef = useRef(null);
 
     const handleSuccess = async (data) => {
@@ -50,8 +51,8 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
             }
         } catch (error) {
             confirmDialog({
-                message: `Error enrolling with Teller Connect. The enrollment was not sent to our server. Please try again.`,
-                header: 'Error Enrolling with Teller Connect',
+                message: `A network error occurred while sending your enrollment data. Please check your internet connection and try again.`,
+                header: 'Network Error',
                 icon: 'pi pi-exclamation-triangle',
                 accept: () => {
                     setProcessingError(false);
@@ -64,7 +65,7 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
             });
             setProcessingError(true);
             console.log(
-                'Error enrolling with Teller Connect. The enrollment was not sent to our server. Please try again.'
+                'A network error occurred while sending your enrollment data. Please check your internet connection and try again.'
             );
             return; // Exit the function if there is an error
         }
@@ -84,7 +85,7 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
                     header: 'Error',
                     icon: 'pi pi-exclamation-triangle',
                     message:
-                        'An error occurred while processing the enrollment. Please try again.',
+                        'The server encountered an error while processing your enrollment. Please try again later.',
                     accept: () => {
                         setProcessingError(false);
                         window.location.href = 'https://cardmath.ai/dashboard';
@@ -95,7 +96,7 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
                 });
                 setProcessingError(true);
                 console.log(
-                    'An error occurred while processing the enrollment. Please try again.'
+                    'The server encountered an error while processing your enrollment. Please try again later.'
                 );
                 return; // Exit the function if response is not ok
             }
@@ -103,10 +104,10 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
             onSuccess();
         } catch (error) {
             confirmDialog({
-                header: 'Error',
+                header: 'Network Error',
                 icon: 'pi pi-exclamation-triangle',
                 message:
-                    'An error occurred while processing the enrollment. Please try again.',
+                    'A network error occurred while processing your enrollment. Please check your internet connection and try again.',
                 accept: () => {
                     setProcessingError(false);
                     window.location.href = 'https://cardmath.ai/dashboard';
@@ -117,7 +118,7 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
             });
             setProcessingError(true);
             console.log(
-                'An error occurred while processing the enrollment. Please try again.'
+                'A network error occurred while processing your enrollment. Please check your internet connection and try again.'
             );
         }
     };
@@ -150,8 +151,6 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
                             icon: 'pi pi-exclamation-triangle',
                             accept: () => {
                                 setProcessingError(false);
-                                // Optionally reopen Teller Connect
-                                // window.location.reload();
                             },
                             reject: () => {
                                 setProcessingError(false);
@@ -165,10 +164,12 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
                 console.error(
                     'TellerConnect is not defined. Make sure the script is loaded correctly.'
                 );
+                setScriptLoadError(true);
             }
         };
         script.onerror = () => {
             console.error('Failed to load the Teller Connect script.');
+            setScriptLoadError(true);
         };
         document.body.appendChild(script);
     }, []);
@@ -178,6 +179,19 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
             tellerConnectRef.current.open();
         } else {
             console.error('TellerConnect is not initialized.');
+            confirmDialog({
+                header: 'Error',
+                message: 'Teller Connect is not initialized. Please try again later.',
+                icon: 'pi pi-exclamation-triangle',
+                accept: () => {
+                    setProcessingError(false);
+                    window.location.href = 'https://cardmath.ai/dashboard';
+                },
+                reject: () => {
+                    setProcessingError(false);
+                },
+            });
+            setProcessingError(true);
         }
     };
 
@@ -187,13 +201,29 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
                 Connect Your Bank Account
             </div>
             <div id="teller-connect"></div>
-            {!showSpinner && !processingError && (
+            {scriptLoadError && (
+                <div className="error-message">
+                    <p className="text-2xl text-red-500">
+                        An error occurred while loading the Teller Connect component. Please check
+                        your internet connection and try again.
+                    </p>
+                </div>
+            )}
+            {!scriptLoadError && !showSpinner && !processingError && (
                 <div className="flex flex-column align-items-center">
-                    <p className='text-2xl'>
-                        Cardmath utilizes Teller Connect to securely link users' bank accounts, ensuring that only transaction data is accessed. Teller Connect is a client-side UI component that facilitates the connection between users' financial accounts and applications like Cardmath. It manages credential validation, multi-factor authentication, account selection, and error handling for various financial institutions. 
-                    </p> 
-                    <p className='text-2xl'>
-                        By integrating Teller Connect, Cardmath ensures that sensitive financial information is handled securely and that users have control over their data. Cardmath commits to never selling user data to third parties, and users retain full rights to their information, deciding how it is utilized.
+                    <p className="text-2xl">
+                        Cardmath utilizes Teller Connect to securely link users' bank accounts,
+                        ensuring that only transaction data is accessed. Teller Connect is a
+                        client-side UI component that facilitates the connection between users'
+                        financial accounts and applications like Cardmath. It manages credential
+                        validation, multi-factor authentication, account selection, and error
+                        handling for various financial institutions.
+                    </p>
+                    <p className="text-2xl">
+                        By integrating Teller Connect, Cardmath ensures that sensitive financial
+                        information is handled securely and that users have control over their data.
+                        Cardmath commits to never selling user data to third parties, and users
+                        retain full rights to their information, deciding how it is utilized.
                     </p>
                     <Button
                         label="Connect Bank Account"

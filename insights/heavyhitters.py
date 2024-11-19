@@ -102,7 +102,7 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
         if request.timeframe:
             date_range = (request.timeframe.start_month, request.timeframe.end_month)
 
-        cc_eligible_txns_response: CCEligibleTransactionsResponse = get_user_cc_eligible_transactions(accounts, date_range)
+        cc_eligible_txns_response: CCEligibleTransactionsResponse = get_user_cc_eligible_transactions(db, accounts, date_range)
         
         logging.debug(f"Found {len(cc_eligible_txns_response.transactions)} total transactions for user {user.email}.")
         hh_two_pass = TwoPassHeavyHitters(k=200, key=get_transaction_category_and_vendor, value=get_transaction_amount)
