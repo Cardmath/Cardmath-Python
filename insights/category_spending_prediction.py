@@ -32,7 +32,8 @@ async def get_average_monthly_purchases_three_months(user: User, db: Session) ->
 
     for account in accounts:
         transactions: List[Transaction] = []
-        query = account.transactions.filter(
+        query = db.query(Transaction).filter(
+            Transaction.account_id == account.id,
             Transaction.type.notin_(["ach", "transfer", "withdrawal", "atm", "deposit", "wire", "interest", "digital_payment"]),
             Transaction.date.between(start_date, end_date)
         )

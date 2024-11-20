@@ -249,3 +249,23 @@ def get_reward_units():
 @app.get("/api/keywords")
 def get_keywords():
     return [keyword.value for keyword in CreditCardKeyword]
+
+@app.get("/api/grocery_stores")
+def get_grocery_stores():
+    return [vendor.value for vendor in Vendors if Vendors.get_category(vendor) == PurchaseCategory.GROCERIES]
+
+@app.get("/api/general_goods_stores")
+def get_general_goods_stores():
+    return [vendor.value for vendor in Vendors if Vendors.get_category(vendor) == PurchaseCategory.SHOPPING]
+
+@app.get("/api/lifestyles")
+def get_lifestyles():
+    return [lifestyle.value for lifestyle in Lifestyle]
+
+@app.get("/api/industries")
+def get_industries():
+    return [industry.value for industry in IndustryType]
+
+@app.get("/api/business_sizes")
+def get_business_sizes():
+    return [size.value for size in BusinessSize]

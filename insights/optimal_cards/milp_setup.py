@@ -68,7 +68,6 @@ def consider_reward_category(model: Model, x: Dict[Tuple[int, int], Model], rmat
         reward_amount=0.0
     )
 
-    
     C, H = rmatrix.R.shape
     for i in range(C):
         card_name = rmatrix.card_names[i]
@@ -91,7 +90,10 @@ def consider_reward_category(model: Model, x: Dict[Tuple[int, int], Model], rmat
 
                 if threshold > 0 and per_timeframe_months > 0:
                     # Calculate how many times the threshold timeframe fits into the computation timeframe
-                    num_threshold_periods = max(1, calculate_timeframe_months(rmatrix.timeframe) // per_timeframe_months)
+                    num_threshold_periods = max(
+                        1, 
+                        calculate_timeframe_months(rmatrix.timeframe) // per_timeframe_months
+                    )
                     effective_threshold = threshold * num_threshold_periods
 
                     # Variables for spending within and beyond the threshold
@@ -117,6 +119,11 @@ def consider_reward_category(model: Model, x: Dict[Tuple[int, int], Model], rmat
                     objective_terms.append(reward_multiplier * y1)
                     objective_terms.append(fallback_multiplier * y2)
                 else:
+                    if per_timeframe_months == 0:
+                        logging.warning(
+                            f"Per timeframe months is zero for card {card_name}, category {category}. "
+                            "Skipping threshold handling to avoid division by zero."
+                        )
                     # No effective threshold; use x directly
                     reward_multiplier = enums.RewardUnit.get_value(reward_unit) * reward_amount
                     objective_terms.append(reward_multiplier * x[(i, j)])
@@ -163,13 +170,24 @@ def precompute_credit_values(rmatrix: RMatrixDetails) -> np.ndarray:
             category = rmatrix.categories[j]
             statement_credits = card.statement_credit
             
-            # Calculate the credit value for this card-category pair
-            credit_values[i, j] = sum(
-                sc.credit_amount * min(sc.max_uses, calculate_timeframe_months(rmatrix.timeframe) / sc.timeframe_months) * calculate_timeframe_years(rmatrix.timeframe) * (12 / sc.timeframe_months)
-                for sc in statement_credits
-                if not sc.categories or category in sc.categories 
-            )
-            
+            for sc in statement_credits:
+                if not sc.categories or category in sc.categories:
+                    if sc.timeframe_months != 0:
+                        max_uses = min(
+                            sc.max_uses,
+                            calculate_timeframe_months(rmatrix.timeframe) / sc.timeframe_months
+                        )
+                        annualization_factor = calculate_timeframe_years(rmatrix.timeframe) * (12 / sc.timeframe_months)
+                        credit_value = sc.credit_amount * max_uses * annualization_factor
+                    else:
+                        logging.warning(
+                            f"Statement credit timeframe_months is zero for card {card.name}, category {category}. "
+                            "Skipping this credit to avoid division by zero."
+                        )
+                        credit_value = 0.0
+
+                    credit_values[i, j] += credit_value
+                
             logging.debug(
                 f"Card: {card.name}, Category: {category}, "
                 f"Statement Credits Applied: {len(statement_credits)}, "

@@ -263,6 +263,18 @@ class Vendors(str, Enum):
 
         # Return found vendor or UNKNOWN if no vendor is found
         return out if out else Vendors.UNKNOWN
+    
+
+    @staticmethod
+    def get_category(vendor):
+        grocery_vendors = {Vendors.WALGREENS, Vendors.WALMART, Vendors.KROGER, Vendors.LOWES, Vendors.ALDI, Vendors.COSTCO}
+        shopping_vendors = {Vendors.AMAZON, Vendors.TARGET}
+        if vendor in grocery_vendors:
+            return PurchaseCategory.GROCERIES
+        elif vendor in shopping_vendors:
+            return PurchaseCategory.SHOPPING
+        else:
+            return None
 
 class APRType(str, Enum):
     PURCHASE = "Purchase"
