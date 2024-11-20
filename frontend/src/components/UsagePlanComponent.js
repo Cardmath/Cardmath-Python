@@ -83,7 +83,7 @@ const UsagePlanComponent = ({ onBack }) => {
                         </div>
                         <Button
                             label="Proceed Monthly"
-                            onClick={() => handleCheckout('limited')}
+                            onClick={() => handleCheckout('monthly')}
                             icon="pi pi-arrow-right"
                             iconPos="right"
                             className="lg:w-full font-medium p-2 text-white"
@@ -114,7 +114,7 @@ const UsagePlanComponent = ({ onBack }) => {
                         </div>
                         <Button
                             label="Proceed Yearly"
-                            onClick={() => handleCheckout('unlimited')}
+                            onClick={() => handleCheckout('annual')}
                             icon="pi pi-arrow-right"
                             iconPos="right"
                             className="lg:w-full font-medium p-2 text-white"

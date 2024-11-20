@@ -9,11 +9,17 @@ from teller.schemas import AccessTokenSchema
 from typing import List, Optional
 from datetime import datetime
 
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 def get_user(db: Session, user_id: int) -> Optional[User]:
     return db.query(User).filter(User.id == user_id).first()
 
 def get_user_by_email(db: Session, username: str) -> Optional[UserInDB]:
-    return db.query(UserInDB).filter(User.username == username).first()
+    return db.query(UserInDB).filter(UserInDB.username == username).first()
 
 def get_users(db: Session, skip: int = 0, limit: int = 10) -> List[User]:
     return db.query(User).offset(skip).limit(limit).all()
@@ -54,6 +60,7 @@ def update_user_password(db: Session, email: str, new_password: str) -> None:
     """
     user = get_user_by_email(db, email)
     if not user:
+        logger.error(f"User not found with email: {email}")
         raise ValueError("User not found")
     
     hashed_password = get_password_hash(new_password)
@@ -63,6 +70,9 @@ def update_user_password(db: Session, email: str, new_password: str) -> None:
 
 async def update_user_enrollment(db: Session, enrollment_schema: AccessTokenSchema, user_id: int) -> Optional[Enrollment]:
     user = get_user(db=db, user_id=user_id)
+    if not user:
+        logger.error(f"User not found with ID: {user_id}")
+        return None
     
     db_enrollment = Enrollment(
         id=enrollment_schema.enrollment.id,
@@ -80,14 +90,17 @@ async def update_user_enrollment(db: Session, enrollment_schema: AccessTokenSche
 
 async def update_user_with_credit_cards(db: Session, credit_cards: List[CreditCard], user_id: int, is_held: bool = True) -> Optional[User]:
     user = get_user(db, user_id)
+    if not user:
+        logger.error(f"User not found with ID: {user_id}")
+        return None
     
     # Check if the user already has a wallet; if not, create one and commit to get its ID
     if not user.wallets:
-        print("[INFO] Creating new wallet of held cards for user")
+        logger.info("[INFO] Creating new wallet of held cards for user")
         new_wallet = Wallet(user_id=user_id, name="All Detected Cards", last_edited=datetime.today())
         db.add(new_wallet)
         db.commit()  # Commit to assign an ID to the wallet
-        db.refresh(new_wallet)  # Refresh to get the wallet ID
+        db.refresh(new_wallet)
         user.wallets.append(new_wallet)
     
     wallet = user.wallets[0]
@@ -108,6 +121,7 @@ async def update_user_with_credit_cards(db: Session, credit_cards: List[CreditCa
             is_held=True
         )
         db.execute(stmt)
+        db.commit()  # Commit after executing the statement
         
         if not user.credit_cards:
             user.credit_cards = []
@@ -120,24 +134,53 @@ async def update_user_with_credit_cards(db: Session, credit_cards: List[CreditCa
     db.refresh(user)
     return user
 
-def create_subscription(db: Session, user_id: int, status: str, duration_days: Optional[int] = 30, computations: Optional[int] = None) -> Subscription:
+def create_or_update_subscription(
+    db: Session, 
+    user_id: int, 
+    status: str, 
+    duration_days: int = 30, 
+    computations: Optional[int] = None
+) -> Subscription:
     """
-    Create a new subscription for a user with given status, duration, and computation limit.
+    Create a new subscription or update an existing one for a user with the given status, duration, and computation limit.
+    Logs the changes for auditing purposes.
     """
-    # Set the end date based on duration (e.g., 30 days by default)
+    subscription = get_subscription_by_user_id(db=db, user_id=user_id)
+
+    # Set the start and end dates
     start_date = datetime.now().date()
     end_date = start_date + timedelta(days=duration_days) if duration_days else None
 
-    subscription = Subscription(
-        user_id=user_id,
-        status=status,
-        start_date=start_date,
-        end_date=end_date,
-        remaining_computations=computations
-    )
-    db.add(subscription)
+    if subscription:
+        logger.info(f"Existing subscription found for user_id={user_id}: {subscription}")
+
+        logger.info(f"Updating subscription for user_id={user_id}: "
+                    f"status={status}, start_date={start_date}, end_date={end_date}, "
+                    f"remaining_computations={computations}")
+
+        subscription.status = status
+        subscription.start_date = start_date
+        subscription.end_date = end_date
+        subscription.remaining_computations = computations
+    else:
+        logger.info(f"Creating new subscription for user_id={user_id}: "
+                    f"status={status}, start_date={start_date}, end_date={end_date}, "
+                    f"remaining_computations={computations}")
+
+        subscription = Subscription(
+            user_id=user_id,
+            status=status,
+            start_date=start_date,
+            end_date=end_date,
+            remaining_computations=computations
+        )
+        db.add(subscription)
+
     db.commit()
     db.refresh(subscription)
+
+    logger.info(f"Final state of subscription for user_id={user_id}: {subscription}")
+
     return subscription
 
 def get_subscription_by_user_id(db: Session, user_id: int) -> Optional[Subscription]:
@@ -145,19 +188,6 @@ def get_subscription_by_user_id(db: Session, user_id: int) -> Optional[Subscript
     Retrieve the subscription for a specific user.
     """
     return db.query(Subscription).filter(Subscription.user_id == user_id).first()
-
-def update_subscription_status(db: Session, user_id: int, status: str) -> Optional[Subscription]:
-    """
-    Update the subscription status and optionally the number of computations for a user.
-    """
-    subscription = get_subscription_by_user_id(db, user_id)
-    if not subscription:
-        return None
-
-    subscription.status = status
-    db.commit()
-    db.refresh(subscription)
-    return subscription
 
 def delete_subscription(db: Session, user_id: int) -> None:
     """

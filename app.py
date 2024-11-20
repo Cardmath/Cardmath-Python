@@ -223,8 +223,8 @@ def get_checkout_session_endpoint(request: CheckoutSessionIDRequest):
     return get_checkout_session(request=request)
 
 @app.post("/stripe-webhook")
-def stripe_webhook_endpoint(request: Request , db: Session = Depends(get_sync_db)):
-    return stripe_webhook(request=request, db=db)
+async def stripe_webhook_endpoint(request: Request , db: Session = Depends(get_sync_db)):
+    return await stripe_webhook(request=request, db=db)
 
 @app.post("/password-recovery-email")
 async def request_password_recovery_endpoint(request: PasswordResetRequest, db: Session = Depends(get_sync_db)):

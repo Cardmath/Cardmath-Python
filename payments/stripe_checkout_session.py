@@ -1,21 +1,25 @@
-import stripe
-from fastapi import Depends, HTTPException, Request
-from pydantic import BaseModel
-from enum import Enum
-
-import stripe.error
-from database.auth.user import User, Subscription
-from database.auth.crud import create_subscription, update_subscription_status
-import os
-import auth.utils as auth_utils
+from database.auth.crud import create_or_update_subscription
+from database.auth.user import User
 from dotenv import load_dotenv
+from enum import Enum
+from fastapi import HTTPException, Request
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from datetime import timedelta
+
+import logging
+import os
+import stripe
+import stripe.error
+import sys  # Added for logging configuration
+
+# Configure logging
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class Product(str, Enum):
-    unlimited = 'unlimited'
-    limited = 'limited'
-    free = 'free'
+    annual = 'annual'
+    monthly = 'monthly'
 
 class CheckoutSessionRequest(BaseModel):    
     product: Product
@@ -29,40 +33,23 @@ class CheckoutSessionResponse(BaseModel):
 load_dotenv()
 stripe.api_key = os.getenv('STRIPE_API_KEY', "your_stripe_api_key")
 
-# TEST MODE PRODUCT ID's
+# TEST MODE PRODUCT IDs
 PRODUCTS = {
-    Product.unlimited: 'prod_RCpGRQtRhol743',
-    Product.limited: 'prod_RCpGPTdB4yqw8w',
-    Product.free: None  # Free tier does not require checkout
+    Product.annual: 'prod_RCpGRQtRhol743',
+    Product.monthly: 'prod_RCpGPTdB4yqw8w',
 }
 
-PRODUCT_PRICE_AMOUNTS = {
-    Product.free: 0,
-    Product.unlimited: 6000,
-    Product.limited: 3000
-}
 def create_checkout_session(db: Session, current_user: User, request: CheckoutSessionRequest) -> CheckoutSessionResponse:
-    if request.product == Product.free:
-        raise HTTPException(status_code=400, detail="Free tier does not require checkout.")
-    
     product_id = PRODUCTS[request.product]
-    
-    # Retrieve or create the price associated with the product
     prices = stripe.Price.list(product=product_id, active=True)
+    logger.info(f"Active prices for product {product_id}: {prices.data}")
     
     if prices.data:
-        # Use the first available active price
         price_id = prices.data[0].id
     else:
-        # Create a price if no active price exists (e.g., if you need a default price setup)
-        price = stripe.Price.create(
-            unit_amount=PRODUCT_PRICE_AMOUNTS[request.product],
-            currency="usd",
-            recurring={"interval": "month"},
-            product=product_id,
-        )
-        price_id = price.id
-    
+        logger.error(f"No active price found for product {product_id}")
+        raise HTTPException(status_code=400, detail="No active price found for the selected product.")
+
     session = stripe.checkout.Session.create(
         line_items=[{
             'price': price_id,
@@ -71,7 +58,7 @@ def create_checkout_session(db: Session, current_user: User, request: CheckoutSe
         mode='subscription',
         success_url=f'https://cardmath.ai/registration-steps?session_id={{CHECKOUT_SESSION_ID}}',
         cancel_url='https://cardmath.ai/registration-steps?payment_status=cancelled',
-        customer_email=current_user.email
+        customer_email=current_user.email  # Ensure you are using the email attribute
     )
 
     return CheckoutSessionResponse(url=session.url)
@@ -79,46 +66,81 @@ def create_checkout_session(db: Session, current_user: User, request: CheckoutSe
 async def stripe_webhook(request: Request, db: Session):
     payload = await request.body()
     sig_header = request.headers.get('Stripe-Signature')
-    event = None
-
+    secret = os.getenv('STRIPE_WEBHOOK_SECRET')
+    
+    if not secret:
+        logger.error("Stripe webhook secret is not set in the environment variables.")
+        raise HTTPException(status_code=500, detail="Webhook secret not configured.")
+    
     try:
         event = stripe.Webhook.construct_event(
-            payload, sig_header, os.getenv('STRIPE_WEBHOOK_SECRET')
+            payload, sig_header, secret
         )
     except ValueError:
+        logger.error("Invalid payload in Stripe webhook")
         raise HTTPException(status_code=400, detail="Invalid payload")
     except stripe.error.SignatureVerificationError:
+        logger.error("Invalid signature in Stripe webhook")
         raise HTTPException(status_code=400, detail="Invalid signature")
 
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
-        customer_email = session['customer_email']
+
+        customer_id = session.get('customer')
         session_id = session['id']
-        
-        line_items = stripe.checkout.Session.list_line_items(session_id)
-        product_id = line_items['data'][0]['price']['product']
+        logger.info(f"Stripe webhook called for session ID: {session_id} and customer ID: {customer_id}")
 
+        # Retrieve the customer email from Stripe
+        if customer_id:
+            customer = stripe.Customer.retrieve(customer_id)
+            customer_email = customer.get('email')
+        else:
+            logger.error(f"No customer ID found in session ID: {session_id}")
+            raise HTTPException(status_code=400, detail="No customer ID found in the session.")
 
-        user = db.query(User).filter(User.email == customer_email).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+        if not customer_email:
+            logger.error(f"No customer email found for customer ID: {customer_id}")
+            raise HTTPException(status_code=400, detail="No customer email found for the customer.")
 
-        # Update or create subscription based on the product purchased
-        if product_id == PRODUCTS[Product.unlimited]:
-            create_subscription(db, user_id=user.id, status="unlimited", duration_days=365, computations=None)
-        elif product_id == PRODUCTS[Product.limited]:
-            create_subscription(db, user_id=user.id, status="limited", duration_days=30, computations=10)
-    
+        # Retrieve line items
+        try:
+            line_items = stripe.checkout.Session.list_line_items(session_id)
+            if not line_items['data']:
+                logger.error(f"No line items found for session ID: {session_id}")
+                raise HTTPException(status_code=400, detail="No line items found in the session.")
+            product_id = line_items['data'][0]['price']['product']
+        except Exception as e:
+            logger.error(f"Error retrieving line items for session ID {session_id}: {e}")
+            raise HTTPException(status_code=500, detail="Error retrieving line items.")
+
+        # Query the user using the email
+        user: User = db.query(User).filter(User.email == customer_email).first()
+        if user:
+            logger.info(f"User found: {user.username} with email: {user.email}")
+        else:
+            logger.error(f"No user found with email: {customer_email}")
+            raise HTTPException(status_code=500, detail="We could not find your account. Please contact support at support@cardmath.ai.")
+
+        logger.info(f"Product purchased: {product_id}")
+        try:
+            if product_id == PRODUCTS[Product.annual]:
+                create_or_update_subscription(db, user_id=user.id, status="annual", duration_days=365, computations=None)
+                db.commit()  # Ensure the database session is committed
+                logger.info(f"Annual subscription created for user {user.username}")
+            elif product_id == PRODUCTS[Product.monthly]:
+                create_or_update_subscription(db, user_id=user.id, status="monthly", duration_days=30, computations=None)
+                db.commit()  # Ensure the database session is committed
+                logger.info(f"Monthly subscription created for user {user.username}")
+            else:
+                logger.error(f"Stripe webhook called with unknown product ID: {product_id}")
+                raise HTTPException(status_code=400, detail="Unknown product ID in the session.")
+        except Exception as e:
+            logger.error(f"Error updating subscription for user {user.username}: {e}")
+            raise HTTPException(status_code=500, detail="Error updating subscription.")
+    else:
+        logger.info(f"Unhandled event type: {event['type']}")
+
     return {"status": "success"}
-
-def handle_subscription_upgrade(db: Session, user_id: int, product: Product):
-    """
-    Handle subscription upgrade based on product type.
-    """
-    if product == Product.unlimited:
-        update_subscription_status(db, user_id=user_id, status="unlimited", computations=None)
-    elif product == Product.limited:
-        update_subscription_status(db, user_id=user_id, status="limited", computations=10)
 
 def get_checkout_session(request: CheckoutSessionIDRequest):
     try:
@@ -129,4 +151,5 @@ def get_checkout_session(request: CheckoutSessionIDRequest):
             "payment_status": payment_status
         }
     except Exception as e:
+        logger.error(f"Error retrieving checkout session: {e}")
         raise HTTPException(status_code=500, detail=str(e))
