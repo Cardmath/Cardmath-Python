@@ -26,9 +26,6 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
   const [timeframe, setTimeframe] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
 
-  const [allTimeSavings, setAllTimeSavings] = useState(0);
-  const [lastMonthSavings, setLastMonthSavings] = useState(0);
-
   const [toAdd, setToAdd] = useState(2);
   const [toUse, setToUse] = useState(4);
 
@@ -38,24 +35,18 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
   const [cardsDrop, setCardsDrop] = useState([]);
   const [recommendedCards, setRecommendedCards] = useState([]);
 
-  const [recommendedCardsBonusTotal, setRecommendedCardsBonusTotal] = useState(0);
-  const [recommendedCardsLastMonthSavings, setRecommendedCardsLastMonthSavings] = useState(0);
-
-  const [numRecommendedCards, setNumRecommendedCards] = useState(0);
-  const [tolerance, setTolerance] = useState(5);
-
   const [summary, setSummary] = useState([]);
   const [spendingPlan, setSpendingPlan] = useState([]);
-  const [actionableSteps, setActionableSteps] = useState([]);
   const [totalRegularRewards, setTotalRegularRewards] = useState(0);
   const [totalSignOnBonus, setTotalSignOnBonus] = useState(0);
+  const [totalStatementCredits, setTotalStatementCredits] = useState(0); // New state variable
   const [totalAnnualFees, setTotalAnnualFees] = useState(0);
   const [netRewards, setNetRewards] = useState(0);
 
   const [netRewardsCurrent, setNetRewardsCurrent] = useState(0);
   const [totalRegularRewardsCurrent, setTotalRegularRewardsCurrent] = useState(0);
-  const [totalSignOnBonusCurrent, setTotalSignOnBonusCurrent] = useState(0);
   const [totalAnnualFeesCurrent, setTotalAnnualFeesCurrent] = useState(0);
+  const [totalStatementCreditsCurrent, setTotalStatementCreditsCurrent] = useState(0); // New state variable
 
   const netRewardsDifference = (netRewards - netRewardsCurrent).toFixed(2);
 
@@ -126,10 +117,10 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
         let data = await response.json();
         data = data.solutions[0];
         console.log(data)
-        setAllTimeSavings(data.total_reward_usd);
         setNetRewardsCurrent(data.net_rewards_usd);
         setTotalRegularRewardsCurrent(data.total_regular_rewards_usd);
         setTotalAnnualFeesCurrent(data.total_annual_fees_usd);
+        setTotalStatementCreditsCurrent(data.total_statement_credits_usd); // Set the new state variable
       } catch (error) {
         console.error('Error fetching current cards optimal allocation:', error);
       }
@@ -192,14 +183,13 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
     setRecommendedCards(data.cards_added);
     setCardsDrop(data.cards_dropped);
     
-    setRecommendedCardsBonusTotal(data.total_reward_usd);
 
     setTimeframe(timeframe);
     setSummary(data.summary);
     setSpendingPlan(data.spending_plan);
-    setActionableSteps(data.actionable_steps);
     setTotalRegularRewards(data.total_regular_rewards_usd);
     setTotalSignOnBonus(data.total_sign_on_bonus_usd);
+    setTotalStatementCredits(data.total_statement_credits_usd); // Set the new state variable
     setTotalAnnualFees(data.total_annual_fees_usd);
     setNetRewards(data.net_rewards_usd);
   }, [solutionIndex, solutions]);
@@ -248,17 +238,16 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
       {/* Display total rewards and net rewards */}
       <div className="flex pt-4 gap-2 justify-content-center">
         <Tooltip className='w-3' target=".current-wallet-net-rewards" position="bottom"/>
-        <div className="current-wallet-net-rewards col-5 border-round shadow-3" data-pr-tooltip="Current Wallet Regular Rewards - Current Wallet Annual Fees. The estimated maximum potential value of rewards you could have earned in the timeframe after fees.">
+        <div className="current-wallet-net-rewards col-5 border-round shadow-3" data-pr-tooltip="The estimated maximum potential value of rewards you could have earned with your current wallet over the timeframe, after fees.">
           <div className="grid align-items-center justify-content-center py-2">Current Wallet Net Rewards:</div>
           <div className="font-bold text-2xl grid justify-content-center pb-1">${netRewardsCurrent}</div>
         </div>
 
         <Tooltip className='w-3' target=".recommended-wallet-net-rewards" position="bottom"/>
-        <div className="recommended-wallet-net-rewards col-5 border-round shadow-3" data-pr-tooltip="Recommended Wallet Regular Rewards + Recommended Wallet Sign on Bonus - Recommended Wallet Annual Fees. How much you could earn in rewards if you used the credit cards in the recommended wallet, after fees.">
+        <div className="recommended-wallet-net-rewards col-5 border-round shadow-3" data-pr-tooltip="The estimated maximum potential value of rewards you could earn if you signed up for the new cards in the recommended wallet and cancelled some of your current cards, after fees, over the timeframe.">
           <div className="grid align-items-center justify-content-center py-2">Recommended Wallet Net Rewards:</div>
           <div className="font-bold text-2xl grid justify-content-center pb-1">${netRewards}</div>
         </div>
-      
       </div>
 
       {/* Display total regular rewards and annual fees */}
@@ -283,6 +272,12 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
             <div className="grid justify-content-center py-2">Timeframe of Calculation</div>
             {timeframe && <div className="font-bold text-2xl grid justify-content-center pb-1">{moment(timeframe.start_month).format('MMMM YYYY')} to {moment(timeframe.end_month).format('MMMM YYYY')}</div>}
           </div>
+
+          <Tooltip className='w-3' target=".current-wallet-statement-credits" position="bottom"/>
+          <div className="current-wallet-statement-credits" data-pr-tooltip="Total Statement Credits for Current Wallet. These are credits applied to your account based on card benefits or promotions.">
+            <div className="grid justify-content-center py-2">Current Wallet Statement Credits:</div>
+            <div className="font-bold text-2xl grid justify-content-center pb-1">${totalStatementCreditsCurrent}</div>
+          </div>
         </div>
         {/* Recommended Wallet */}
         <div className="col-5 border-round shadow-3">
@@ -304,7 +299,13 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
             <div className="grid justify-content-center py-2">Recommended Wallet Expected Sign on Bonus</div>
             <div className="font-bold text-2xl grid justify-content-center pb-1">${totalSignOnBonus}</div>
           </div>
-        
+
+          {/* Recommended Wallet Statement Credits */}
+          <Tooltip className='w-3' target=".recommended-wallet-statement-credits" position="bottom"/>
+          <div className="recommended-wallet-statement-credits" data-pr-tooltip="Total Statement Credits for Recommended Wallet. These are credits applied to your account based on card benefits or promotions.">
+            <div className="grid justify-content-center py-2">Recommended Wallet Statement Credits:</div>
+            <div className="font-bold text-2xl grid justify-content-center pb-1">${totalStatementCredits}</div>
+          </div>  
         </div>
       </div>
 

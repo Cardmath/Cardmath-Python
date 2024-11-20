@@ -12,8 +12,29 @@ import { Dropdown } from 'primereact/dropdown';
 const PreferencesCard = ({ onBack, onSuccess }) => {
     const navigate = useNavigate(); // Initialize useNavigate
     useEffect(() => {
-        const fetchUserPreferences = async () => {
+        const fetchEnumsAndPreferences = async () => {
             try {
+                // Fetch Enums
+                const [banksData, pointsSystemsData, groceriesData, shoppingData, lifestyleData, industriesData, businessSizesData] = await Promise.all([
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/issuers').then(res => res.json()),
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/reward_units').then(res => res.json()),
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/grocery_stores').then(res => res.json()),
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/general_goods_stores').then(res => res.json()),
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/lifestyles').then(res => res.json()),
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/industries').then(res => res.json()),
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/business_sizes').then(res => res.json()),
+                ]);
+
+                // Set Enums
+                setBanks(banksData.map(item => ({ label: item, value: item })));
+                setPointsSystems(pointsSystemsData.map(item => ({ label: item, value: item })));
+                setGroceries(groceriesData.map(item => ({ label: item, value: item })));
+                setShopping(shoppingData.map(item => ({ label: item, value: item })));
+                setLifestyle(lifestyleData.map(item => ({ label: item, value: item })));
+                setIndustries(industriesData.map(item => ({ label: item, value: item })));
+                setBusinessSizes(businessSizesData.map(item => ({ label: item, value: item })));
+
+                // Fetch User Preferences
                 const response = await fetchWithAuth(
                     'https://backend-dot-cardmath-llc.uc.r.appspot.com/read_user_preferences',
                     {
@@ -54,11 +75,11 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                     setSelectedBusinessSize(data.business_preferences.business_size || null);
                 }
             } catch (error) {
-                console.error('Error fetching user preferences:', error);
+                console.error('Error fetching enums or user preferences:', error);
             }
         };
 
-        fetchUserPreferences();
+        fetchEnumsAndPreferences();
     }, []);
 
     function checkProperties(obj) {
@@ -99,19 +120,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
     const [selectedHaveBanks, setSelectedHaveBanks] = useState([]);
     const [selectedBanks, setSelectedBanks] = useState([]);
     const [selectedAvoidBanks, setSelectedAvoidBanks] = useState([]);
-    const banks = [
-        'Chase',
-        'Bank of America',
-        'Wells Fargo',
-        'Citi',
-        'Capital One',
-        'American Express',
-        'Discover',
-        'US Bank',
-        'PNC Bank',
-        'TD Bank',
-        'HSBC',
-    ];
+    const [banks, setBanks] = useState([]);
 
     const findBanksIntersection = () => {
         const intersection = selectedBanks.filter((x) => selectedAvoidBanks.includes(x));
@@ -123,35 +132,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
 
     const [selectedPointsSystems, setSelectedPointsSystems] = useState([]);
     const [selectedAvoidPointsSystems, setSelectedAvoidPointsSystems] = useState([]);
-    const pointsSystems = [
-        'Chase Ultimate Rewards',
-        'American Express Membership Rewards',
-        'Citi ThankYou Points',
-        'Capital One Miles',
-        'Wells Fargo Go Far Rewards',
-        'Bank of America Preferred Rewards',
-        'Barclays Arrival Points',
-        'Discover Cashback Bonus',
-        'U.S. Bank Altitude Points',
-        'PNC Points',
-        'Hilton Honors Points',
-        'Marriott Bonvoy Points',
-        'World of Hyatt Points',
-        'Delta SkyMiles',
-        'United MileagePlus',
-        'American Airlines AAdvantage Miles',
-        'Southwest Rapid Rewards',
-        'IHG One Rewards Points',
-        'JetBlue TrueBlue Points',
-        'Alaska Mileage Plan Miles',
-        'Radisson Rewards Points',
-        'Percent Cashback USD',
-        'Statement Credit USD',
-        'Avios',
-        'Aeroplan Points',
-        'Choice Privileges Points',
-        'Unknown',
-    ];
+    const [pointsSystems, setPointsSystems] = useState([]);
 
     const findAirlinesIntersection = () => {
         const intersection = selectedPointsSystems.filter((x) =>
@@ -164,38 +145,22 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
     };
 
     const [selectedGroceries, setSelectedGroceries] = useState([]);
-    const groceries = ['Walgreens', 'Walmart', 'Kroger', 'Lowes', 'Aldi', 'Costco'];
+    const [groceries, setGroceries] = useState([]);
 
     const [selectedShopping, setSelectedShopping] = useState([]);
-    const shopping = ['Amazon', 'Target'];
+    const [shopping, setShopping] = useState([]);
 
     const [selectedLifestyle, setSelectedLifestyle] = useState(null);
-    const lifestyle = ['Retired', 'Student', 'Early Career', 'Mid-Career', 'Late Career'];
+    const [lifestyle, setLifestyle] = useState([]);
 
     const [creditScore, setCreditScore] = useState('');
     const [salary, setSalary] = useState('');
 
     const [selectedIndustries, setSelectedIndustries] = useState([]);
-    const industries = [
-        'Other',
-        'Restaurant',
-        'Hotel',
-        'Hotel Rental',
-        'Technology',
-        'Healthcare',
-        'Entertainment',
-        'Consumer Goods',
-        'Construction',
-    ];
+    const [industries, setIndustries] = useState([]);
 
     const [selectedBusinessSize, setSelectedBusinessSize] = useState(null);
-    const businessSizes = [
-        'Micro (less than 10 employees)',
-        'Small (10-49 employees)',
-        'Medium (50-199 employees)',
-        'Large (200-499 employees)',
-        'Enterprise (500 or more employees)',
-    ];
+    const [businessSizes, setBusinessSizes] = useState([]);
 
     const sendPreferences = () => {
         const credit_profile_out = {
@@ -268,7 +233,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
     // Handle conflicting selections
     useEffect(() => {
         const conflictingBanks = findBanksIntersection();
-        if (conflictingBanks) {
+        if (conflictingBanks && conflictingBanks.length > 0) {
             alert(
                 `You have selected the same bank in both preferred and avoid lists: ${conflictingBanks.join(
                     ', '
@@ -279,7 +244,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
 
     useEffect(() => {
         const conflictingRewards = findAirlinesIntersection();
-        if (conflictingRewards) {
+        if (conflictingRewards && conflictingRewards.length > 0) {
             alert(
                 `You have selected the same rewards program in both preferred and avoid lists: ${conflictingRewards.join(
                     ', '
@@ -423,6 +388,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         value={selectedLifestyle}
                                         onChange={(e) => setSelectedLifestyle(e.value)}
                                         options={lifestyle}
+                                        optionLabel="label"
                                         placeholder="Select your Lifestyle"
                                     />
                                 </div>
@@ -463,6 +429,8 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         value={selectedHaveBanks}
                                         onChange={(e) => setSelectedHaveBanks(e.value)}
                                         options={banks}
+                                        optionLabel="label"
+                                        optionValue="value"
                                         placeholder="Select Your Banks"
                                         maxSelectedLabels={3}
                                         className="w-full md:w-20rem"
@@ -474,6 +442,8 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         value={selectedBanks}
                                         onChange={(e) => setSelectedBanks(e.value)}
                                         options={banks}
+                                        optionLabel="label"
+                                        optionValue="value"
                                         placeholder="Select Preferred Banks"
                                         maxSelectedLabels={3}
                                         className="w-full md:w-20rem"
@@ -487,6 +457,8 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         value={selectedAvoidBanks}
                                         onChange={(e) => setSelectedAvoidBanks(e.value)}
                                         options={banks}
+                                        optionLabel="label"
+                                        optionValue="value"
                                         placeholder="Select Banks to Avoid"
                                         maxSelectedLabels={3}
                                         className="w-full md:w-20rem"
@@ -529,6 +501,8 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         value={selectedPointsSystems}
                                         onChange={(e) => setSelectedPointsSystems(e.value)}
                                         options={pointsSystems}
+                                        optionLabel="label"
+                                        optionValue="value"
                                         placeholder="Select Preferred Programs"
                                         maxSelectedLabels={3}
                                         className="w-full md:w-20rem"
@@ -542,6 +516,8 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         value={selectedAvoidPointsSystems}
                                         onChange={(e) => setSelectedAvoidPointsSystems(e.value)}
                                         options={pointsSystems}
+                                        optionLabel="label"
+                                        optionValue="value"
                                         placeholder="Select Programs to Avoid"
                                         maxSelectedLabels={3}
                                         className="w-full md:w-20rem"
@@ -586,6 +562,8 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         value={selectedGroceries}
                                         onChange={(e) => setSelectedGroceries(e.value)}
                                         options={groceries}
+                                        optionLabel="label"
+                                        optionValue="value"
                                         placeholder="Select your favorite grocery stores"
                                         maxSelectedLabels={3}
                                         className="w-full md:w-20rem"
@@ -599,6 +577,8 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         value={selectedShopping}
                                         onChange={(e) => setSelectedShopping(e.value)}
                                         options={shopping}
+                                        optionLabel="label"
+                                        optionValue="value"
                                         placeholder="Select your favorite general goods stores"
                                         maxSelectedLabels={3}
                                         className="w-full md:w-20rem"
@@ -641,6 +621,8 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         value={selectedBusinessSize}
                                         onChange={(e) => setSelectedBusinessSize(e.value)}
                                         options={businessSizes}
+                                        optionLabel="label"
+                                        optionValue="value"
                                         placeholder="Select your business size"
                                         className="w-full md:w-20rem"
                                     />
@@ -653,6 +635,8 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         value={selectedIndustries}
                                         onChange={(e) => setSelectedIndustries(e.value)}
                                         options={industries}
+                                        optionLabel="label"
+                                        optionValue="value"
                                         placeholder="Select all applicable industries"
                                         maxSelectedLabels={3}
                                         className="w-full md:w-20rem"

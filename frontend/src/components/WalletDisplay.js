@@ -38,10 +38,24 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
                 name: card.card.name,
                 issuer: card.card.issuer
             })));
+            // Remove selected cards from availableCards
+            const selectedCardNames = wallet.cards.map(card => card.card.name);
+            setAvailableCards(prevCards => prevCards.filter(card => !selectedCardNames.includes(card.name)));
             setEditingWallet(wallet);
         } else {
             setWalletName("");
             setNewWalletCards([]);
+            // Re-fetch available cards when creating a new wallet
+            fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com/read_credit_cards_database", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ card_details: "all", use_preferences: false })
+            })
+            .then(response => response.json())
+            .then(data => {
+                setAvailableCards(data.credit_card || []);
+            })
+            .catch(error => console.error("Error fetching cards:", error));
             setEditingWallet(null);
         }
         setShowDialog(true);
@@ -121,32 +135,32 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
 
     // PickList change handler
     const onChangePickList = (event) => {
+        setAvailableCards(event.source);
         setNewWalletCards(event.target);
     };
 
-  // Template for each card within the wallet carousel
-  const cardTemplate = (cardInWallet) => {
-    const { card, is_held } = cardInWallet;
-    return (
-        <div className="flex justify-content-center">
-            <div className="w-full text-center shadow-1 border-round surface-card overflow-hidden p-3">
-                <div 
-                    className="text-xl font-bold mb-1 overflow-hidden text-overflow-ellipsis"
-                    style={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                    }}
-                >
-                    {card.name}
+    // Template for each card within the wallet carousel
+    const cardTemplate = (cardInWallet) => {
+        const { card, is_held } = cardInWallet;
+        return (
+            <div className="flex justify-content-center">
+                <div className="w-full text-center shadow-1 border-round surface-card overflow-hidden p-3">
+                    <div 
+                        className="text-xl font-bold mb-1 overflow-hidden text-overflow-ellipsis"
+                        style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                        }}
+                    >
+                        {card.name}
+                    </div>
+                    <div className="text-sm text-600 mb-1">Issuer: {card.issuer}</div>
+                    <div className="text-sm">Status: {is_held ? 'Held' : 'New'}</div>
                 </div>
-                <div className="text-sm text-600 mb-1">Issuer: {card.issuer}</div>
-                <div className="text-sm">Status: {is_held ? 'Held' : 'New'}</div>
             </div>
-        </div>
-    );
-  };
-
+        );
+    };
 
     if (loading) {
         return <p>Loading wallets...</p>;
