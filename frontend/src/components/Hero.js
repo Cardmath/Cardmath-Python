@@ -5,8 +5,8 @@ const Hero = () => {
         <div
             className="relative p-4 md:p-8 overflow-hidden"
             style={{
-                backgroundImage: `linear-gradient(
-                    90deg,
+                background: `linear-gradient(
+                    135deg,
                     hsl(157deg 99% 48%) 0%,
                     hsl(159deg 100% 48%) 4%,
                     hsl(161deg 100% 47%) 8%,
@@ -33,10 +33,29 @@ const Hero = () => {
                     hsl(198deg 100% 48%) 96%,
                     hsl(200deg 100% 48%) 100%
                 )`,
+                backgroundSize: '150% 150%',
+                animation: 'bg-pan-diagonal-reverse 8s ease-in-out infinite',
                 position: 'relative',
             }}
         >
-            {/* Dark gradient overlay with a frosted blur effect */}
+            <style>
+                {`
+                /* Diagonal animation from bottom-right to top-left */
+                @keyframes bg-pan-diagonal-reverse {
+                    0% { background-position: 100% 100%; }
+                    50% { background-position: 0% 0%; }
+                    100% { background-position: 100% 100%; }
+                }
+
+                /* Text animation for Cardmath */
+                @keyframes tracking-in-expand {
+                    0% { letter-spacing: -0.5em; opacity: 0; }
+                    40% { opacity: 0.6; }
+                    100% { letter-spacing: normal; opacity: 1; }
+                }
+                `}
+            </style>
+            {/* Static dark gradient overlay for corner darkening */}
             <div
                 style={{
                     position: 'absolute',
@@ -44,12 +63,10 @@ const Hero = () => {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundImage: `linear-gradient(
-                        90deg,
-                        rgba(0, 0, 0, 0.4) 0%,
-                        rgba(0, 0, 0, 0.2) 100%
-                    )`,
-                    backdropFilter: 'blur(5px)', // Subtle blur for frosted effect
+                    background: `
+                        radial-gradient(circle at top right, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0) 50%),
+                        radial-gradient(circle at bottom left, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0) 50%)
+                    `,
                     zIndex: 1,
                 }}
             />
@@ -60,6 +77,7 @@ const Hero = () => {
                     className="font-bold text-4xl md:text-6xl text-white mb-1"
                     style={{
                         textShadow: '1px 1px 5px rgba(0, 0, 0, 0.3)', // Subtle text shadow for readability
+                        animation: 'tracking-in-expand 0.7s cubic-bezier(0.215, 0.61, 0.355, 1.000) both', // Animation for text
                     }}
                 >
                     Cardmath
