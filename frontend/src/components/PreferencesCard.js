@@ -10,139 +10,88 @@ import { fetchWithAuth } from '../pages/AuthPage';
 import { Dropdown } from 'primereact/dropdown';
 
 const PreferencesCard = ({ onBack, onSuccess }) => {
-    const navigate = useNavigate(); // Initialize useNavigate
-    useEffect(() => {
-        const fetchEnumsAndPreferences = async () => {
-            try {
-                // Fetch Enums
-                const [banksData, pointsSystemsData, groceriesData, shoppingData, lifestyleData, industriesData, businessSizesData] = await Promise.all([
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/issuers').then(res => res.json()),
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/reward_units').then(res => res.json()),
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/grocery_stores').then(res => res.json()),
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/general_goods_stores').then(res => res.json()),
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/lifestyles').then(res => res.json()),
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/industries').then(res => res.json()),
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/business_sizes').then(res => res.json()),
-                ]);
+    const navigate = useNavigate();
 
-                // Set Enums
-                setBanks(banksData.map(item => ({ label: item, value: item })));
-                setPointsSystems(pointsSystemsData.map(item => ({ label: item, value: item })));
-                setGroceries(groceriesData.map(item => ({ label: item, value: item })));
-                setShopping(shoppingData.map(item => ({ label: item, value: item })));
-                setLifestyle(lifestyleData.map(item => ({ label: item, value: item })));
-                setIndustries(industriesData.map(item => ({ label: item, value: item })));
-                setBusinessSizes(businessSizesData.map(item => ({ label: item, value: item })));
+    // Debugging: Track state changes
+    const debugLog = (message, data = null) => {
+        console.log(`[DEBUG] ${message}`, data);
+    };
 
-                // Fetch User Preferences
-                const response = await fetchWithAuth(
-                    'https://backend-dot-cardmath-llc.uc.r.appspot.com/read_user_preferences',
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({}),
-                    }
-                );
-                const data = await response.json();
-
-                // Update state variables with fetched data
-                if (data.banks_preferences) {
-                    setSelectedHaveBanks(data.banks_preferences.have_banks || []);
-                    setSelectedBanks(data.banks_preferences.preferred_banks || []);
-                    setSelectedAvoidBanks(data.banks_preferences.avoid_banks || []);
-                }
-                if (data.rewards_programs_preferences) {
-                    setSelectedPointsSystems(
-                        data.rewards_programs_preferences.preferred_rewards_programs || []
-                    );
-                    setSelectedAvoidPointsSystems(
-                        data.rewards_programs_preferences.avoid_rewards_programs || []
-                    );
-                }
-                if (data.consumer_preferences) {
-                    setSelectedGroceries(data.consumer_preferences.favorite_grocery_stores || []);
-                    setSelectedShopping(
-                        data.consumer_preferences.favorite_general_goods_stores || []
-                    );
-                }
-                if (data.credit_profile) {
-                    setCreditScore(data.credit_profile.credit_score || '');
-                    setSalary(data.credit_profile.salary || '');
-                    setSelectedLifestyle(data.credit_profile.lifestyle || null);
-                }
-                if (data.business_preferences) {
-                    setSelectedIndustries(data.business_preferences.business_type || []);
-                    setSelectedBusinessSize(data.business_preferences.business_size || null);
-                }
-            } catch (error) {
-                console.error('Error fetching enums or user preferences:', error);
-            }
-        };
-
-        fetchEnumsAndPreferences();
-    }, []);
-
-    function checkProperties(obj) {
-        for (var key in obj) {
-            if (obj[key] !== null && obj[key] !== '') return false;
-        }
-        return true;
-    }
-
+    // Tab state and order
     const [activeTab, setActiveTab] = useState('CreditProfile');
-
     const tabOrder = ['CreditProfile', 'Banks', 'RewardsPrograms', 'Vendors', 'Business'];
 
     const handleTabClick = (tab) => {
+        debugLog('Switching to tab:', tab);
         setActiveTab(tab);
     };
 
     const moveToNextTab = () => {
         const currentIndex = tabOrder.indexOf(activeTab);
+        debugLog('Moving to next tab from:', activeTab);
         if (currentIndex < tabOrder.length - 1) {
-            sendPreferences();
             setActiveTab(tabOrder[currentIndex + 1]);
+        } else {
+            debugLog('Already at the last tab. No further movement.');
         }
     };
 
     const moveToPreviousTab = () => {
         const currentIndex = tabOrder.indexOf(activeTab);
+        debugLog('Moving to previous tab from:', activeTab);
         if (currentIndex > 0) {
-            sendPreferences();
             setActiveTab(tabOrder[currentIndex - 1]);
         } else {
-            // If on the first tab, call onBack to go to the previous step
+            debugLog('Already at the first tab. Triggering onBack.');
             onBack();
         }
     };
 
-    // State variables for preferences
+    const sendPreferences = () => {
+        debugLog('Sending preferences for active tab:', activeTab);
+
+        // Logic for preference submission
+        const payload = {
+            credit_profile: { credit_score: creditScore, salary, lifestyle: selectedLifestyle },
+            banks_preferences: { have_banks: selectedHaveBanks, preferred_banks: selectedBanks, avoid_banks: selectedAvoidBanks },
+            rewards_programs_preferences: { preferred_rewards_programs: selectedPointsSystems, avoid_rewards_programs: selectedAvoidPointsSystems },
+            consumer_preferences: { favorite_grocery_stores: selectedGroceries, favorite_general_goods_stores: selectedShopping },
+            business_preferences: { business_type: selectedIndustries, business_size: selectedBusinessSize },
+        };
+
+        fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/save_user_preferences', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Failed to save preferences.');
+                }
+                debugLog('Preferences submitted successfully for tab:', activeTab);
+
+                // Move to the next tab or complete registration
+                if (activeTab === 'Business') {
+                    onSuccess();
+                    navigate('/dashboard');
+                } else {
+                    moveToNextTab();
+                }
+            })
+            .catch((error) => {
+                console.error('Error saving preferences:', error);
+            });
+    };
+
+    // State and preference management
     const [selectedHaveBanks, setSelectedHaveBanks] = useState([]);
     const [selectedBanks, setSelectedBanks] = useState([]);
     const [selectedAvoidBanks, setSelectedAvoidBanks] = useState([]);
     const [banks, setBanks] = useState([]);
 
-    const findBanksIntersection = () => {
-        const intersection = selectedBanks.filter((x) => selectedAvoidBanks.includes(x));
-        if (intersection.length > 0) {
-            return intersection;
-        }
-        return null;
-    };
-
     const [selectedPointsSystems, setSelectedPointsSystems] = useState([]);
     const [selectedAvoidPointsSystems, setSelectedAvoidPointsSystems] = useState([]);
     const [pointsSystems, setPointsSystems] = useState([]);
-
-    const findAirlinesIntersection = () => {
-        const intersection = selectedPointsSystems.filter((x) =>
-            selectedAvoidPointsSystems.includes(x)
-        );
-        if (intersection.length > 0) {
-            return intersection;
-        }
-        return null;
-    };
 
     const [selectedGroceries, setSelectedGroceries] = useState([]);
     const [groceries, setGroceries] = useState([]);
@@ -162,72 +111,84 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
     const [selectedBusinessSize, setSelectedBusinessSize] = useState(null);
     const [businessSizes, setBusinessSizes] = useState([]);
 
-    const sendPreferences = () => {
-        const credit_profile_out = {
-            credit_score: creditScore !== '' ? creditScore : null,
-            salary: salary !== '' ? salary : null,
-            lifestyle: selectedLifestyle !== null ? selectedLifestyle : null,
-        };
+    useEffect(() => {
+        const fetchEnumsAndPreferences = async () => {
+            try {
+                debugLog('Fetching enums and user preferences');
+                const [banksData, pointsSystemsData, groceriesData, shoppingData, lifestyleData, industriesData, businessSizesData] = await Promise.all([
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/issuers').then(res => res.json()),
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/reward_units').then(res => res.json()),
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/grocery_stores').then(res => res.json()),
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/general_goods_stores').then(res => res.json()),
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/lifestyles').then(res => res.json()),
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/industries').then(res => res.json()),
+                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/business_sizes').then(res => res.json()),
+                ]);
 
-        const banks_preferences_out = {
-            have_banks: selectedHaveBanks.length > 0 ? selectedHaveBanks : null,
-            preferred_banks: selectedBanks.length > 0 ? selectedBanks : null,
-            avoid_banks: selectedAvoidBanks.length > 0 ? selectedAvoidBanks : null,
-        };
+                // Populate dropdowns
+                setBanks(banksData.map(item => ({ label: item, value: item })));
+                setPointsSystems(pointsSystemsData.map(item => ({ label: item, value: item })));
+                setGroceries(groceriesData.map(item => ({ label: item, value: item })));
+                setShopping(shoppingData.map(item => ({ label: item, value: item })));
+                setLifestyle(lifestyleData.map(item => ({ label: item, value: item })));
+                setIndustries(industriesData.map(item => ({ label: item, value: item })));
+                setBusinessSizes(businessSizesData.map(item => ({ label: item, value: item })));
 
-        const rewards_programs_preferences_out = {
-            preferred_rewards_programs:
-                selectedPointsSystems.length > 0 ? selectedPointsSystems : null,
-            avoid_rewards_programs:
-                selectedAvoidPointsSystems.length > 0 ? selectedAvoidPointsSystems : null,
-        };
+                // Fetch preferences
+                const response = await fetchWithAuth(
+                    'https://backend-dot-cardmath-llc.uc.r.appspot.com/read_user_preferences',
+                    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) }
+                );
+                const data = await response.json();
+                debugLog('Fetched user preferences:', data);
 
-        const consumer_preferences_out = {
-            favorite_grocery_stores: selectedGroceries.length > 0 ? selectedGroceries : null,
-            favorite_general_goods_stores:
-                selectedShopping.length > 0 ? selectedShopping : null,
-        };
-
-        const business_preferences_out = {
-            business_type: selectedIndustries.length > 0 ? selectedIndustries : null,
-            business_size: selectedBusinessSize !== null ? selectedBusinessSize : null,
-        };
-
-        fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/save_user_preferences', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                credit_profile: checkProperties(credit_profile_out) ? null : credit_profile_out,
-                banks_preferences: checkProperties(banks_preferences_out)
-                    ? null
-                    : banks_preferences_out,
-                rewards_programs_preferences: checkProperties(rewards_programs_preferences_out)
-                    ? null
-                    : rewards_programs_preferences_out,
-                consumer_preferences: checkProperties(consumer_preferences_out)
-                    ? null
-                    : consumer_preferences_out,
-                business_preferences: checkProperties(business_preferences_out)
-                    ? null
-                    : business_preferences_out,
-            }),
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Failed to save preferences.');
+                // Apply fetched preferences to state
+                if (data.banks_preferences) {
+                    setSelectedHaveBanks(data.banks_preferences.have_banks || []);
+                    setSelectedBanks(data.banks_preferences.preferred_banks || []);
+                    setSelectedAvoidBanks(data.banks_preferences.avoid_banks || []);
                 }
-                console.log('Preferences submitted!');
-                // Move to next tab or complete registration
-                if (activeTab === 'Business') {
-                    onSuccess(); // Complete registration
-                } else {
-                    moveToNextTab();
+                if (data.rewards_programs_preferences) {
+                    setSelectedPointsSystems(data.rewards_programs_preferences.preferred_rewards_programs || []);
+                    setSelectedAvoidPointsSystems(data.rewards_programs_preferences.avoid_rewards_programs || []);
                 }
-            })
-            .catch((error) => {
-                console.error('Error saving preferences:', error);
-                // Handle error (e.g., display a message to the user)
-            });
+                if (data.consumer_preferences) {
+                    setSelectedGroceries(data.consumer_preferences.favorite_grocery_stores || []);
+                    setSelectedShopping(data.consumer_preferences.favorite_general_goods_stores || []);
+                }
+                if (data.credit_profile) {
+                    setCreditScore(data.credit_profile.credit_score || '');
+                    setSalary(data.credit_profile.salary || '');
+                    setSelectedLifestyle(data.credit_profile.lifestyle || null);
+                }
+                if (data.business_preferences) {
+                    setSelectedIndustries(data.business_preferences.business_type || []);
+                    setSelectedBusinessSize(data.business_preferences.business_size || null);
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        fetchEnumsAndPreferences();
+    }, []);
+        
+    const findBanksIntersection = () => {
+        const intersection = selectedBanks.filter((x) => selectedAvoidBanks.includes(x));
+        if (intersection.length > 0) {
+            return intersection;
+        }
+        return null;
+    };
+
+    const findAirlinesIntersection = () => {
+        const intersection = selectedPointsSystems.filter((x) =>
+            selectedAvoidPointsSystems.includes(x)
+        );
+        if (intersection.length > 0) {
+            return intersection;
+        }
+        return null;
     };
 
     // Handle conflicting selections

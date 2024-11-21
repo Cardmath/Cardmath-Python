@@ -83,6 +83,16 @@ class CreditCardSchema(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    # Overriding __eq__ method to compare by name and issuer
+    def __eq__(self, other):
+        if not isinstance(other, CreditCardSchema):
+            return False
+        return self.name == other.name and self.issuer == other.issuer
+
+    # Optional: Overriding __hash__ to allow use in sets and dict keys
+    def __hash__(self):
+        return hash((self.name, self.issuer))
+
     @field_validator('sign_on_bonus', mode='before')
     @classmethod
     def validate_sign_on_bonus(cls, v):

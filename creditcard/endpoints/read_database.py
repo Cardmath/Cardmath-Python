@@ -25,21 +25,21 @@ async def read_credit_cards_database(
             lifestyle = credit_profile_preferences.lifestyle if credit_profile_preferences else None
 
             banks_preferences = preferences.banks_preferences
-            have_banks = banks_preferences.have_banks if banks_preferences else []
-            preferred_banks = banks_preferences.preferred_banks if banks_preferences else []
-            avoid_banks = banks_preferences.avoid_banks if banks_preferences else []
+            have_banks = banks_preferences.have_banks if banks_preferences else None
+            preferred_banks = banks_preferences.preferred_banks if banks_preferences else None
+            avoid_banks = banks_preferences.avoid_banks if banks_preferences else None
 
             rewards_preferences = preferences.rewards_programs_preferences
-            preferred_rewards_programs = rewards_preferences.preferred_rewards_programs if rewards_preferences else []
-            avoid_rewards_programs = rewards_preferences.avoid_rewards_programs if rewards_preferences else []
+            preferred_rewards_programs = rewards_preferences.preferred_rewards_programs if rewards_preferences else None
+            avoid_rewards_programs = rewards_preferences.avoid_rewards_programs if rewards_preferences else None
 
             consumer_preferences = preferences.consumer_preferences
-            favorite_grocery_stores = consumer_preferences.favorite_restaurants if consumer_preferences else []
-            favorite_general_goods_stores = consumer_preferences.favorite_general_goods_stores if consumer_preferences else []
+            favorite_grocery_stores = consumer_preferences.favorite_grocery_stores if consumer_preferences else None
+            favorite_general_goods_stores = consumer_preferences.favorite_general_goods_stores if consumer_preferences else None
 
             business_preferences = preferences.business_preferences
-            business_type = business_preferences.business_type if business_preferences else []
-            business_size = business_preferences.business_size if business_preferences else []
+            business_type = business_preferences.business_type if business_preferences else None
+            business_size = business_preferences.business_size if business_preferences else None
 
             query = db.query(CreditCard)
 

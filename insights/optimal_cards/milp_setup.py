@@ -47,7 +47,7 @@ def initialize_model(rmatrix: RMatrixDetails, credit_values: np.ndarray):
     wallet_indices = list(range(rmatrix.wallet_size))
     eligible_indices = list(range(rmatrix.wallet_size, rmatrix.wallet_size + len(rmatrix.ccs_added)))
     
-    model.addCons(quicksum(z[i] for i in wallet_indices) <= rmatrix.to_use, name="MaxHeldCards")
+    model.addCons(quicksum(z[i] for i in wallet_indices + eligible_indices) <= rmatrix.to_use, name="MaxHeldCards")
     model.addCons(quicksum(z[i] for i in eligible_indices) <= rmatrix.to_add, name="MaxAddedCards")
         
     return model, x, z, credit_reduction
