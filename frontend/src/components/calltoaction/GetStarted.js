@@ -1,13 +1,14 @@
 import React from 'react';
 import { Button } from 'primereact/button';
 import FadingImage from '../FadingImage';
+import CreditCard from './CreditCard';
 
 const GetStartedCallToAction = () => {
     return (
-        <div className="w-full bg-gray-900 pb-2 md:pb-2 flex flex-column md:flex-row align-items-center">
+        <div className="w-full bg-gray-900 pb-2 pt-6 md:pb-2 flex flex-column md:flex-row align-items-center">
             {/* Image above text on small screens, to the left on large screens */}
-            <div className="w-full md:w-6 mb-4 md:mb-0">
-                <FadingImage src="/cta-2.png" alt="People working together" className="w-full" />
+            <div className="flex justify-content-center w-full md:w-6 md:mb-0">
+                <CreditCard />
             </div>
 
             {/* Text content on the right side for large screens, below the image on small screens */}

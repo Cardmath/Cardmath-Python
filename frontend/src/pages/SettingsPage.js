@@ -86,7 +86,7 @@ const SettingsPage = () => {
                 </div>
             )}
             {showTellerConnect && (
-                <div className="card mt-5">
+                <div className="mt-5">
                     {isLoading && <ProgressSpinner />}
                     <TellerConnectComponent
                         onBack={handleTellerBack}

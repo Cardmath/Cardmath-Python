@@ -133,11 +133,8 @@ const RegistrationFlowPage = () => {
     const completeRegistration = () => navigate('/dashboard');
 
     return (
-        <div className="bg-gray-800 min-h-screen text-white">
-            <div
-                className="px-4 py-6 md:px-6 lg:px-8 bg-no-repeat bg-cover"
-                style={{ background: 'url("/demo/images/blocks/pricing/pricing-4.svg")' }}
-            >
+        <div className="bg-gray-800 w-full h-screen flex justify-content-center text-white">
+            <div className="w-full px-4 py-6 md:px-6 lg:px-8">
                 <div className="flex flex-column align-items-start justify-content-start">
                     <img
                         src="/logos/svg/Color logo - no background.svg"
@@ -146,7 +143,7 @@ const RegistrationFlowPage = () => {
                     />
                 </div>
 
-                <div className="card mt-5">
+                <div className="mt-5">
                     <Steps model={steps} activeIndex={activeIndex} readOnly className="custom-steps" />
 
                     {/* Added Alert component */}

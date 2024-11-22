@@ -140,7 +140,7 @@ async def receive_teller_enrollment(current_user: Annotated[User, Depends(auth_u
                  db: Session = Depends(get_sync_db)):
     return await teller_endpoints.receive_teller_enrollment(db=db, access_token=access_token, user=current_user) 
 
-@app.post("/ingest_user_preferences")
+@app.post("/save_user_preferences")
 async def ingest_user_preferences(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                  preferences: PreferencesSchema,
                  db: Session = Depends(get_sync_db)):

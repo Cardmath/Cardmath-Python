@@ -1,0 +1,85 @@
+@property --rotate {
+    syntax: "<angle>";
+    initial-value: 132deg;
+    inherits: false;
+  }
+  
+  .glowing-body {
+    min-height: flex;
+    background: #212534;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centers the content horizontally and vertically */
+    flex-direction: column;
+    padding: 1rem;
+    box-sizing: border-box;
+    z-index: 1;
+  }
+  
+  .glow-card {
+    background: #191c29;
+    width: var(--glow-card-width);
+    height: var(--glow-card-height);
+    max-width: 500px; /* Optional: Set a max width for better scaling */
+    max-height: 500px; /* Optional: Set a max height for better scaling */
+    position: relative;
+    border-radius: 6px;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    color: rgb(88 199 250 / 0%);
+    cursor: pointer;
+  }
+  
+  .glow-card::before {
+    content: "";
+    width: 102%;
+    height: 102%;
+    border-radius: 6px;
+    background-image: linear-gradient(
+      var(--rotate),
+      hsl(157deg 99% 48%) 0%,
+      hsl(161deg 100% 47%) 25%,
+      hsl(164deg 100% 46%) 50%,
+      hsl(170deg 100% 44%) 75%,
+      hsl(198deg 100% 48%) 100%
+    );
+    position: absolute;
+    z-index: 0;
+    animation: spin 2.5s linear infinite;
+  }
+  
+  .glow-card::after {
+    position: absolute;
+    content: "";
+    top: calc(var(--glow-card-height) / 6);
+    left: 0;
+    right: 0;
+    z-index: 0;
+    height: 100%;
+    width: 100%;
+    margin: 0 auto;
+    transform: scale(0.8);
+    filter: blur(calc(var(--glow-card-height) / 6));
+    background-image: linear-gradient(
+      var(--rotate),
+      hsl(157deg 99% 48%) 0%,
+      hsl(161deg 100% 47%) 25%,
+      hsl(164deg 100% 46%) 50%,
+      hsl(170deg 100% 44%) 75%,
+      hsl(198deg 100% 48%) 100%
+    );
+    opacity: 1;
+    transition: opacity 0.5s;
+    animation: spin 6s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% {
+      --rotate: 0deg;
+    }
+    100% {
+      --rotate: 360deg;
+    }
+  }
+  
