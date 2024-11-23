@@ -1,9 +1,14 @@
 from database.sql_alchemy_db import Base
 from sqlalchemy import Column, Integer, String, JSON, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy import CheckConstraint
 
 class CreditProfilePreferences(Base):
     __tablename__ = 'credit_profile_preferences'
+    __table_args__ = (
+        CheckConstraint('credit_score >= 300 AND credit_score <= 850', name='check_credit_score_range'),
+        CheckConstraint('salary >= 0', name='check_positive_salary'),
+    )
     user_id = Column(Integer, ForeignKey('preferences.user_id'), primary_key=True)
     preferences = relationship("Preferences", back_populates="credit_profile")
 

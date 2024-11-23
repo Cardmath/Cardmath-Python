@@ -176,6 +176,7 @@ class CreditCardsFilter(BaseModel):
     issuer : Optional[List[Issuer]]
     credit_needed : Optional[List[CreditNeeded]]
     benefits : Optional[List[Benefit]]
+    keywords: Optional[List[CreditCardKeyword]]
     apr : Optional[float]
 
 class CreditCardsDatabaseRequest(BaseModel):
