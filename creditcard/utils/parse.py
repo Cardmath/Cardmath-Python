@@ -26,6 +26,13 @@ class RewardCategoryThreshold(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    @field_validator('fallback_reward_amount', mode="before")
+    @classmethod
+    def amount_must_be_reasonable(cls, v):
+        if v < 0 or v > 10:
+            raise ValueError('Amount must be positive and less than 20 to be reasonable')
+        return v
+
 class RewardCategoryRelation(BaseModel):
     category : Union[PurchaseCategory, Vendors]
     reward_unit : RewardUnit
@@ -38,8 +45,8 @@ class RewardCategoryRelation(BaseModel):
     @field_validator('reward_amount', mode="before")
     @classmethod
     def amount_must_be_reasonable(cls, v):
-        if v < 0 or v > 100:
-            raise ValueError('Amount must be positive and less than 100 to be reasonable')
+        if v < 0 or v > 20:
+            raise ValueError('Amount must be positive and less than 20 to be reasonable')
         return v
     
     @field_validator('reward_threshold', mode="before")
@@ -47,7 +54,7 @@ class RewardCategoryRelation(BaseModel):
     def validate_threshold(cls, v):
         if v is not None:
             v = RewardCategoryThreshold.model_validate(v)
-            if v.on_up_to_purchase_amount_usd < 0 or v.fallback_reward_amount < 0 or v.per_timeframe_num_months < 0:
+            if v.on_up_to_purchase_amount_usd < 0 or v.per_timeframe_num_months < 0:
                 return None
             else :
                 return v

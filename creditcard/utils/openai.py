@@ -96,26 +96,26 @@ def reward_category_map_response_format():
                                 },
                                 "reward_unit": {
                                     "type": "string",
-                                    "enum": [reward_unit.value for reward_unit in RewardUnit if reward_unit != RewardUnit.PERCENT_CASHBACK_USD],
+                                    "enum": [reward_unit.value for reward_unit in RewardUnit if reward_unit != RewardUnit.UNKNOWN and reward_unit != RewardUnit.STATEMENT_CREDIT_USD],
                                 },
                                 "reward_amount": {
                                     "type": "number",
                                     "description": "The amount of the reward unit. Please use general category amount if you want to capture default rewards. This number is almost always less than 10, and usually aroudn 1-3."
                                 },
                                 "reward_threshold": {
-                                    "type": "object",
+                                    "type": ["object", "null"],
                                     "properties": {
                                         "on_up_to_purchase_amount_usd": {
                                             "type": "number",
-                                            "description": "The maximum amount of the transaction that the reward is valid for per timeframe. Make this number -1 if there is no limit."
+                                            "description": "The maximum amount of the transaction that the reward is valid for per timeframe."
                                         },
                                         "per_timeframe_num_months": {
                                             "type": "number",
-                                            "description": "The number of months the reward is valid for, until it resets. Typically a single month but can be greater than 1. Make this number -1 if there is no limit."
+                                            "description": "The number of months the reward is valid for, until it resets. Typically a single month (1) but can be greater than 1."
                                         },
                                         "fallback_reward_amount": {
                                             "type": "number",
-                                            "description": "The fallback amount of the reward unit after the on_up_to_purchase_amount_usd is exceeded in the per_timeframe_num_months months timeframe. Typically the same as reward amount in general category.Make this number -1 if there is no limit."
+                                            "description": "The fallback amount of the reward unit after the on_up_to_purchase_amount_usd is exceeded in the per_timeframe_num_months months timeframe. Typically the same as reward amount in general category"
                                         }   
                                     },
                                     "additionalProperties": False,
