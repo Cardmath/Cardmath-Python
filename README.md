@@ -1,9 +1,3 @@
-## Issue Tracker
-[Google Doc](https://docs.google.com/document/d/1fCZ-KVuJ2Rv4VMN8IJ3mdNmXG8HH2luKAAgKBecQnmI/edit?usp=sharing)
-
-## Sites this Project Scrapes
-[Cardrating.com](https://www.cardratings.com/credit-card-list.html)
-
 ## On Startup
 Set the path variable to the root directory of the repo
 ```
@@ -15,42 +9,31 @@ export PYTHONPATH=$(pwd)
 fastapi dev app.py
 ```
 
-## To run tests:
-```
-pytest -s tests/test_app.py
-```
-You might want to replace test_app.py with a different filepath
+## To test Frontend Changes
+1. Create an account with a personal email, and verify it. 
+2. Fill in this bash script with the correct details: ```
+    #!/bin/bash
 
-## Install Postman
-### On Mac:
-```
-curl -o- "https://dl-cli.pstmn.io/install/osx_arm64.sh" | sh
-```
-### On Linux
-```
-curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
-```
+    # Define the endpoint, username, and password
+    URL="https://backend-dot-cardmath-llc.uc.r.appspot.com/token"
+    USERNAME="your@email.com"
+    PASSWORD="password"
 
-## Postman Endpoint Tests
+    # Perform the POST request to login and extract the access_token
+    ACCESS_TOKEN=$(curl -s -X POST "$URL" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "username=$USERNAME" \
+    -d "password=$PASSWORD" | jq -r '.access_token')
 
-localhost:8000/download
-```
-{
-    "url" : "https://www.cardratings.com/credit-card-list.html",
-    "file_path" : "/home/johannes/CreditCards/cardratings.html",
-    "force_download" : true,
-    "user_agent" : "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0"
-}
-```
+    # Check if the token was extracted successfully
+    if [[ "$ACCESS_TOKEN" != "null" && -n "$ACCESS_TOKEN" ]]; then
+    echo "localStorage.setItem('cardmath_access_token', '$ACCESS_TOKEN');"
+    else
+    echo "Failed to retrieve access token. Please check your credentials or server status."
+    fi
+    ```
 
-## Old Sample Output
-```
-Found 80 cards.
-Long description used: 31
-Mid description used: 49
- --- 1 ---
- --- 2 ---
-CreditCard(name=Bank of America Premium Rewards credit card, issuer=Bank of America, rewards=[(<PurchaseCategory.TRAVEL: 'Travel'>, (<RewardUnit.BANK_OF_AMERICA_PREFERRED_REWARDS: 'Bank of America Preferred Rewards'>, 2.0)), (<PurchaseCategory.DINING: 'Dining'>, (<RewardUnit.BANK_OF_AMERICA_PREFERRED_REWARDS: 'Bank of America Preferred Rewards'>, 2.0)), (None, (<RewardUnit.BANK_OF_AMERICA_PREFERRED_REWARDS: 'Bank of America Preferred Rewards'>, 1.5))], benefits=['global entry/tsa precheck credit', 'no foreign transaction fees', 'travel insurance'], credit_needed=[<CreditNeeded.EXCELLENT: 'Excellent'>, <CreditNeeded.GOOD: 'Good'>])
-------------------------------
-CreditCard(name=Citi/ AAdvantage Business™World Elite Mastercard, issuer=Citi, rewards=[(<PurchaseCategory.TRAVEL: 'Travel'>, (<RewardUnit.AA_ADVANTAGE_MILES: 'American Airlines AAdvantage Miles'>, 2.0)), (<PurchaseCategory.GAS_AND_TRANSPORTATION: 'Gas and Transportation'>, (<RewardUnit.AA_ADVANTAGE_MILES: 'American Airlines AAdvantage Miles'>, 2.0)), (<PurchaseCategory.UTILITIES_AND_SERVICES: 'Utilities and Services'>, (<RewardUnit.AA_ADVANTAGE_MILES: 'American Airlines AAdvantage Miles'>, 2.0)), (<PurchaseCategory.ELECTRONICS_AND_TECHNOLOGY: 'Electronics and Technology'>, (<RewardUnit.AA_ADVANTAGE_MILES: 'American Airlines AAdvantage Miles'>, 2.0)), (<PurchaseCategory.RETAIL_SHOPPING: 'Retail Shopping'>, (<RewardUnit.AA_ADVANTAGE_MILES: 'American Airlines AAdvantage Miles'>, 1.0)), (<PurchaseCategory.DINING: 'Dining'>, (<RewardUnit.AA_ADVANTAGE_MILES: 'American Airlines AAdvantage Miles'>, 1.0)), (<PurchaseCategory.GROCERIES: 'Groceries'>, (<RewardUnit.AA_ADVANTAGE_MILES: 'American Airlines AAdvantage Miles'>, 1.0)), (<PurchaseCategory.ENTERTAINMENT: 'Entertainment'>, (<RewardUnit.AA_ADVANTAGE_MILES: 'American Airlines AAdvantage Miles'>, 1.0)), (<PurchaseCategory.HEALTH_AND_WELLNESS: 'Health and Wellness'>, (<RewardUnit.AA_ADVANTAGE_MILES: 'American Airlines AAdvantage Miles'>, 1.0)), (<PurchaseCategory.ONLINE_SHOPPING: 'Online Shopping'>, (<RewardUnit.AA_ADVANTAGE_MILES: 'American Airlines AAdvantage Miles'>, 1.0)), (<PurchaseCategory.CHARITABLE_DONATIONS: 'Charitable Donations'>, (<RewardUnit.AA_ADVANTAGE_MILES: 'American Airlines AAdvantage Miles'>, 1.0))], benefits=['free checked bags', 'no foreign transaction fees', 'priority boarding'], credit_needed=[<CreditNeeded.EXCELLENT: 'Excellent'>])
-```
+3. Execute the script and copy the output with ctrl+shift+c
+4. Start the frontend with: ```HTTPS=true npm start ```
+5. Open the browser console and paste the command ex: ```localStorage.setItem('cardmath_access_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqYWwyMzQwQGNvbHVtYmlhLmVkdSIsImV4cCI6MTczMjY0ODIwNX0.g2aXv02CHs0fpsQQbBNoPtP40_QITgeH4QS830B7F9A');```
+6. Finished! Make changes to your local frontend and see them in action with real data
