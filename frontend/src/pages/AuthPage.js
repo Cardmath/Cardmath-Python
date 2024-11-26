@@ -5,7 +5,6 @@ import 'primereact/resources/themes/saga-blue/theme.css';  // Theme
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Password } from 'primereact/password';
-import { Checkbox } from 'primereact/checkbox';
 import React, { useState } from 'react';
 import Alert from '../components/Alert';
 import TermsOfUseDialog from '../components/TermsOfUseDialog';
@@ -14,7 +13,6 @@ const AuthPage = ({ userHasAccount }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState(''); // New state variable
-    const [checked3, setChecked3] = useState(false);
     const [passwordValid, setPasswordValid] = useState(false);
     const [usernameValid, setUsernameValid] = useState(false);
     const [alert, setAlert] = useState({ visible: false, message: '', heading: '', type: 'error' });
@@ -172,150 +170,204 @@ const AuthPage = ({ userHasAccount }) => {
 
     return (
         <div
+            className="h-screen w-screen overflow-hidden flex flex-column align-items-center justify-content-center"
             style={{
-                background: 'linear-gradient(120deg, hsl(146deg 96% 28%) 0%, hsl(147deg 95% 27%) 12%, hsl(148deg 95% 26%) 18%, hsl(149deg 95% 26%) 22%, hsl(150deg 96% 25%) 26%, hsl(151deg 96% 24%) 29%, hsl(152deg 97% 23%) 33%, hsl(153deg 94% 20%) 36%, hsl(154deg 92% 18%) 39%, hsl(156deg 91% 15%) 42%, hsl(159deg 91% 13%) 44%, hsl(163deg 92% 10%) 47%, hsl(169deg 95% 8%) 50%, hsl(171deg 95% 10%) 53%, hsl(172deg 95% 12%) 56%, hsl(173deg 95% 15%) 58%, hsl(173deg 96% 18%) 61%, hsl(174deg 96% 20%) 64%, hsl(174deg 97% 23%) 67%, hsl(174deg 96% 25%) 71%, hsl(174deg 96% 28%) 74%, hsl(174deg 96% 30%) 78%, hsl(174deg 96% 33%) 82%, hsl(174deg 96% 36%) 88%, hsl(174deg 96% 38%) 100%)',
-                backgroundSize: 'cover',
-                minHeight: '100vh',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center'
+                background: `linear-gradient(
+                    135deg,
+                    hsl(157deg 99% 48%) 0%,
+                    hsl(159deg 100% 48%) 4%,
+                    hsl(161deg 100% 47%) 8%,
+                    hsl(162deg 100% 47%) 13%,
+                    hsl(164deg 100% 46%) 17%,
+                    hsl(166deg 100% 46%) 21%,
+                    hsl(167deg 100% 45%) 25%,
+                    hsl(169deg 100% 44%) 29%,
+                    hsl(170deg 100% 44%) 33%,
+                    hsl(172deg 100% 43%) 37%,
+                    hsl(173deg 100% 43%) 42%,
+                    hsl(175deg 100% 42%) 46%,
+                    hsl(176deg 100% 41%) 50%,
+                    hsl(178deg 100% 41%) 54%,
+                    hsl(181deg 100% 41%) 58%,
+                    hsl(184deg 100% 42%) 63%,
+                    hsl(186deg 100% 44%) 67%,
+                    hsl(188deg 100% 45%) 71%,
+                    hsl(190deg 100% 46%) 75%,
+                    hsl(192deg 100% 47%) 79%,
+                    hsl(194deg 100% 47%) 83%,
+                    hsl(196deg 100% 48%) 87%,
+                    hsl(197deg 100% 48%) 92%,
+                    hsl(198deg 100% 48%) 96%,
+                    hsl(200deg 100% 48%) 100%
+                )`,
+                animation: 'bg-pan-diagonal-reverse 8s ease-in-out infinite',
+                backgroundSize: '200% 200%',
+                position: 'relative',
+                zIndex: 0,
             }}
-            className='flex flex-column'
         >
-            <Alert visible={alert.visible} message={alert.message} type={alert.type} heading={alert.heading} setVisible={(visible) => setAlert({ ...alert, visible })}/>
-            <div className="flex flex-wrap lg:flex-nowrap p-4">
-                <div className="w-full lg:w-6 p-4 lg:p-7" style={{ backgroundColor: 'rgba(255,255,255,.7)' }}>
-                <img src="logos/svg/Black logo - no background.svg" alt="Cardmath Logo" height="50" className="mb-6" />
-                    <div className="text-xl text-black-alpha-90 font-medium mb-3">Welcome to Cardmath</div>
-                    <p className="text-black-alpha-50 line-height-3 mt-0 mb-6">
-                        Choose your credit card more intelligently by matching it to your spending habits and lifestyle needs.
-                    </p>
-                    <ul className="list-none p-0 m-0">
-                        <li className="flex align-items-start mb-4">
-                            <div>
-                                <span className="flex align-items-center justify-content-center bg-green-500 shadow-2" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
-                                    <i className="text-xl text-white pi pi-credit-card"></i>
-                                </span>
-                            </div>
-                            <div className="ml-3">
-                                <span className="font-medium text-black-alpha-90">Pick the Right Card</span>
-                                <p className="mt-2 mb-0 text-black-alpha-50 line-height-3">Cardmath analyzes your spending patterns to help you pick the right credit card, ensuring you get the best rewards and benefits tailored to your lifestyle.</p>
-                            </div>
-                        </li>
-                        <li className="flex align-items-start mb-4">
-                            <div>
-                                <span className="flex align-items-center justify-content-center bg-green-500 shadow-2" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
-                                    <i className="text-xl text-white pi pi-calculator"></i>
-                                </span>
-                            </div>
-                            <div className="ml-3">
-                                <span className="font-medium text-black-alpha-90">Track Your Spending</span>
-                                <p className="mt-2 mb-0 text-black-alpha-50 line-height-3">Track your spending and rewards to avoid fees and make the most of your cards.</p>
-                            </div>
-                        </li>
-                        <li className="flex align-items-start">
-                            <div>
-                                <span className="flex align-items-center justify-content-center bg-green-500 shadow-2" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
-                                    <i className="text-xl text-white pi pi-shield"></i>
-                                </span>
-                            </div>
-                            <div className="ml-3">
-                                <span className="font-medium text-black-alpha-90">Premium Security</span>
-                                <p className="mt-2 mb-0 text-black-alpha-50 line-height-3">Cardmath prioritizes your security with robust encryption and never sells or shares your data, ensuring your financial information stays private and protected.</p>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-                <div className="w-full lg:w-6 p-4 lg:p-7 bg-gray-200">
-                    <div className="text-900 text-2xl font-medium mb-6">
-                        {forgotPasswordMode ? "Reset Password" : (userHasAccount ? "Login" : "Register")}
-                    </div>
+            <style>
+                {`
+                /* Diagonal animation from bottom-right to top-left */
+                @keyframes bg-pan-diagonal-reverse {
+                    0% { background-position: 100% 100%; }
+                    50% { background-position: 0% 0%; }
+                    100% { background-position: 100% 100%; }
+                }
 
-                    <label htmlFor="email" className="block text-900 font-medium mb-2">Email</label>
-                    <InputText
-                        tabIndex={0}
-                        value={username}
-                        id="email"
-                        type="text"
-                        placeholder="Email address"
-                        className="w-full mb-4"
-                        onChange={(e) => handleUsernameChange(e.target.value)}
-                    />
-
-                    {!forgotPasswordMode && (
-                        <>
-                            <label htmlFor="password" className="block text-900 font-medium mb-2">Password</label>
-                            <Password
-                                footer={userHasAccount ? null : register_footer}
-                                tabIndex={0}
-                                value={password}
-                                feedback={!userHasAccount}
-                                id="password"
-                                type="text"
-                                placeholder="Password"
-                                className="w-full mb-4"
-                                onChange={(e) => handlePasswordChange(e.target.value)}
-                                toggleMask
-                            />
-
-                            {/* Confirm Password Field for Registration */}
-                            {!userHasAccount && (
-                                <>
-                                    <label htmlFor="confirmPassword" className="block text-900 font-medium mb-2">Confirm Password</label>
-                                    <Password
-                                        tabIndex={0}
-                                        value={confirmPassword}
-                                        feedback={false}
-                                        id="confirmPassword"
-                                        type="text"
-                                        placeholder="Confirm Password"
-                                        className="w-full mb-4"
-                                        onChange={(e) => handleConfirmPasswordChange(e.target.value)}
-                                        toggleMask
-                                    />
-                                </>
-                            )}
-
-                            <div className="flex align-items-center justify-content-between mb-6">
-                                <div className="flex align-items-center">
-                                    <Checkbox id="rememberme3" className="mr-2" checked={checked3} onChange={(e) => setChecked3(e.checked)} />
-                                    <label htmlFor="rememberme3">Remember me</label>
+                /* Text animation for Cardmath */
+                @keyframes tracking-in-expand {
+                    0% { letter-spacing: -0.5em; opacity: 0; }
+                    40% { opacity: 0.6; }
+                    100% { letter-spacing: normal; opacity: 1; }
+                }
+                `}
+            </style>
+            <div
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: `
+                        radial-gradient(circle at top right, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0) 50%),
+                        radial-gradient(circle at bottom left, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0) 50%)
+                    `,
+                    zIndex: -1,
+                }} />
+            <div style={{zIndex: 2}}>
+            <Alert className ='py-8' visible={alert.visible} message={alert.message} type={alert.type} heading={alert.heading} setVisible={(visible) => setAlert({ ...alert, visible })}/>
+            <div className="grid px-6 mt-5">
+                    <div className="col p-4 lg:p-7" style={{ backgroundColor: 'rgba(255,255,255,.7)' }}>
+                    <img src="logos/svg/Black logo - no background.svg" alt="Cardmath Logo" height="50" className="mb-6" />
+                        <div className="text-xl text-black-alpha-90 font-medium mb-3">Welcome to Cardmath</div>
+                        <p className="text-black-alpha-50 line-height-3 mt-0 mb-6">
+                            Choose your credit card more intelligently by matching it to your spending habits and lifestyle needs.
+                        </p>
+                        <ul className="list-none p-0 m-0">
+                            <li className="flex align-items-start mb-4">
+                                <div>
+                                    <span className="flex align-items-center justify-content-center bg-green-500 shadow-2" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
+                                        <i className="text-xl text-white pi pi-credit-card"></i>
+                                    </span>
                                 </div>
-                                {userHasAccount && (
-                                    <a onClick={() => setForgotPasswordMode(true)} className="font-medium no-underline ml-2 text-blue-500 text-right cursor-pointer">
-                                        Forgot password?
-                                    </a>
+                                <div className="ml-3">
+                                    <span className="font-medium text-black-alpha-90">Pick the Right Card</span>
+                                    <p className="mt-2 mb-0 text-black-alpha-50 line-height-3">Cardmath analyzes your spending patterns to help you pick the right credit card, ensuring you get the best rewards and benefits tailored to your lifestyle.</p>
+                                </div>
+                            </li>
+                            <li className="flex align-items-start mb-4">
+                                <div>
+                                    <span className="flex align-items-center justify-content-center bg-green-500 shadow-2" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
+                                        <i className="text-xl text-white pi pi-calculator"></i>
+                                    </span>
+                                </div>
+                                <div className="ml-3">
+                                    <span className="font-medium text-black-alpha-90">Track Your Spending</span>
+                                    <p className="mt-2 mb-0 text-black-alpha-50 line-height-3">Track your spending and rewards to avoid fees and make the most of your cards.</p>
+                                </div>
+                            </li>
+                            <li className="flex align-items-start">
+                                <div>
+                                    <span className="flex align-items-center justify-content-center bg-green-500 shadow-2" style={{ width: '38px', height: '38px', borderRadius: '10px' }}>
+                                        <i className="text-xl text-white pi pi-shield"></i>
+                                    </span>
+                                </div>
+                                <div className="ml-3">
+                                    <span className="font-medium text-black-alpha-90">Premium Security</span>
+                                    <p className="mt-2 mb-0 text-black-alpha-50 line-height-3">Cardmath prioritizes your security with robust encryption and never sells or shares your data, ensuring your financial information stays private and protected.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div className="col lg:p-7 bg-gray-200">
+                        <div className="text-900 text-2xl font-medium mb-6">
+                            {forgotPasswordMode ? "Reset Password" : (userHasAccount ? "Login" : "Register")}
+                        </div>
+    
+                        <label htmlFor="email" className="block text-900 font-medium mb-2">Email</label>
+                        <InputText
+                            tabIndex={0}
+                            value={username}
+                            id="email"
+                            type="text"
+                            placeholder="Email address"
+                            className="w-full mb-4"
+                            onChange={(e) => handleUsernameChange(e.target.value)}
+                        />
+    
+                        {!forgotPasswordMode && (
+                            <>
+                                <label htmlFor="password" className="block text-900 font-medium mb-2">Password</label>
+                                <Password
+                                    footer={userHasAccount ? null : register_footer}
+                                    tabIndex={0}
+                                    value={password}
+                                    feedback={!userHasAccount}
+                                    id="password"
+                                    type="text"
+                                    placeholder="Password"
+                                    className="w-full mb-4"
+                                    onChange={(e) => handlePasswordChange(e.target.value)}
+                                    toggleMask
+                                />
+    
+                                {/* Confirm Password Field for Registration */}
+                                {!userHasAccount && (
+                                    <>
+                                        <label htmlFor="confirmPassword" className="block text-900 font-medium mb-2">Confirm Password</label>
+                                        <Password
+                                            tabIndex={0}
+                                            value={confirmPassword}
+                                            feedback={false}
+                                            id="confirmPassword"
+                                            type="text"
+                                            placeholder="Confirm Password"
+                                            className="w-full mb-4"
+                                            onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+                                            toggleMask
+                                        />
+                                    </>
+                                )}
+    
+                                <div className="pb-6">
+                                    {userHasAccount && (
+                                        <a onClick={() => setForgotPasswordMode(true)} className="font-medium no-underline ml-2 text-blue-500 text-right cursor-pointer">
+                                            Forgot password?
+                                        </a>
+                                    )}
+                                </div>
+    
+                                <Button label={userHasAccount ? "Login" : "Register"} icon="pi pi-user" className="bg-blue-500 text-white w-full" onClick={handleAuth}/>
+                                
+                                {/* Terms of Use dialog */}
+                                {showTermsDialog && (
+                                    <TermsOfUseDialog
+                                        pdfUrl="/Cardmath, LLC - Terms of Use.docx.pdf"
+                                        onConfirm={() => {
+                                            setShowTermsDialog(false);
+                                            performAuth();  // Proceed with authentication after terms are accepted
+                                        }}
+                                    />
+                                )}
+                            </>
+                        )}
+    
+                        {forgotPasswordMode && (
+                            <Button label="Send Reset Link" icon="pi pi-envelope" className="bg-blue-500 text-white w-full" onClick={handlePasswordResetRequest}/>
+                        )}
+    
+                        {!forgotPasswordMode && (
+                            <div className="mt-6 text-center text-600">
+                                {userHasAccount ? (
+                                    <>Don't have an account? <a href="/register" tabIndex="0" className="font-medium text-blue-500">Sign up</a></>
+                                ) : (
+                                    <>Already have an account? <a href="/login" tabIndex="0" className="font-medium text-blue-500">Login</a></>
                                 )}
                             </div>
-
-                            <Button label={userHasAccount ? "Login" : "Register"} icon="pi pi-user" className="bg-blue-500 text-white w-full" onClick={handleAuth}/>
-                            
-                            {/* Terms of Use dialog */}
-                            {showTermsDialog && (
-                                <TermsOfUseDialog
-                                    pdfUrl="/Cardmath, LLC - Terms of Use.docx.pdf"
-                                    onConfirm={() => {
-                                        setShowTermsDialog(false);
-                                        performAuth();  // Proceed with authentication after terms are accepted
-                                    }}
-                                />
-                            )}
-                        </>
-                    )}
-
-                    {forgotPasswordMode && (
-                        <Button label="Send Reset Link" icon="pi pi-envelope" className="bg-blue-500 text-white w-full" onClick={handlePasswordResetRequest}/>
-                    )}
-
-                    {!forgotPasswordMode && (
-                        <div className="mt-6 text-center text-600">
-                            {userHasAccount ? (
-                                <>Don't have an account? <a href="/register" tabIndex="0" className="font-medium text-blue-500">Sign up</a></>
-                            ) : (
-                                <>Already have an account? <a href="/login" tabIndex="0" className="font-medium text-blue-500">Login</a></>
-                            )}
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
