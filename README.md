@@ -34,6 +34,8 @@ fastapi dev app.py
     ```
 
 3. Execute the script and copy the output with ctrl+shift+c
-4. Start the frontend with: ```HTTPS=true npm start ```
-5. Open the browser console and paste the command ex: ```localStorage.setItem('cardmath_access_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqYWwyMzQwQGNvbHVtYmlhLmVkdSIsImV4cCI6MTczMjY0ODIwNX0.g2aXv02CHs0fpsQQbBNoPtP40_QITgeH4QS830B7F9A');```
+4. Start the frontend with: 
+```HTTPS=true npm start ```
+5. Open the browser console and paste the command ex:
+``localStorage.setItem('cardmath_access_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqYWwyMzQwQGNvbHVtYmlhLmVkdSIsImV4cCI6MTczMjY0ODIwNX0.g2aXv02CHs0fpsQQbBNoPtP40_QITgeH4QS830B7F9A');```
 6. Finished! Make changes to your local frontend and see them in action with real data
