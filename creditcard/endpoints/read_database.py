@@ -1,10 +1,14 @@
 from creditcard.schemas import CreditCardSchema, CreditCardsFilter
-from creditcard.enums import CreditNeeded, Lifestyle, CreditCardKeyword
+from creditcard.enums import CreditNeeded, CreditCardKeyword
 from creditcard.schemas import CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
 from teller.schemas import PreferencesSchema
 from database.creditcard.creditcard import CreditCard
+from database.teller.preferences import Preferences
 from sqlalchemy.orm import Session
 from database.auth.user import User
+from sqlalchemy import cast
+from sqlalchemy.dialects.postgresql import JSONB, array
+import logging
 from typing import Optional
 
 async def read_credit_cards_database(
@@ -19,6 +23,17 @@ async def read_credit_cards_database(
 
     if request.use_preferences and current_user:
         preferences: PreferencesSchema = current_user.preferences
+        if not preferences:
+            logging.info("Additional database query to retrieve the user's preferences")
+            query_preferences = db.query(Preferences).filter(Preferences.user_id == current_user.id).first()
+            if query_preferences:
+                preferences = PreferencesSchema.model_validate(query_preferences, exclude_unset=True)
+            else:
+                preferences = PreferencesSchema()
+                logging.info("No preferences found for the user. Using empty preferences.")
+
+        logging.info(f"Using preferences: {preferences}")
+
         if preferences:
             credit_profile_preferences = preferences.credit_profile
             credit_score = credit_profile_preferences.credit_score if credit_profile_preferences else None
@@ -32,47 +47,39 @@ async def read_credit_cards_database(
             preferred_rewards_programs = rewards_preferences.preferred_rewards_programs if rewards_preferences else None
             avoid_rewards_programs = rewards_preferences.avoid_rewards_programs if rewards_preferences else None
 
-            # Filter by credit score
             if credit_score:
                 credit_scores = CreditNeeded.get_from_user_credit(credit_score)
                 query = query.filter(
-                    CreditCard.credit_needed.op('->>')('key').in_(credit_scores)
+                    cast(CreditCard.credit_needed, JSONB).has_any(array(credit_scores))
                 )
 
-            # Apply bank preferences
-            if preferred_banks:
-                query = query.filter(CreditCard.issuer.in_(preferred_banks))
-            if have_banks:
-                query = query.filter(CreditCard.issuer.in_(have_banks))
-            if avoid_banks:
-                query = query.filter(~CreditCard.issuer.in_(avoid_banks))
 
-            # Apply rewards program preferences
+            if preferred_banks:
+                query = query.filter(CreditCard.issuer.in_(array(preferred_banks)))
+            if have_banks:
+                query = query.filter(CreditCard.issuer.in_(array(have_banks)))
+            if avoid_banks:
+                query = query.filter(~CreditCard.issuer.in_(array(avoid_banks)))
+
             if preferred_rewards_programs:
                 query = query.filter(CreditCard.primary_reward_unit.in_(preferred_rewards_programs))
             if avoid_rewards_programs:
                 query = query.filter(~CreditCard.primary_reward_unit.in_(avoid_rewards_programs))
 
-            # Exclude unwanted keywords
-            business_keywords = [
-                    CreditCardKeyword.business.value,
-                    CreditCardKeyword.small_business.value
-                ]
-            wanted_keywords = request.card_details.keywords if isinstance(request.card_details, CreditCardsFilter) else None
-            if not preferences.business_preferences and wanted_keywords and set(business_keywords).isdisjoint(wanted_keywords):
-                query = query.filter(
-                    ~CreditCard.keywords.op('->>')('key').in_(business_keywords))
-            if wanted_keywords:
-                query = query.filter(
-                    CreditCard.keywords.op('->>')('key').in_(wanted_keywords))
+            wanted_keywords = request.card_details.keywords if isinstance(request.card_details, CreditCardsFilter) and request.card_details.keywords else []
 
-    elif request.card_details and request.card_details == "all":
-        credit_cards = query.limit(request.max_num).all()
-        return CreditCardsDatabaseResponse(
-            credit_card=[CreditCardSchema.model_validate(cc) for cc in credit_cards]
-        )
+            business_keywords = [
+                CreditCardKeyword.business.value,
+                CreditCardKeyword.small_business.value
+            ]
+            
+            if set(business_keywords).isdisjoint(wanted_keywords):
+                logging.info("Including rows that do NOT match business keywords")
+                query = query.filter(
+                    ~(cast(CreditCard.keywords, JSONB).has_any(array(business_keywords)))
+                )
+            else :
+                logging.info("Including business keywords")
 
     credit_cards = query.limit(request.max_num).all()
-    return CreditCardsDatabaseResponse(
-        credit_card=[CreditCardSchema.model_validate(cc) for cc in credit_cards]
-    )
+    return CreditCardsDatabaseResponse(credit_card=[CreditCardSchema.model_validate(cc) for cc in credit_cards])
