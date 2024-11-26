@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Button } from 'primereact/button';
 import { ConfirmDialog } from 'primereact/confirmdialog';
 import { fetchWithAuth } from '../pages/AuthPage'; // Adjust the import path as needed
-import { useNavigate } from 'react-router-dom';
 import { Toast } from 'primereact/toast';
 import TellerConnectComponent from './TellerConnect'; // Import TellerConnectComponent
 import { ProgressSpinner } from 'primereact/progressspinner';
@@ -11,7 +10,6 @@ const SettingsPage = () => {
     const [confirmVisible, setConfirmVisible] = useState(false);
     const [showTellerConnect, setShowTellerConnect] = useState(false); // State to control Teller Connect visibility
     const [isLoading, setIsLoading] = useState(false); // State for loading spinner
-    const navigate = useNavigate();
     const toast = React.useRef(null);
 
     const showConfirm = () => {
