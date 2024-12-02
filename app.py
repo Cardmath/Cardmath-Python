@@ -1,5 +1,8 @@
+from auth.recovery import request_password_recovery, PasswordResetForm, reset_password, PasswordResetRequest, create_email_verification_token, send_verification_email, verify_email
 from auth.schemas import Token
 from auth.schemas import User, UserCreate
+from chat.endpoint import chat 
+from chat.schemas import ChatRequest
 from contextlib import asynccontextmanager
 from creditcard.endpoints.download import download
 from creditcard.endpoints.download import DownloadRequest, DownloadResponse
@@ -10,7 +13,6 @@ from creditcard.endpoints.parse import ParseRequest, ParseResponse
 from creditcard.endpoints.read_database import CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
 from creditcard.endpoints.read_database import read_credit_cards_database
 from creditcard.schemas import *
-from payments.stripe_checkout_session import create_checkout_session, CheckoutSessionRequest, CheckoutSessionIDRequest, CheckoutSessionResponse, stripe_webhook, get_checkout_session
 from database.creditcard import creditcard
 from database.sql_alchemy_db import sync_engine, async_engine, get_async_db, get_sync_db, print_sql_schema
 from datetime import timedelta
@@ -18,16 +20,17 @@ from fastapi import Request, Depends, FastAPI, HTTPException, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from insights.heavyhitters import read_heavy_hitters
 from insights.moving_averages import compute_categories_moving_averages
 from insights.optimal_cards.endpoint import optimize_credit_card_selection_milp
-from insights.schemas import OptimalCardsAllocationRequest, OptimalCardsAllocationResponse
 from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, CategoriesMovingAveragesRequest, CategoriesMovingAveragesResponse
+from insights.schemas import OptimalCardsAllocationRequest, OptimalCardsAllocationResponse
+from payments.stripe_checkout_session import create_checkout_session, CheckoutSessionRequest, CheckoutSessionIDRequest, CheckoutSessionResponse, stripe_webhook, get_checkout_session
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
-from auth.recovery import request_password_recovery, PasswordResetForm, reset_password, PasswordResetRequest, create_email_verification_token, send_verification_email, verify_email
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
 import teller.endpoints as teller_endpoints
@@ -237,6 +240,10 @@ async def reset_password_endpoint(form_data: PasswordResetForm, db: Session = De
 @app.post("/delete-user-data")
 async def delete_user_data_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], db: Session = Depends(get_sync_db)):
     return auth_crud.delete_user_data(user=current_user, db=db)
+
+@app.post("/chat")
+async def chat_endpoint(request: ChatRequest) -> StreamingResponse:
+    return await chat(request=request)
 
 @app.get("/api/issuers")
 def get_issuers():

@@ -1,6 +1,6 @@
 .image-class {
     width: 400px;
-    height: 400px;
-    object-fit: scale-down;
+    height: 350px;
+    object-fit: 'scale-down';
   }
   

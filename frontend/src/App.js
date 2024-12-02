@@ -15,11 +15,13 @@ import ResetPassword from './pages/ResetPasswordPage';
 import RegistrationFlowPage from './pages/RegistrationFlowPage';
 import ArticleDetailPage from './components/articles/ArticleDetailPage';
 import BlogPage from './pages/BlogPage';
+import ChatContainer from './components/chat/ChatContainer';
 
 const App = () => {
     return (
         <Router>
             <Routes>
+                <Route path="/chat" element={<ChatContainer />} />
                 <Route path="/" element={<LandingPageComponent />}/>
                 <Route path="/connect" element={<TellerConnectComponent />} />
                 <Route path="/dashboard" element={ <DashboardPage /> } />
