@@ -32,67 +32,63 @@ const CityOnly = ({ city }) => (
 
 const IsometricCreditCard = () => {
   useEffect(() => {
+    function updateGridSize() {
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      const gridSize = isMobile ? 2 : 5;
+      document.documentElement.style.setProperty('--gridSize', gridSize.toString());
+    }
+
     function scrollGrid() {
       const wrapperHeight = document.querySelector(".wrapper").offsetHeight;
       const cards = document.querySelector(".icc-cards");
       const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight));
-      const transY = scrollPercent * -100 + 50 ;
+      const transY = scrollPercent * -100 + 50;
       
       cards.style.setProperty("--scroll", `${transY}%`);
     }
 
-    {// // Log positions
-    // const main = document.querySelector('.icc-main');
-    // const wrapper = document.querySelector('.wrapper');
-    // const cardsEl = document.querySelector('.icc-cards');
-    
-    // [main, wrapper, cardsEl].forEach(el => {
-    //   const rect = el.getBoundingClientRect();
-    //   console.log(`${el.className}:`, {
-    //     top: rect.top,
-    //     left: rect.left, 
-    //     bottom: rect.bottom,
-    //     right: rect.right,
-    //     width: rect.width,
-    //     height: rect.height
-    //   });
-    // });}
-    }
-
-    window.addEventListener("resize", scrollGrid);
+    window.addEventListener("resize", () => {
+      updateGridSize();
+      scrollGrid();
+    });
     window.addEventListener("scroll", scrollGrid);
 
-    scrollGrid(); // Initial call
+    // Initial calls
+    updateGridSize();
+    scrollGrid();
 
     return () => {
-      window.removeEventListener("resize", scrollGrid);
+      window.removeEventListener("resize", updateGridSize);
       window.removeEventListener("scroll", scrollGrid);
     };
   }, []);
 
+  // Get current grid size for card count
+  const gridSize = window.matchMedia('(max-width: 768px)').matches ? 2 : 5;
+  const totalCards = gridSize * gridSize;
+
   return (
-    <div class="wrapper">
-    <div className="icc-main">
-      <div className="icc-cards">
-        {[...Array(64)].map((_, index) => {
-          const c = index % cardText.length;
-          return (
-            <a className="icc-stack" key={index}>
-              <div className="icc-card top">
-                <CardText {...cardText[c]} />
-              </div>
-              <div className="icc-card mid">
-                <CityOnly city={cardText[c].city} />
-              </div>
-              <div className="icc-card bottom">
-                <CityOnly city={cardText[c].city} />
-              </div>
-              <div className="icc-card shadow"></div>
-            </a>
-          );
-        })}
+    <div className="wrapper">
+      <div className="icc-main">
+        <div className="icc-cards">
+          {[...Array(totalCards)].map((_, index) => {
+            const c = index % cardText.length;
+            return (
+              <a className="icc-stack" key={index}>
+                <div className="icc-card top">
+                  <CardText {...cardText[c]} />
+                </div>
+                <div className="icc-card mid">
+                  <CityOnly city={cardText[c].city} />
+                </div>
+                <div className="icc-card bottom">
+                  <CityOnly city={cardText[c].city} />
+                </div>
+              </a>
+            );
+          })}
+        </div>
       </div>
-    </div>
     </div>
   );
 };
