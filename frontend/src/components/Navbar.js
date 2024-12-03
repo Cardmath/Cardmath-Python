@@ -128,7 +128,7 @@ const Navbar = () => {
                                         <div
                                             className="px-0 lg:px-3 py-3 hover:bg-gray-700 transition-duration-150"
                                             onClick={() => {
-                                                navigate('/creditcards/travel');
+                                                navigate('/creditcards');
                                             }}
                                         >
                                             <span className="text-white">Travel</span>
@@ -139,7 +139,7 @@ const Navbar = () => {
                                         <div
                                             className="px-0 lg:px-3 py-3 hover:bg-gray-700 transition-duration-150"
                                             onClick={() => {
-                                                navigate('/creditcards/student');
+                                                navigate('/creditcards');
                                             }}
                                         >
                                             <span className="text-white">Student</span>

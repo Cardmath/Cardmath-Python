@@ -24,7 +24,7 @@ const GetStartedCallToAction = () => {
                     <div className="text-gray-200 font-medium mb-4 md:mb-6">
                         Earn more with what you spend, and simplify your credit card search with our advanced tools!
                     </div>
-                    <Button onClick={() =>navigate('/register')} size="large" label="Get Started" className="bg-green-300 text-gray-900 font-bold px-5 py-3" />
+                    <Button onClick={() => navigate('/register')} size="large" label="Get Started" className="bg-green-300 text-gray-900 font-bold px-5 py-3" />
                 </div>
             </div>
         </div>
