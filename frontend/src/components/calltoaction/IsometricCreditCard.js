@@ -77,7 +77,7 @@ const IsometricCreditCard = () => {
         {[...Array(64)].map((_, index) => {
           const c = index % cardText.length;
           return (
-            <a href="#" className="icc-stack" key={index}>
+            <a className="icc-stack" key={index}>
               <div className="icc-card top">
                 <CardText {...cardText[c]} />
               </div>
