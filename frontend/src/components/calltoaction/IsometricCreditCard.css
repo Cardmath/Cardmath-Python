@@ -5,40 +5,36 @@
 }
 
 .wrapper {
-  clip-path: inset(0 0 0 0); /* Clips all content beyond the container */
-  z-index: 10; /* Higher z-index to ensure it's above other elements */
-  max-height: 330px; 
-  overflow: hidden;
-} 
-.icc-main {
-  margin: auto;
+  width: min(85vw, 770px);
+  height: 400px;
   position: relative;
-  box-sizing: border-box;
-  height: calc(var(--cardH) * 36 - 1.5em);
+  overflow: hidden;
 }
 
-.icc-cards,
-.icc-stack {
-  transform-style: preserve-3d;
+.icc-main {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  margin: 30px;
 }
 
 .icc-cards {
-  --scroll: -200;
   display: grid;
   grid-template: repeat(8, var(--cardH)) / repeat(8, var(--cardW));
   grid-gap: 1.5em;
-  position: fixed;
-  top: 100%;
-  left: 100%; 
-  transform: translateX(-50%) rotateX(45deg) rotateZ(45deg) translateY(var(--scroll));
-  transform-origin: 70% -50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotateX(45deg) rotateZ(45deg) translateY(var(--scroll));
+  transform-style: preserve-3d;
 }
 
 .icc-stack {
   display: block;
   position: relative;
+  transform-style: preserve-3d;
 }
-
+ 
 .icc-contents {
   color: #000;
   font-size: 0.5em;
@@ -72,21 +68,6 @@
   background-position: 100% 100%;
 }
 
-.icc-stack:nth-child(8n + 5) .icc-card,
-.icc-stack:nth-child(8n + 6) .icc-card,
-.icc-stack:nth-child(8n + 7) .icc-card,
-.icc-stack:nth-child(8n + 8) .icc-card {
-  filter: hue-rotate(90deg);
-  -webkit-filter: hue-rotate(90deg);
-}
-
-.icc-stack:nth-child(12n + 9) .icc-card,
-.icc-stack:nth-child(12n + 10) .icc-card,
-.icc-stack:nth-child(12n + 11) .icc-card,
-.icc-stack:nth-child(12n + 12) .icc-card {
-  filter: hue-rotate(180deg);
-  -webkit-filter: hue-rotate(180deg);
-}
 
 .icc-stack:hover .top,
 .icc-stack:focus .top {

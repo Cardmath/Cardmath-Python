@@ -35,7 +35,7 @@ const CreditCard = () => {
                 <span className="end-text">exp. end:</span>
                 <span className="end-date">11/22</span>
             </div>
-            <div className="card-holder">mr Bill Dingcredit</div>
+            <div className="card-holder">Bill Dingcredit</div>
             <div className="master">
                 <div className="circle master-red"></div>
                 <div className="circle master-yellow"></div>

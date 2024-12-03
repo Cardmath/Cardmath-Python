@@ -51,8 +51,8 @@ body {
   transform: translate(-50%, -50%);
 }
 .card {
-  width: 400px;
-  height: 250px;
+  width: var(--glow-card-width);
+  height: var(--glow-card-height);
   z-index: 1;
 }
 .flip {
@@ -156,21 +156,23 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 40px 25px 10px;
+  margin: 30px 25px min(2vw, 30px);
   font-size: 23px;
   font-family: 'cc font', monospace;
 }
-.end {
+.end{
   margin-left: 25px;
   text-transform: uppercase;
   font-family: 'cc font', monospace;
 }
+
 .end .end-text {
   font-size: 9px;
+  margin-right : 5px;
   color: rgba(255,255,255,0.8);
 }
 .card-holder {
-  margin: 10px 25px;
+  margin: 2vw 25px;
   text-transform: uppercase;
   font-family: 'cc font', monospace;
 }
@@ -187,11 +189,11 @@ body {
 }
 
 .master .master-red {
-    background-color: #eb001b;
-  }
+  background-color: #eb001b;
+}
 .master .master-yellow {
-    margin-left: -10px;
-    background-color: rgba(255,209,0,0.7);
+  margin-left: -10px;
+  background-color: rgba(255,209,0,0.7);
 }
 
 .card {

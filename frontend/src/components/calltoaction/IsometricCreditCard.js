@@ -33,12 +33,30 @@ const CityOnly = ({ city }) => (
 const IsometricCreditCard = () => {
   useEffect(() => {
     function scrollGrid() {
-      const bodyHeight = document.body.offsetHeight;
-      const mainHeight = document.querySelector(".icc-main").offsetHeight;
+      const wrapperHeight = document.querySelector(".wrapper").offsetHeight;
       const cards = document.querySelector(".icc-cards");
-      const transY = (window.scrollY / (mainHeight - bodyHeight)) * -100;
+      const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight));
+      const transY = scrollPercent * -100 + 50 ;
       
-      cards.style.setProperty("--scroll", transY + "%");
+      cards.style.setProperty("--scroll", `${transY}%`);
+    }
+
+    {// // Log positions
+    // const main = document.querySelector('.icc-main');
+    // const wrapper = document.querySelector('.wrapper');
+    // const cardsEl = document.querySelector('.icc-cards');
+    
+    // [main, wrapper, cardsEl].forEach(el => {
+    //   const rect = el.getBoundingClientRect();
+    //   console.log(`${el.className}:`, {
+    //     top: rect.top,
+    //     left: rect.left, 
+    //     bottom: rect.bottom,
+    //     right: rect.right,
+    //     width: rect.width,
+    //     height: rect.height
+    //   });
+    // });}
     }
 
     window.addEventListener("resize", scrollGrid);
@@ -56,7 +74,7 @@ const IsometricCreditCard = () => {
     <div class="wrapper">
     <div className="icc-main">
       <div className="icc-cards">
-        {[...Array(100)].map((_, index) => {
+        {[...Array(64)].map((_, index) => {
           const c = index % cardText.length;
           return (
             <a href="#" className="icc-stack" key={index}>
