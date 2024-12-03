@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Button } from 'primereact/button';
 import { useLocation } from 'react-router-dom';
 import Alert from './Alert';
-import { fetchWithAuth } from '../pages/AuthPage';
+import { getBackendUrl } from '../utils/urlResolver';
+
 
 const VerifyEmailComponent = ({ onSuccess }) => {
     const [alert, setAlert] = useState({
@@ -28,7 +29,7 @@ const VerifyEmailComponent = ({ onSuccess }) => {
         }
 
         // Send token to backend to verify email
-        fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/verify-email?token=' + encodeURIComponent(token))
+        fetch(`${getBackendUrl()}/verify-email?token=` + encodeURIComponent(token))
             .then((response) => response.json())
             .then((data) => {
                 if (data.msg === 'Email verified successfully') {
@@ -57,7 +58,7 @@ const VerifyEmailComponent = ({ onSuccess }) => {
     }, [token, onSuccess]);
 
     const retryVerification = () => {
-        fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/retry-email-verification', {
+        fetch(`${getBackendUrl()}/retry-email-verification`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         })

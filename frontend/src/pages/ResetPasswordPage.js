@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Password } from 'primereact/password';
 import { Button } from 'primereact/button';
 import Alert from '../components/Alert';
+import { getBackendUrl } from '../utils/urlResolver';
 
 const ResetPassword = () => {
     const [newPassword, setNewPassword] = useState('');
@@ -32,7 +33,7 @@ const ResetPassword = () => {
             return;
         }
 
-        fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/reset-password/', {
+        fetch(`${getBackendUrl()}/reset-password/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

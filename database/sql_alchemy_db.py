@@ -10,11 +10,10 @@ load_dotenv()
 ENVIRONMENT = os.getenv("ENVIRONMENT", "prod")
 
 if ENVIRONMENT == "prod":
-    # Production configuration (Google Cloud SQL with TLS)
     DB_NAME = os.getenv("DB_NAME", "postgres")
-    DB_USER = os.getenv("DB_USER", "cardmathdb")
+    DB_USER = os.getenv("DB_USER", "postgres")
     DB_PASSWORD = os.getenv("DB_PASSWORD", "your_database_password")
-    DB_HOST = os.getenv("DB_HOST", "cardmath-llc:us-central1:cardmathdb")  # Instance connection name
+    DB_HOST = os.getenv("DB_HOST", "cardmath-llc:northamerica-northeast2:cardmathdb")  # Instance connection name
     HOST_PREFIX = "/cloudsql"
 
     SSL_CERT_PATH = os.getenv("SSL_CERT_PATH")
@@ -29,9 +28,7 @@ if ENVIRONMENT == "prod":
         f"postgresql://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}?"
         f"host={HOST_PREFIX}/{DB_HOST}&sslmode=verify-full&sslcert={SSL_CERT_PATH}&sslkey={SSL_KEY_PATH}&sslrootcert={SSL_ROOT_CERT_PATH}"
     )
-
 else:
-    # Local development configuration (SQLite)
     SQLALCHEMY_DATABASE_URL_ASYNC = "sqlite+aiosqlite:///./test.db?check_same_thread=False"
     SQLALCHEMY_DATABASE_URL_SYNC = "sqlite:///./test.db?check_same_thread=False"
 

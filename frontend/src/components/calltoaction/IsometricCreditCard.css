@@ -8,16 +8,13 @@
   clip-path: inset(0 0 0 0); /* Clips all content beyond the container */
   z-index: 10; /* Higher z-index to ensure it's above other elements */
   max-height: 330px; 
+  overflow: hidden;
 } 
 .icc-main {
-  display: flex;
   margin: auto;
   position: relative;
-  overflow: hidden !important; /* This prevents content overflow */
+  box-sizing: border-box;
   height: calc(var(--cardH) * 36 - 1.5em);
-  max-height: 100%; /* Constrain height to the parent container */
-  width: 100%; /* Use percentage or specific units */
-  max-width: 100%; /* Prevents overflow horizontally */
 }
 
 .icc-cards,
@@ -28,11 +25,11 @@
 .icc-cards {
   --scroll: -200;
   display: grid;
-  grid-template: repeat(10, var(--cardH)) / repeat(10, var(--cardW));
+  grid-template: repeat(8, var(--cardH)) / repeat(8, var(--cardW));
   grid-gap: 1.5em;
   position: fixed;
   top: 100%;
-  left: 100%;
+  left: 100%; 
   transform: translateX(-50%) rotateX(45deg) rotateZ(45deg) translateY(var(--scroll));
   transform-origin: 70% -50%;
 }

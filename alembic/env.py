@@ -57,9 +57,9 @@ def get_db_url():
         db_password = getpass.getpass("Enter database password: ")
         db_url = URL.create(
             drivername="postgresql+psycopg2",
-            username="cardmathdb",
+            username="postgres",
             password=db_password,
-            host="34.31.74.189",
+            host="34.130.1.69",
             port=5432,
             database="postgres",
             query={

@@ -6,6 +6,7 @@ import { Slider } from 'primereact/slider';
 import CreditCardFaceouts from '../components/CreditCardFaceout';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { getBackendUrl } from '../utils/urlResolver';
 
 const CreditCardDatabase = () => {
     const [selectedIssuer, setSelectedIssuer] = useState(null);
@@ -21,17 +22,17 @@ const CreditCardDatabase = () => {
 
     // Fetch enum values from backend API on component mount
     useEffect(() => {
-        fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com/api/issuers")
+        fetch(`${getBackendUrl()}/api/issuers`)
             .then(response => response.json())
             .then(data => setIssuers(data.map(item => ({ label: item, value: item }))))
             .catch(error => console.error("Error fetching issuers:", error));
 
-        fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com/api/reward_units")
+        fetch(`${getBackendUrl()}/api/reward_units`)
             .then(response => response.json())
             .then(data => setRewardUnits(data.map(item => ({ label: item, value: item }))))
             .catch(error => console.error("Error fetching reward units:", error));
 
-        fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com/api/keywords")
+        fetch(`${getBackendUrl()}/api/keywords`)
             .then(response => response.json())
             .then(data => setKeywords(data.map(item => ({ label: item, value: item }))))
             .catch(error => console.error("Error fetching keywords:", error));

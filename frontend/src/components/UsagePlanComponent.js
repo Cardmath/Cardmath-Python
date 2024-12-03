@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from 'primereact/button';
 import { confirmDialog } from 'primereact/confirmdialog';
 import { fetchWithAuth } from '../pages/AuthPage';
+import { getBackendUrl } from '../utils/urlResolver';
 
 const UsagePlanComponent = ({ onBack }) => {
     const [processingError, setProcessingError] = useState(false);
@@ -9,7 +10,7 @@ const UsagePlanComponent = ({ onBack }) => {
     const handleCheckout = async (product) => {
         try {
             const response = await fetchWithAuth(
-                'https://backend-dot-cardmath-llc.uc.r.appspot.com/create_checkout_session',
+                `${getBackendUrl()}/create_checkout_session`,
                 {
                     method: 'POST',
                     headers: {

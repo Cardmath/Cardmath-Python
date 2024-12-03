@@ -8,6 +8,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { FloatLabel } from 'primereact/floatlabel';
 import { fetchWithAuth } from '../pages/AuthPage';
 import { Dropdown } from 'primereact/dropdown';
+import { getBackendUrl } from '../utils/urlResolver';
 
 const PreferencesCard = ({ onBack, onSuccess }) => {
     const navigate = useNavigate();
@@ -59,7 +60,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
             business_preferences: { business_type: selectedIndustries, business_size: selectedBusinessSize },
         };
 
-        fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/save_user_preferences', {
+        fetchWithAuth(`${getBackendUrl()}/save_user_preferences`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -116,13 +117,13 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
             try {
                 debugLog('Fetching enums and user preferences');
                 const [banksData, pointsSystemsData, groceriesData, shoppingData, lifestyleData, industriesData, businessSizesData] = await Promise.all([
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/issuers').then(res => res.json()),
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/reward_units').then(res => res.json()),
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/grocery_stores').then(res => res.json()),
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/general_goods_stores').then(res => res.json()),
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/lifestyles').then(res => res.json()),
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/industries').then(res => res.json()),
-                    fetch('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/business_sizes').then(res => res.json()),
+                    fetch(`${getBackendUrl()}/api/issuers`).then(res => res.json()),
+                    fetch(`${getBackendUrl()}/api/reward_units`).then(res => res.json()),
+                    fetch(`${getBackendUrl()}/api/grocery_stores`).then(res => res.json()),
+                    fetch(`${getBackendUrl()}/api/general_goods_stores`).then(res => res.json()),
+                    fetch(`${getBackendUrl()}/api/lifestyles`).then(res => res.json()),
+                    fetch(`${getBackendUrl()}/api/industries`).then(res => res.json()),
+                    fetch(`${getBackendUrl()}/api/business_sizes`).then(res => res.json()),
                 ]);
 
                 // Populate dropdowns
@@ -136,7 +137,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
 
                 // Fetch preferences
                 const response = await fetchWithAuth(
-                    'https://backend-dot-cardmath-llc.uc.r.appspot.com/read_user_preferences',
+                    `${getBackendUrl()}/read_user_preferences`,
                     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) }
                 );
                 const data = await response.json();

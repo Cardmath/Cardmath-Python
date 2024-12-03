@@ -9,6 +9,7 @@ import { FloatLabel } from 'primereact/floatlabel';
 import { Calendar } from 'primereact/calendar';
 import { Tooltip } from 'primereact/tooltip';
 import { Dropdown } from 'primereact/dropdown';
+import { getBackendUrl } from '../utils/urlResolver';
 import moment from 'moment';
 
 import CreditCardItemTemplate from './CreditCardItemTemplate';
@@ -68,7 +69,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
 
   const fetchUserPreferences = async () => {
     try {
-      const response = await fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/read_user_preferences', {
+      const response = await fetchWithAuth(`${getBackendUrl()}/read_user_preferences`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -108,7 +109,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
           };
         }
 
-        const response = await fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/compute_optimal_allocation', {
+        const response = await fetchWithAuth(`${getBackendUrl()}/compute_optimal_allocation`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
@@ -157,7 +158,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
         };
       }
 
-      const response = await fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/compute_optimal_allocation', {
+      const response = await fetchWithAuth(`${getBackendUrl()}/compute_optimal_allocation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)

@@ -5,6 +5,7 @@ import { Button } from 'primereact/button';
 import './Navbar.css';
 import { fetchWithAuth } from '../pages/AuthPage';
 import { useNavigate } from 'react-router-dom';
+import { getBackendUrl } from '../utils/urlResolver';
 
 const Navbar = () => {
     const rootBtnRef6 = useRef(null);
@@ -14,7 +15,7 @@ const Navbar = () => {
 
     useEffect(() => {
         // Check if user is authenticated
-        fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/api/is_user_logged_in', {
+        fetchWithAuth(`${getBackendUrl()}/api/is_user_logged_in`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
         })

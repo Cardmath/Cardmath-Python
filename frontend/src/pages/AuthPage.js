@@ -8,6 +8,8 @@ import { Password } from 'primereact/password';
 import React, { useState } from 'react';
 import Alert from '../components/Alert';
 import TermsOfUseDialog from '../components/TermsOfUseDialog';
+import { useNavigate } from 'react-router-dom';
+import { getBackendUrl } from '../utils/urlResolver';
 
 const AuthPage = ({ userHasAccount }) => {
     const [username, setUsername] = useState('');
@@ -18,11 +20,13 @@ const AuthPage = ({ userHasAccount }) => {
     const [alert, setAlert] = useState({ visible: false, message: '', heading: '', type: 'error' });
     const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
     const [showTermsDialog, setShowTermsDialog] = useState(false); // For Terms dialog visibility
+    const navigate = useNavigate();
+    
 
     const authEndpoint = userHasAccount 
-        ? 'https://backend-dot-cardmath-llc.uc.r.appspot.com/token' 
-        : 'https://backend-dot-cardmath-llc.uc.r.appspot.com/register';
-    const passwordRecoveryEndpoint = 'https://backend-dot-cardmath-llc.uc.r.appspot.com/password-recovery-email';
+        ? `${getBackendUrl()}/token` 
+        : `${getBackendUrl()}/register`;
+    const passwordRecoveryEndpoint = `${getBackendUrl()}/password-recovery-email`;
 
     const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&,.])[A-Za-z\d@$!%*?&,.]{8,}$/;
     const isEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -95,9 +99,9 @@ const AuthPage = ({ userHasAccount }) => {
         }).then(data => {
             localStorage.setItem('cardmath_access_token', data.access_token);
             if (!userHasAccount) {
-                window.location.href = 'https://cardmath.ai/registration-steps';    
+                navigate('/registration-steps');
             } else {
-                window.location.href = 'https://cardmath.ai/dashboard';
+                navigate('/dashboard');
             }
         }).catch(error => {
             console.error('There was an error!', error);

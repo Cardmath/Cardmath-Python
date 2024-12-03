@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { DataView } from 'primereact/dataview';
 import CreditCardItemTemplate from './CreditCardItemTemplate';
+import { getBackendUrl } from '../utils/urlResolver';
 
 export default function CreditCardFaceouts({ issuer, name, annualFeeRange, primaryRewardUnit, keyword }) {
     const [creditCards, setCreditCards] = useState([]);
 
     useEffect(() => {
-        fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com/read_credit_cards_database", {
+        fetch(`${getBackendUrl()}/read_credit_cards_database`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ card_details: "all", use_preferences: false })

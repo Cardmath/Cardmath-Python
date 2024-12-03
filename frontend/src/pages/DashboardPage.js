@@ -11,6 +11,7 @@ import CategorizationMeter from '../components/CategorizationMeter';
 import PreferencesCard from '../components/PreferencesCard';
 import Alert from '../components/Alert';
 import SettingsPage from './SettingsPage';
+import { getBackendUrl } from '../utils/urlResolver';
 
 const DashboardPage = () => {
     const [pageView, setPageView] = useState('home');
@@ -37,7 +38,7 @@ const DashboardPage = () => {
     // Fetch wallets function
     const fetchWallets = () => {
         setLoading(true);
-        fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/read_user_wallets', {
+        fetchWithAuth(`${getBackendUrl()}/read_user_wallets`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         })
@@ -68,7 +69,7 @@ const DashboardPage = () => {
     };
 
     useEffect(() => {
-        fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/compute_categories_moving_averages', {
+        fetchWithAuth(`${getBackendUrl()}/compute_categories_moving_averages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -93,7 +94,7 @@ const DashboardPage = () => {
     }, []);
 
     useEffect(() => {
-        fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/read_heavy_hitters', {
+        fetchWithAuth(`${getBackendUrl()}/read_heavy_hitters`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

@@ -3,6 +3,7 @@ import ChatInput from './ChatInput';
 import ChatCallToAction from './ChatCallToAction';
 import ChatDialogue from './ChatDialogue';
 import { fetchWithAuth } from '../../pages/AuthPage';
+import { getBackendUrl } from '../../utils/urlResolver';
 
 const ChatContainer = () => {
     const [messages, setMessages] = useState([]);
@@ -30,7 +31,7 @@ const ChatContainer = () => {
 
         let reader;
         try {
-            const response = await fetchWithAuth('https://backend-dot-cardmath-llc.uc.r.appspot.com/chat', {
+            const response = await fetchWithAuth(`${getBackendUrl()}/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

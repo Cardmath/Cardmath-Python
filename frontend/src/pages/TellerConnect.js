@@ -4,6 +4,7 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { confirmDialog } from 'primereact/confirmdialog';
 import { ConfirmDialog } from 'primereact/confirmdialog';
 import { Button } from 'primereact/button';
+import { getBackendUrl } from '../utils/urlResolver';
 
 const TellerConnectComponent = ({ onBack, onSuccess }) => {
     const [showSpinner, setShowSpinner] = useState(false);
@@ -20,7 +21,7 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
         }
         try {
             let response = await fetchWithAuth(
-                'https://backend-dot-cardmath-llc.uc.r.appspot.com/receive_teller_enrollment',
+                `${getBackendUrl()}/receive_teller_enrollment`,
                 {
                     method: 'POST',
                     headers: {
@@ -72,7 +73,7 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
 
         try {
             let response = await fetchWithAuth(
-                'https://backend-dot-cardmath-llc.uc.r.appspot.com/process_new_enrollment',
+                `${getBackendUrl()}/process_new_enrollment`,
                 {
                     method: 'POST',
                     headers: {

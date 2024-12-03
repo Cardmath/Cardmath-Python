@@ -8,6 +8,7 @@ import { PickList } from 'primereact/picklist';
 import { InputText } from 'primereact/inputtext';
 import moment from 'moment';
 import { fetchWithAuth } from '../pages/AuthPage';
+import { getBackendUrl } from '../utils/urlResolver';
 
 const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptimalAllocation }) => {
     const [showDialog, setShowDialog] = useState(false);
@@ -18,7 +19,7 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
 
     // Fetch available credit cards when the component mounts
     useEffect(() => {
-        fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com/read_credit_cards_database", {
+        fetch(`${getBackendUrl()}/read_credit_cards_database`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ card_details: "all", use_preferences: false })
@@ -46,7 +47,7 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
             setWalletName("");
             setNewWalletCards([]);
             // Re-fetch available cards when creating a new wallet
-            fetch("https://backend-dot-cardmath-llc.uc.r.appspot.com/read_credit_cards_database", {
+            fetch(`${getBackendUrl()}/read_credit_cards_database`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ card_details: "all", use_preferences: false })
@@ -84,8 +85,8 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
 
         try {
             const endpoint = editingWallet
-                ? "https://backend-dot-cardmath-llc.uc.r.appspot.com/edit_user_wallet"
-                : "https://backend-dot-cardmath-llc.uc.r.appspot.com/ingest_user_wallet";
+                ? `${getBackendUrl()}/edit_user_wallet`
+                : `${getBackendUrl()}/ingest_user_wallet`;
             
             const response = await fetchWithAuth(endpoint, {
                 method: 'POST',
@@ -117,7 +118,7 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
     // Delete wallet function
     const deleteWallet = async (walletId) => {
         try {
-            const response = await fetchWithAuth("https://backend-dot-cardmath-llc.uc.r.appspot.com/delete_user_wallet", {
+            const response = await fetchWithAuth(`${getBackendUrl()}/delete_user_wallet`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ wallet_id: walletId })
