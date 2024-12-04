@@ -21,7 +21,8 @@
 
 
 .wrapper {
-  width: min(85vw, 770px);
+  border-radius: 30px;
+  width: min(85vw, 850px);
   height: 400px;
   position: relative;
   overflow: hidden;

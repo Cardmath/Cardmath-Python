@@ -72,7 +72,7 @@ const Hero = () => {
             />
 
             {/* Text content */}
-            <div className="text-center my-6 relative" style={{ position: 'relative', zIndex: 2 }}>
+            <div className="text-center my-7 relative" style={{ position: 'relative', zIndex: 2 }}>
                 <div
                     className="font-bold text-4xl md:text-6xl text-white mb-1"
                     style={{
@@ -88,7 +88,7 @@ const Hero = () => {
                         textShadow: '1px 1px 5px rgba(0, 0, 0, 0.3)', // Subtle text shadow for readability
                     }}
                 >
-                    We crunch the numbers.
+                    Your Wallet's Best Friend
                 </div>
                 <p
                     className="mt-0 mb-4 line-height-3 text-center mx-auto text-white text-base md:text-lg px-2 md:px-0"
@@ -98,16 +98,7 @@ const Hero = () => {
                         textShadow: '1px 1px 3px rgba(0, 0, 0, 0.2)', // Lighter shadow for paragraph text
                     }}
                 >
-                    We provide independent, data-driven credit-card recommendations—just sign into your bank accounts for personalized insights, and rest assured your data is securely protected and only used as needed.
-                </p>
-                <p
-                    className="text-sm mt-4 mb-4 line-height-3 text-white"
-                    style={{
-                        fontWeight: '600', // Increased font weight for small text
-                        textShadow: '1px 1px 3px rgba(0, 0, 0, 0.2)',
-                    }}
-                >
-                    Available for users in the United States Only
+                    Stop guessing and start saving. Cardmath helps you pick credit cards that maximize your rewards.
                 </p>
             </div>
         </div>
