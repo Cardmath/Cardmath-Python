@@ -1,0 +1,12 @@
+.logo-font {
+    font-family: Inter;
+    font-weight: 700;
+}
+
+.logo-secondary {
+    font-family: 'Inter', sans-serif; /* Use Mulish font */
+    font-weight: 400; /* Regular weight */
+    font-style: italic; /* Italic style */
+}
+  
+  

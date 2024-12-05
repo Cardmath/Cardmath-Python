@@ -37,6 +37,7 @@ import teller.endpoints as teller_endpoints
 from pathlib import Path
 
 import logging
+import os
 
 DEFAULT_DOWNLOAD_DIR = Path("/tmp") if os.getenv("GAE_ENV", "") == "standard" else Path.home() / "Cardmath" / "./server_download_location"
 SAFE_LOCAL_DOWNLOAD_SPOT = DEFAULT_DOWNLOAD_DIR / "cardratings.html"
@@ -112,7 +113,8 @@ async def register_for_access_token(
     db_user = auth_crud.create_user(db, user)
     
     token = create_email_verification_token(user.email)
-    verification_link = f"https://cardmath.ai/registration-steps?token={token}"
+    BASE_URL = "cardmath.ai" if os.getenv("ENVIRONMENT", "prod") == "prod" else "localhost:3000"
+    verification_link = f"https://{BASE_URL}/registration-steps?token={token}"
     
     send_verification_email(user.email, verification_link)
     

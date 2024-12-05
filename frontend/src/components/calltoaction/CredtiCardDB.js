@@ -10,12 +10,12 @@ const CreditCardDBCallToAction = () => {
                     <div className="text-blue-300">Transparent</div>
                     <div className="text-white">Database of Credit Cards</div>
                 </div>
-                <div className="text-gray-300 text-xl mb-4 px-4 md:px-0">
+                <div className="text-gray-300 text-xl mb-4 px-4 md:px-0 text-2xl ">
                     We maintain a completely transparent database of Credit Cards that is easily accessible!
                 </div>
                 <Button
                     onClick={() => window.location.href = "https://cardmath.ai/creditcards"}
-                    className="px-5 py-3 font-bold mb-3"
+                    className="px-5 py-3 font-bold mb-3 text-2xl "
                     label="Explore the Database"
                     size='large'
                 />

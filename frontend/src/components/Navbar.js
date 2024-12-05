@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import { StyleClass } from 'primereact/styleclass';
 import { Ripple } from 'primereact/ripple';
 import { Button } from 'primereact/button';
-import './Navbar.css';
 import { fetchWithAuth } from '../pages/AuthPage';
 import { useNavigate } from 'react-router-dom';
 import { getBackendUrl } from '../utils/urlResolver';
@@ -52,7 +51,7 @@ const Navbar = () => {
     };
 
     return (
-        <div className="navbar-container bg-gray-900 py-3 px-4 shadow-2 flex align-items-center justify-content-between relative">
+        <div className="z-3 position-relative bg-gray-900 py-3 px-4 shadow-2 flex align-items-center justify-content-between relative">
             <div
                 className="flex align-items-center cursor-pointer"
                 onClick={() => navigate('/')}
@@ -63,22 +62,7 @@ const Navbar = () => {
                     height="50"
                 />
             </div>
-            <StyleClass
-                nodeRef={rootBtnRef6}
-                selector="@next"
-                enterClassName="hidden"
-                leaveToClassName="hidden"
-                hideOnOutsideClick
-            >
-                <a
-                    ref={rootBtnRef6}
-                    className="p-ripple cursor-pointer block lg:hidden text-gray-400"
-                >
-                    <i className="pi pi-bars text-4xl"></i>
-                    <Ripple />
-                </a>
-            </StyleClass>
-            <div className="align-items-center flex-grow-1 justify-content-between hidden lg:flex absolute lg:static w-full bg-gray-900 left-0 top-100 px-6 lg:px-0 shadow-2 lg:shadow-none">
+            <div className="align-items-center text-lg flex-grow-1 justify-content-between hidden lg:flex absolute lg:static w-full bg-gray-900 left-0 top-100 px-6 lg:px-0 shadow-2 lg:shadow-none">
                 <section></section>
                 <ul className="list-none p-0 m-0 flex lg:align-items-center text-gray-400 select-none flex-column lg:flex-row">
                     <li>
@@ -176,12 +160,12 @@ const Navbar = () => {
                         <>
                             <Button
                                 label="To Dashboard"
-                                className="hover:bg-green-400 p-button-text text-white font-bold"
+                                className="hover:bg-green-400 text-lg text-white font-bold"
                                 onClick={() => navigate('/dashboard')}
                             />
                             <Button
                                 label="Log out"
-                                className="ml-3 font-bold"
+                                className="ml-3 text-lg  font-bold"
                                 onClick={handleLogout}
                             />
                         </>
@@ -189,12 +173,12 @@ const Navbar = () => {
                         <>
                             <Button
                                 label="Login"
-                                className="hover:bg-green-400 p-button-text text-white font-bold"
+                                className="hover:bg-green-400 text-lg text-white font-bold"
                                 onClick={() => navigate('/login')}
                             />
                             <Button
                                 label="Register"
-                                className="ml-3 font-bold"
+                                className="ml-3 text-lg font-bold"
                                 onClick={() => navigate('/register')}
                             />
                         </>

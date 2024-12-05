@@ -1,9 +1,14 @@
 import React from 'react';
+import SavingsComparisonChart from './calltoaction/SavingsComparisonChart';
+import ResponsiveButton from './calltoaction/ResponsiveButton';
+import "../css/fonts.css";
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
+    const navigate = useNavigate();
     return (
         <div
-            className="relative p-4 md:p-8 overflow-hidden"
+            className="relative p-5 overflow-hidden grid"
             style={{
                 background: `linear-gradient(
                     135deg,
@@ -72,34 +77,34 @@ const Hero = () => {
             />
 
             {/* Text content */}
-            <div className="text-center my-7 relative" style={{ position: 'relative', zIndex: 2 }}>
+            <div className="text-center col-5 my-4 relative" style={{ position: 'relative', zIndex: 2 }}>
                 <div
-                    className="font-bold text-4xl md:text-6xl text-white mb-1"
+                    className="text-6xl text-white mb-1 logo-font"
                     style={{
                         textShadow: '1px 1px 5px rgba(0, 0, 0, 0.3)', // Subtle text shadow for readability
                         animation: 'tracking-in-expand 0.7s cubic-bezier(0.215, 0.61, 0.355, 1.000) both', // Animation for text
                     }}
                 >
-                    Cardmath
-                </div>
-                <div
-                    className="font-bold text-4xl md:text-6xl text-blue-100 mb-4"
-                    style={{
-                        textShadow: '1px 1px 5px rgba(0, 0, 0, 0.3)', // Subtle text shadow for readability
-                    }}
-                >
-                    Your Wallet's Best Friend
+                    Maximize Your Rewards
                 </div>
                 <p
-                    className="mt-0 mb-4 line-height-3 text-center mx-auto text-white text-base md:text-lg px-2 md:px-0"
+                    className="mt-0 mb-4 line-height-3 text-center mx-auto text-white logo-secondary text-base text-2xl px-2 md:px-0"
                     style={{
                         maxWidth: '500px',
                         fontWeight: '600', // Slightly increased font weight for readability
                         textShadow: '1px 1px 3px rgba(0, 0, 0, 0.2)', // Lighter shadow for paragraph text
                     }}
                 >
-                    Stop guessing and start saving. Cardmath helps you pick credit cards that maximize your rewards.
+                    Smart Spending Starts Here: Personalized Credit Card and Wallet Optimization.
                 </p>
+                <ResponsiveButton onClick={() => navigate('/register')}>
+                    Get Started
+                </ResponsiveButton>
+            </div>
+
+            {/* Examples Section */}
+            <div style={{ position: 'relative', zIndex: 2 }}>
+                    <SavingsComparisonChart />
             </div>
         </div>
     );

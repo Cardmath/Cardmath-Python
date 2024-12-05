@@ -1,5 +1,8 @@
 runtime: nodejs22
 
+env_variables:
+  REACT_APP_MODE: development
+  
 handlers:
   # Serve favicon explicitly
   - url: /favicon\.ico
