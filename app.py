@@ -127,7 +127,8 @@ async def register_for_access_token(
 @app.get("/retry-email-verification")
 async def retry_email_verification_endpoint(user: User = Depends(auth_utils.get_current_user), db: Session = Depends(get_sync_db)):
     token = create_email_verification_token(user.email)
-    verification_link = f"https://cardmath.ai/registration-steps?token={token}"
+    BASE_URL = "cardmath.ai" if os.getenv("ENVIRONMENT", "prod") == "prod" else "localhost:3000"
+    verification_link = f"https://{BASE_URL}/registration-steps?token={token}"
     return await send_verification_email(user.email, verification_link)
 
 @app.get("/verify-email")

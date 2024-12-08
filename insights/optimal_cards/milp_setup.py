@@ -12,7 +12,7 @@ def initialize_model(rmatrix: RMatrixDetails, credit_values: np.ndarray):
     model = Model("credit_card_selection")
 
     C, H = rmatrix.R.shape
-    x = {(i, j): model.addVar(vtype="C", lb=0.0, name=f"x[{i},{j}]") for i in range(C) for j in range(H)}
+    x = {(i, j): model.addVar(vtype="C", lb=0.0, name=f"x[{i},{j}]") for i in range(C) for j in range(H)} # WTF is lb
     z = {i: model.addVar(vtype="B", name=f"z[{i}]") for i in range(C)}
 
     # Define auxiliary variables for statement credit reductions
