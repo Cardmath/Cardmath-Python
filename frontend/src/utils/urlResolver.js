@@ -1,10 +1,12 @@
 export function getBackendUrl() {
-    const mode = process.env.REACT_APP_MODE;    
-    console.log("mode", mode)
+    const mode = process.env.NODE_ENV;    
     if (mode === 'development') {
+      console.log('Running in development mode');
       return 'https://tunnel.cardmath.ai';
+    } else if (mode === 'production') { 
+      return 'https://backend-dot-cardmath-llc.uc.r.appspot.com';
     } else {
-      return 'https://your-backend-dot-cardmath-llc.uc.r.appspot.com';
+      throw new Error('Unknown mode');
     }
   }
   
