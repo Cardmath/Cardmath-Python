@@ -7,24 +7,6 @@ const SavingsComparisonChart = () => {
     const r = 0.05;  // Growth rate
     const years = Array.from({length: 11}, (_, i) => i);
 
-    // Calculate savings for User A (3% + $100, with reinvestment)
-    const calculateUserASavings = (year) => {
-        const annualReward = P * 0.03 + 100;
-        let savings = 0;
-        for (let t = 1; t <= year; t++) {
-            savings += annualReward * Math.pow(1 + r, year - t);
-        }
-        return savings;
-    };
-
-    // Calculate savings for User B with reinvestment (1%)
-    const calculateUserBSavingsReinvested = (year) => {
-        const annualReward = P * 0.01;
-        return r > 0 ? 
-            annualReward * (Math.pow(1 + r, year) - 1) / r :
-            annualReward * year;
-    };
-
     // Calculate savings for User B without reinvestment (1%)
     const calculateUserBSavings = (year) => {
         return P * 0.01 * year;
@@ -42,25 +24,11 @@ const SavingsComparisonChart = () => {
       labels: years.map(year => `Year ${year}`),
       datasets: [
           {
-              label: '3% Cashback + $100 Credit (Reinvested)',
-              data: years.map(year => Math.round(calculateUserASavings(year))),
-              fill: false,
-              borderColor: '#00FF94',  // Bright green
-              tension: 0.4
-          },
-          {
             label: '4.2% Cashback (Reinvested)',
             data: years.map(year => Math.round(calculateUserCSavings(year))),
             fill: false,
             borderColor: '#00E5FF',  // Bright light blue
             tension: 0.4
-          },
-          {
-              label: '1% Cashback (Reinvested)',
-              data: years.map(year => Math.round(calculateUserBSavingsReinvested(year))),
-              fill: false,
-              borderColor: '#FFFFFF',  // White
-              tension: 0.4
           },
           {
               label: '1% Cashback (No Reinvestment)',
@@ -78,7 +46,7 @@ const SavingsComparisonChart = () => {
           plugins: {
               title: {
                   display: true,
-                  text: 'The Sooner You Start, The More You Save',
+                  text: 'The Sooner You Start, The More You Earn',
                   color: '#FFFFFF',
                   font: {
                       size: 20,
@@ -121,10 +89,6 @@ const SavingsComparisonChart = () => {
           },
           scales: {
               x: {
-                  grid: {
-                      color: 'rgba(255, 255, 255, 0.1)',  // Subtle grid lines
-                      drawBorder: true
-                  },
                   ticks: {
                       color: '#FFFFFF'  // White text for x-axis
                   }
@@ -134,10 +98,6 @@ const SavingsComparisonChart = () => {
                       display: true,
                       text: 'Total Savings ($)',
                       color: '#FFFFFF'  // White text for y-axis title
-                  },
-                  grid: {
-                      color: 'rgba(255, 255, 255, 0.1)',  // Subtle grid lines
-                      drawBorder: true
                   },
                   ticks: {
                       color: '#FFFFFF',  // White text for y-axis

@@ -1,4 +1,3 @@
-// FadingImage.jsx
 import React from 'react';
 
 function FadingImage({ src, alt, className }) {

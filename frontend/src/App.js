@@ -16,11 +16,13 @@ import RegistrationFlowPage from './pages/RegistrationFlowPage';
 import ArticleDetailPage from './components/articles/ArticleDetailPage';
 import BlogPage from './pages/BlogPage';
 import ChatContainer from './components/chat/ChatContainer';
+import OnboardingFlow from './pages/OnboardingFlowPage';
 
 const App = () => {
     return (
         <Router>
             <Routes>
+                <Route path="/onboarding" element={<OnboardingFlow />} />
                 <Route path="/chat" element={<ChatContainer />} />
                 <Route path="/" element={<LandingPageComponent />}/>
                 <Route path="/connect" element={<TellerConnectComponent />} />

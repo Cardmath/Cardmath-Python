@@ -62,7 +62,7 @@ const Navbar = () => {
                     height="50"
                 />
             </div>
-            <div className="align-items-center text-lg flex-grow-1 justify-content-between hidden lg:flex absolute lg:static w-full bg-gray-900 left-0 top-100 px-6 lg:px-0 shadow-2 lg:shadow-none">
+            <div className="align-items-center flex-grow-1 justify-content-between hidden lg:flex absolute lg:static w-full bg-gray-900 left-0 top-100 px-6 lg:px-0 shadow-2 lg:shadow-none">
                 <section></section>
                 <ul className="list-none p-0 m-0 flex lg:align-items-center text-gray-400 select-none flex-column lg:flex-row">
                     <li>
@@ -160,7 +160,7 @@ const Navbar = () => {
                         <>
                             <Button
                                 label="To Dashboard"
-                                className="hover:bg-green-400 text-lg text-white font-bold"
+                                className="bg-green-400 text-lg text-white font-bold"
                                 onClick={() => navigate('/dashboard')}
                             />
                             <Button
@@ -173,7 +173,7 @@ const Navbar = () => {
                         <>
                             <Button
                                 label="Login"
-                                className="hover:bg-green-400 text-lg text-white font-bold"
+                                className="bg-green-400 text-lg text-white font-bold"
                                 onClick={() => navigate('/login')}
                             />
                             <Button

@@ -1,0 +1,175 @@
+.onboarding-container {
+    --onb-green: #37c4b1;
+    --onb-cyan: #25aad8;
+    --onb-blue: #4092e3;
+    --onb-purple: #7d54c1;
+    --onb-pink: #c776a3;
+    --onb-orange: #ee8877;
+    --onb-deep-purple: #281c4c;
+    --onb-duration: 0.7s;
+    --onb-ease: cubic-bezier(0.6, 0, 0.2, 1);
+    --onb-transition: transform var(--onb-duration) var(--onb-ease);
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--onb-deep-purple);
+    overflow: hidden;
+    min-height: 100vh;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .onboarding-container .goo-filter { 
+    position: absolute; 
+    visibility: hidden; 
+  }
+  
+  .onboarding-container .app-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    height: 90vmin;
+    width: 55vmin;
+  }
+  
+  .onboarding-container .app-container > section {
+    margin: 5vmin 8vmin;
+    grid-area: 1 / 1; 
+  }
+  
+  .onboarding-container section {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    transform-style: preserve-3d;
+    perspective: 800px;
+    will-change: transform;
+  }
+  
+  .onboarding-container section > * {
+    flex: 0 0 100%;
+    grid-area: 1 / 1;
+  }
+  
+  .onboarding-container .backgrounds {
+    filter: url("#goo");
+    pointer-events: none;
+  }
+  
+  .onboarding-container .background {
+    will-change: transform;
+    border-radius: 2vmin;
+    background-image: linear-gradient(
+      to bottom,
+      var(--primary, var(--onb-blue)),
+      var(--secondary, var(--onb-pink))
+    );
+    transition: var(--onb-transition);
+    transition-property: transform, transform-origin, z-index;
+    transform-origin: right center;
+    transform: translateX(-90%) translateZ(-25vmin) rotateY(40deg);
+  }
+  
+  .onboarding-container .background::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    z-index: 3;
+    background-image: linear-gradient(to bottom, #4b3777, #331847);
+    opacity: 0.8;
+    transition: inherit;
+    transition-property: opacity;
+  }
+  
+  .onboarding-container .background[data-active] {
+    transform-origin: center center;
+    transform: translateX(0) translateZ(0) rotateY(0deg);
+    z-index: 3;
+  }
+  
+  .onboarding-container .background[data-active]::before {
+    opacity: 0.01;
+  }
+  
+  .onboarding-container .background[data-active] ~ * {
+    z-index: -1;
+    transform-origin: left center;
+    transform: translateX(140%) translateZ(-25vmin) rotateY(-40deg);
+  }
+  
+  .onboarding-container .background[data-active] + * {
+    z-index: 1;
+    transform: translateX(90%) translateZ(-25vmin) rotateY(-40deg);
+  }
+  
+  .onboarding-container article {
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+    transition: var(--onb-transition);
+    transition-property: transform, transform-origin, z-index;
+    padding: 5vmin;
+    color: white;
+    transform-origin: right center;
+    transform: translateX(-90%) translateZ(-25vmin) rotateY(40deg);
+    opacity: 0;
+  }
+  
+  .onboarding-container article[data-active] {
+    transform-origin: center center;
+    transform: translateX(0) translateZ(0) rotateY(0deg);
+    z-index: 3;
+    opacity: 1;
+  }
+  
+  .onboarding-container article[data-active] ~ * {
+    z-index: -1;
+    transform-origin: left center;
+    transform: translateX(140%) translateZ(-25vmin) rotateY(-40deg);
+  }
+  
+  .onboarding-container article[data-active] + * {
+    z-index: 1;
+    transform: translateX(90%) translateZ(-25vmin) rotateY(-40deg);
+  }
+  
+  .onboarding-container article h1 {
+    font-size: 4vmin;
+    line-height: 1.2;
+    margin: 0 0 1rem 0;
+  }
+  
+  .onboarding-container article p {
+    font-size: 2.5vmin;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 0 2rem 0;
+  }
+  
+  /* PrimeReact component overrides */
+  .onboarding-container .p-inputtext {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+  
+  .onboarding-container .p-float-label label {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .onboarding-container .p-button {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+  }
+  
+  .onboarding-container .p-button:enabled:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  .onboarding-container .p-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
