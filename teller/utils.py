@@ -25,6 +25,7 @@ import random
 TELLER_API_ENTRYPOINT = "https://api.teller.io/"
 TELLER_ACCOUNTS = TELLER_API_ENTRYPOINT + "accounts"
 TRANSACTIONS = "transactions"
+IDENTITY = TELLER_API_ENTRYPOINT +"identity"
 CREDIT_TYPE = "credit"
 CREDIT_CARD_SUBTYPE = "credit_card"
 
@@ -99,6 +100,7 @@ class Teller:
         if response.status_code != 200:
             print(f"[ERROR] Failed to fetch {uri} from Teller API")
         return response
+    
     async def fetch_enrollment_accounts(self, enrollment : Enrollment) -> List[AccountSchema]:
         response = await self.fetch(TELLER_ACCOUNTS, enrollment.access_token)
         response = response.json()
@@ -155,6 +157,7 @@ class Teller:
         return out_transactions
 
     async def fetch_transactions_from_account(self, account: Union[Account, AccountSchema], access_token: str, db: Session, should_categorize: bool = False) -> List[TransactionSchema]:
+        
         acc_id = None
         if isinstance(account, Account):
             acc_id = account.id
@@ -163,6 +166,8 @@ class Teller:
             account = db.query(Account).filter(Account.id == acc_id).first()
         else:
             raise TypeError("Invalid account type")
+        
+        print(f"Fetching transactions for account {acc_id}")
         
         uri = f"{TELLER_ACCOUNTS}/{acc_id}/{TRANSACTIONS}"
         response = await self.fetch(uri, access_token)
@@ -185,8 +190,16 @@ class Teller:
         return unknown_transactions
 
     async def fetch_transactions_from_list_account(self, accounts : List[Account], access_token : str, db : Session):
+        print(f"[INFO] Fetching transactions from {len(accounts)} accounts")
         out_transactions : List[Transaction] = []
         for account in accounts:
             fetched_transactions = await self.fetch_transactions_from_account(account, access_token, db)
             out_transactions.extend(fetched_transactions)
         return out_transactions
+    
+    async def fetch_identity(self, access_token):
+        uri = f"{IDENTITY}"
+        response = requests.get(uri, auth=(access_token, ""), cert=(self.cert, self.cert_key))
+        if response.status_code != 200:
+            print(f"[ERROR] Failed to fetch {uri} from Teller API")
+        return response

@@ -1,13 +1,14 @@
-from database.auth.user import User
+from database.auth.user import User, Onboarding
 from insights.optimal_cards.milp_setup import setup_model
 from insights.optimal_cards.r_matrix import compute_r_matrix
 from insights.optimal_cards.solution_extraction import extract_solution
 from insights.schemas import OptimalCardsAllocationRequest, OptimalCardsAllocationResponse, RMatrixDetails
 from insights.utils import hamming_distance
 from sqlalchemy.orm import Session
+from typing import Union
 
 
-async def optimize_credit_card_selection_milp(db: Session, user: User, request: OptimalCardsAllocationRequest) -> OptimalCardsAllocationResponse:
+async def optimize_credit_card_selection_milp(db: Session, user: Union[User, Onboarding], request: OptimalCardsAllocationRequest) -> OptimalCardsAllocationResponse:
     # Step 1: Compute the reward matrix
     rmatrix: RMatrixDetails = await compute_r_matrix(db=db, user=user, request=request)
     model, x, z, s_il, credit_reduction = setup_model(request=request, rmatrix=rmatrix)

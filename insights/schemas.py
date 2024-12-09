@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 from typing import List, Union, Optional, Tuple, Dict
 import creditcard.enums as enums
+from teller.schemas import TransactionSchema
 import numpy as np
 
 import creditcard.enums as enums

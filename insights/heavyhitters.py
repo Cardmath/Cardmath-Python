@@ -1,6 +1,7 @@
 from collections import defaultdict
 from database.auth.user import Account
-from database.auth.user import User
+from database.auth.user import User, Onboarding
+from typing import Union
 from database.teller.transactions import Transaction
 from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema, VENDOR_CONST, CATEGORY_CONST, CategorizationProgressSummary
 from insights.schemas import MonthlyTimeframe
@@ -90,12 +91,16 @@ class TwoPassHeavyHitters:
         threshold = total / self.k
         return {item: ("{:.2f}%".format(round(amount / total, 4) * 100), amount) for item, amount in exact_amounts.items() if amount >= threshold}
 
-async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersRequest) -> HeavyHittersResponse:
+async def read_heavy_hitters(db: Session, user : Union[User , Onboarding], request : HeavyHittersRequest) -> HeavyHittersResponse:
         teller_client = teller_utils.Teller() 
-        accounts: List[Account] = await teller_client.get_list_enrollments_accounts(enrollments=user.enrollments, db=db)
+        accounts = None
+        if isinstance(user, User):
+            accounts: List[Account] = await teller_client.get_list_enrollments_accounts(enrollments=user.enrollments, db=db)
+        elif isinstance(user, Onboarding):
+            accounts: List[Account] = await teller_client.get_list_enrollments_accounts(enrollments=[user.enrollment], db=db)
         
-        if len(accounts) == 0:
-            logging.info(f"[INFO] No accounts found for user {user.id}")
+        if not accounts or len(accounts) == 0:
+            logging.warning(f"No accounts found for {type(user)}, {user.id}")
             return HeavyHittersResponse(vendors=[], heavyhitters=[])
         
         date_range = None
@@ -104,7 +109,7 @@ async def read_heavy_hitters(db: Session, user : User, request : HeavyHittersReq
 
         cc_eligible_txns_response: CCEligibleTransactionsResponse = get_user_cc_eligible_transactions(db, accounts, date_range)
         
-        logging.debug(f"Found {len(cc_eligible_txns_response.transactions)} total transactions for user {user.email}.")
+        logging.debug(f"Found {len(cc_eligible_txns_response.transactions)} total transactions for user {user.email if isinstance(user, User) else user.emails}.")
         hh_two_pass = TwoPassHeavyHitters(k=200, key=get_transaction_category_and_vendor, value=get_transaction_amount)
         hh: dict[str, tuple] = hh_two_pass.heavy_hitters(cc_eligible_txns_response.transactions)
 

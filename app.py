@@ -32,6 +32,7 @@ from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
 import auth.utils as auth_utils
+from auth.onboarding import create_onboarding_token, OnboardingSavingsRequest, get_onboarding_recommendation
 import database.auth.crud as auth_crud
 import teller.endpoints as teller_endpoints
 from pathlib import Path
@@ -243,6 +244,14 @@ async def reset_password_endpoint(form_data: PasswordResetForm, db: Session = De
 @app.post("/delete-user-data")
 async def delete_user_data_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], db: Session = Depends(get_sync_db)):
     return auth_crud.delete_user_data(user=current_user, db=db)
+
+@app.post("/process-onboarding-enrollment")
+async def process_onboarding_complete_endpoint(teller_connect_response: AccessTokenSchema, answers: dict,  db: Session = Depends(get_sync_db)):
+    return await create_onboarding_token(db=db, teller_connect_response=teller_connect_response, answers=answers) 
+
+@app.post("/compute-onboarding-savings")
+async def compute_onboarding_savings_endpoint( request: OnboardingSavingsRequest, db: Session = Depends(get_sync_db)):
+    return await get_onboarding_recommendation(db=db, request=request)
 
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest) -> StreamingResponse:

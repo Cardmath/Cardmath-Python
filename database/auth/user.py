@@ -1,5 +1,5 @@
 from database.sql_alchemy_db import Base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, JSON, Table, Date
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, JSON, Table, Date, CheckConstraint
 from sqlalchemy.orm import relationship
 
 user_credit_card_association = Table(
@@ -16,6 +16,22 @@ wallet_card_association = Table(
     Column('credit_card_id', Integer, ForeignKey('credit_cards.id', ondelete='CASCADE'), primary_key=True),
     Column('is_held', Boolean, default=False, nullable=False, primary_key=False)
 )
+
+class Onboarding(Base):
+    __tablename__ = 'onboarding'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    token = Column(String, unique=True, nullable=False, index=True)
+    created_at = Column(Date, nullable=False)
+    expires_at = Column(Date, nullable=False)
+    is_used = Column(Boolean, default=False)
+    associated_user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    
+    emails = Column(JSON(String), nullable=False)
+    phone_numbers = Column(JSON(String), nullable=False)
+
+    associated_user = relationship("User", backref="onboarding_sessions")
+    enrollment = relationship("Enrollment", back_populates="onboarding", uselist=False)
 
 class User(Base):
     __tablename__ = 'users'
@@ -50,14 +66,24 @@ class Enrollment(Base):
     __tablename__ = 'enrollments'
     
     id = Column(String, primary_key=True, nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
+    onboarding_id = Column(Integer, ForeignKey('onboarding.id', ondelete='CASCADE'), nullable=True)
     access_token = Column(String, nullable=False)
     institution_name = Column(String, nullable=False)
     signatures = Column(JSON, nullable=False)
     last_updated = Column(Date, nullable=False)
-    user = relationship("User", back_populates="enrollments")
     
-    accounts = relationship("Account", back_populates="enrollment", cascade="all, delete-orphan")    
+    user = relationship("User", back_populates="enrollments")
+    onboarding = relationship("Onboarding", back_populates="enrollment")
+    accounts = relationship("Account", back_populates="enrollment", cascade="all, delete-orphan")
+        
+    __table_args__ = (
+        CheckConstraint(
+            '(user_id IS NULL AND onboarding_id IS NOT NULL) OR '
+            '(user_id IS NOT NULL AND onboarding_id IS NULL)',
+            name='enrollment_owner_check'
+        ),
+    )
     
 class Account(Base):
     __tablename__ = 'accounts'

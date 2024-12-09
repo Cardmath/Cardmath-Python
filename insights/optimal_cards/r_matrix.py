@@ -4,7 +4,8 @@ from creditcard.enums import PurchaseCategory, RewardUnit
 from creditcard.schemas import CreditCardSchema
 from database.creditcard.creditcard import CreditCard
 from fastapi import HTTPException
-from database.auth.user import User
+from typing import Union
+from database.auth.user import User, Onboarding
 from insights.category_spending_prediction import calculate_incremental_spending_probabilities
 from insights.heavyhitters import read_heavy_hitters, HeavyHittersRequest, HeavyHittersResponse
 from insights.optimal_cards.matrix_helpers import create_cards_matrix, create_heavy_hitter_vector
@@ -15,7 +16,7 @@ from sqlalchemy.orm import Session
 import numpy as np
 
 
-async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocationRequest) -> RMatrixDetails:
+async def compute_r_matrix(db: Session, user: Union[User, Onboarding], request: OptimalCardsAllocationRequest) -> RMatrixDetails:
     heavy_hitters_response: HeavyHittersResponse = await read_heavy_hitters(
         db=db, user=user, request=HeavyHittersRequest(account_ids="all", timeframe=request.timeframe)
     )
@@ -25,7 +26,6 @@ async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocat
     is_new_flags = []  # Keep track of whether each card is new
 
     if request.wallet_override:
-        # Process wallet_override cards
         for idx, cc in enumerate(request.wallet_override.cards):
             # cc is an OptimalCardsAllocationCardLookupSchema
             # cc.card is a CardLookupSchema with 'name' and 'issuer'
@@ -37,9 +37,13 @@ async def compute_r_matrix(db: Session, user: User, request: OptimalCardsAllocat
             
             if cc.is_new:
                 is_new_flags.append(idx)
-    else:
+    elif isinstance(user, User):
         held_cards = user.credit_cards
         ccs_used = [CreditCardSchema.model_validate(cc) for cc in held_cards]
+    elif isinstance(user, Onboarding):
+        print('[INFO] Computing R Matrix for an onboarding session.')
+    else :
+        raise HTTPException(status_code=400, detail="Unexpected user type.")
 
     if request.to_add > 0:
         cc_response = await read_credit_cards_database(db=db, request=CreditCardsDatabaseRequest(card_details="all", use_preferences=True), current_user=user)

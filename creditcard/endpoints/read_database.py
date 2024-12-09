@@ -22,17 +22,19 @@ async def read_credit_cards_database(
     query = db.query(CreditCard)
 
     if request.use_preferences and current_user:
-        preferences: PreferencesSchema = current_user.preferences
-        if not preferences:
-            logging.info("Additional database query to retrieve the user's preferences")
-            query_preferences = db.query(Preferences).filter(Preferences.user_id == current_user.id).first()
-            if query_preferences:
-                preferences = PreferencesSchema.model_validate(query_preferences, exclude_unset=True)
-            else:
-                preferences = PreferencesSchema()
-                logging.info("No preferences found for the user. Using empty preferences.")
+        preferences: PreferencesSchema = PreferencesSchema()
+        if isinstance(current_user, User): 
+            preferences: PreferencesSchema = current_user.preferences
+            if not preferences:
+                logging.info("Additional database query to retrieve the user's preferences")
+                query_preferences = db.query(Preferences).filter(Preferences.user_id == current_user.id).first()
+                if query_preferences:
+                    preferences = PreferencesSchema.model_validate(query_preferences, exclude_unset=True)
+                else:
+                    preferences = PreferencesSchema()
+                    logging.info("No preferences found for the user. Using empty preferences.")
 
-        logging.info(f"Using preferences: {preferences}")
+            logging.info(f"Using preferences: {preferences}")
 
         if preferences:
             credit_profile_preferences = preferences.credit_profile
