@@ -1,38 +1,39 @@
-import os
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy import create_engine
 from sqlalchemy.schema import CreateTable
-from dotenv import load_dotenv
+import os
 
-load_dotenv()
+load_dotenv(override=True)
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "prod")
 
+DB_NAME = None
+
 if ENVIRONMENT == "prod":
     DB_NAME = os.getenv("DB_NAME", "postgres")
-    DB_USER = os.getenv("DB_USER", "postgres")
-    DB_PASSWORD = os.getenv("DB_PASSWORD", "your_database_password")
-    DB_HOST = os.getenv("DB_HOST", "cardmath-llc:northamerica-northeast2:cardmathdb")  # Instance connection name
-    HOST_PREFIX = "/cloudsql"
+else :
+    DB_NAME = os.getenv("DB_NAME", "postgres_dev")
 
-    SSL_CERT_PATH = os.getenv("SSL_CERT_PATH")
-    SSL_KEY_PATH = os.getenv("SSL_KEY_PATH")
-    SSL_ROOT_CERT_PATH = os.getenv("SSL_ROOT_CERT_PATH")
+DB_USER = os.getenv("DB_USER", "postgres")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "your_database_password")
+DB_HOST = os.getenv("DB_HOST", "cardmath-llc:northamerica-northeast2:cardmathdb")  # Instance connection name
+HOST_PREFIX = "/cloudsql"
 
-    SQLALCHEMY_DATABASE_URL_ASYNC = (
-        f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}?"
-        f"host={HOST_PREFIX}/{DB_HOST}&sslmode=verify-full&sslcert={SSL_CERT_PATH}&sslkey={SSL_KEY_PATH}&sslrootcert={SSL_ROOT_CERT_PATH}"
-    )
-    SQLALCHEMY_DATABASE_URL_SYNC = (
-        f"postgresql://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}?"
-        f"host={HOST_PREFIX}/{DB_HOST}&sslmode=verify-full&sslcert={SSL_CERT_PATH}&sslkey={SSL_KEY_PATH}&sslrootcert={SSL_ROOT_CERT_PATH}"
-    )
-else:
-    SQLALCHEMY_DATABASE_URL_ASYNC = "sqlite+aiosqlite:///./test.db?check_same_thread=False"
-    SQLALCHEMY_DATABASE_URL_SYNC = "sqlite:///./test.db?check_same_thread=False"
+SSL_CERT_PATH = os.getenv("SSL_CERT_PATH")
+SSL_KEY_PATH = os.getenv("SSL_KEY_PATH")
+SSL_ROOT_CERT_PATH = os.getenv("SSL_ROOT_CERT_PATH")
 
-# Create asynchronous and synchronous SQLAlchemy engines
+SQLALCHEMY_DATABASE_URL_ASYNC = (
+    f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}?"
+    f"host={HOST_PREFIX}/{DB_HOST}&sslmode=verify-full&sslcert={SSL_CERT_PATH}&sslkey={SSL_KEY_PATH}&sslrootcert={SSL_ROOT_CERT_PATH}"
+)
+SQLALCHEMY_DATABASE_URL_SYNC = (
+    f"postgresql://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}?"
+    f"host={HOST_PREFIX}/{DB_HOST}&sslmode=verify-full&sslcert={SSL_CERT_PATH}&sslkey={SSL_KEY_PATH}&sslrootcert={SSL_ROOT_CERT_PATH}"
+)
+
 async_engine = create_async_engine(SQLALCHEMY_DATABASE_URL_ASYNC)
 sync_engine = create_engine(SQLALCHEMY_DATABASE_URL_SYNC)
 

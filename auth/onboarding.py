@@ -1,19 +1,16 @@
-import json
+from database.auth.user import Enrollment, Onboarding
+from datetime import datetime, timedelta
+from datetime import datetime, timedelta
 from datetime import timedelta
-from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
-from uuid import uuid4
-from datetime import datetime, timedelta
-from database.auth.user import Enrollment, Onboarding, User
-from teller.schemas import TransactionSchema 
-from teller.schemas import AccessTokenSchema
-from teller.schemas import AccountSchema
+from insights.optimal_cards.endpoint import optimize_credit_card_selection_milp, OptimalCardsAllocationRequest, OptimalCardsAllocationResponse
 from pydantic import BaseModel, EmailStr, ConfigDict
-from insights.optimal_cards.endpoint import optimize_credit_card_selection_milp, OptimalCardsAllocationRequest
-from insights.schemas import MonthlyTimeframe
-from typing import List, Tuple, Union
-import teller.utils as teller_utils
 from requests import Response
+from sqlalchemy.orm import Session
+from teller.schemas import AccessTokenSchema
+from typing import List, Tuple, Union
+from uuid import uuid4
+import json
+import teller.utils as teller_utils
 
 class ContactInfo(BaseModel):
     emails: List[EmailStr]
@@ -74,36 +71,43 @@ async def create_onboarding_token(db: Session, teller_connect_response: AccessTo
     expiration = datetime.now() + timedelta(minutes=30)
     enr_id = teller_connect_response.enrollment.id
     
-    enrollment = db.query(Enrollment).filter(Enrollment.id == enr_id).first()
-    if enrollment:
+    # Check if enrollment exists
+    if db.query(Enrollment).filter(Enrollment.id == enr_id).first():
         raise ValueError(f"Enrollment ID {enr_id} already present in the database.")
-    else:
-        enrollment = Enrollment(
-            id=enr_id,
-            user_id=None,
-            access_token=teller_connect_response.accessToken,
-            institution_name=teller_connect_response.enrollment.institution.name,
-            signatures=teller_connect_response.signatures,
-            last_updated=datetime.now()
-        )
-        db.add(enrollment)
     
-    teller_client = teller_utils.Teller()
-    identity = await teller_client.fetch_identity(access_token=teller_connect_response.accessToken)
-    await teller_client.fetch_enrollment_transactions(db=db, enrollment=[teller_connect_response.enrollment], should_categorize=True)
-    
-    contact_info: ContactInfo = extract_contact_info(identity)
-    
+    # Create onboarding first
     onboarding = Onboarding(
         token=token,
         created_at=datetime.now(),
         expires_at=expiration,
         is_used=False,
-        enrollment=enrollment,
-        phone_numbers=contact_info.phone_numbers,
-        emails=contact_info.emails
+        phone_numbers=[],
+        emails=[]
     )
     db.add(onboarding)
+    db.flush()  # This gets us the onboarding ID
+    
+    # Now create enrollment with onboarding_id
+    enrollment = Enrollment(
+        id=enr_id,
+        user_id=None,
+        onboarding_id=onboarding.id,  # Set this explicitly
+        access_token=teller_connect_response.accessToken,
+        institution_name=teller_connect_response.enrollment.institution.name,
+        signatures=teller_connect_response.signatures,
+        last_updated=datetime.now()
+    )
+    db.add(enrollment)
+    
+    teller_client = teller_utils.Teller()
+    identity = teller_client.fetch_identity(access_token=teller_connect_response.accessToken)
+    
+    contact_info: ContactInfo = extract_contact_info(identity)
+    
+    # Update onboarding with contact info
+    onboarding.phone_numbers = contact_info.phone_numbers
+    onboarding.emails = contact_info.emails
+    
     db.commit()
     db.refresh(onboarding)
     
@@ -141,6 +145,7 @@ def get_onboarding_token_enrollment(token: str, db: Session) -> Tuple[Onboarding
 async def get_onboarding_recommendation(request: OnboardingSavingsRequest, db: Session):
     # Get the onboarding and the enrollment
     onboarding, enrollment = get_onboarding_token_enrollment(request.token, db)
+    print(f"Got onboarding and enrollment for token {request.token}")
 
     optimization_request = OptimalCardsAllocationRequest(
         to_use=request.answers.num_cards,
@@ -152,13 +157,24 @@ async def get_onboarding_recommendation(request: OnboardingSavingsRequest, db: S
         return_cards_dropped=False,
         save_to_db=False,
     )
-
-    optimization_result = await optimize_credit_card_selection_milp(
+    
+    print(f"Created optimization request for token {request.token}")
+    teller_client = teller_utils.Teller()
+    
+    # Optimize for onboarding by setting bulk_mode=True and using a larger batch size
+    teller_client.fetch_enrollment_transactions(
+        db=db, 
+        enrollment=enrollment, 
+        should_categorize=False,
+        bulk_mode=True,
+        batch_size=200,  # Larger batch size for onboarding
+        is_new_user=True  # Skip existence checks during onboarding
+    )
+    
+    optimization_result: OptimalCardsAllocationResponse = await optimize_credit_card_selection_milp(
         db=db,
         user=onboarding,
         request=optimization_request
     )
 
-    return optimization_result
-
-
+    return optimization_result.solutions[0].total_reward_usd

@@ -1,5 +1,6 @@
 /frontend/
 cardmath.db
+test.db
 /cardmath_venv/
 /dbviz_venv/
 /__pycache__/

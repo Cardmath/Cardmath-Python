@@ -1,9 +1,8 @@
 from creditcard.schemas import WalletSchema, CardInWalletSchema, WalletsIngestRequest, WalletUpdateRequest, WalletDeleteRequest
 from database.auth.crud import update_user_enrollment
-from database.auth.user import User, Enrollment, Wallet, wallet_card_association
+from database.auth.user import User, Wallet, wallet_card_association
 from database.creditcard.creditcard import CreditCard
 from database.teller.crud import replace_preferences
-from database.teller.transactions import Transaction
 from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -12,32 +11,32 @@ from teller.schemas import AccessTokenSchema, PreferencesSchema
 from teller.utils import Teller, update_user_credit_cards, read_user_new_enrollment
 from typing import List
 
-async def process_new_enrollment(user: User, db: Session):
+def process_new_enrollment(user: User, db: Session):
     '''
     After the initial sign-up, this function processes a new enrollment (<= 10 mins old) from the DB
     By fetching accounts, transactions from the Teller API and updating the user's credit cards
     '''
     teller_client = Teller()
-    new_enrollments : List[Enrollment] = await read_user_new_enrollment(user=user, db=db)
-    transactions : List[Transaction] = await teller_client.fetch_enrollment_transactions(db=db, enrollment=new_enrollments, should_categorize=True) 
-    await update_user_credit_cards(user=user, db=db)
+    new_enrollments = read_user_new_enrollment(user=user, db=db)
+    transactions = teller_client.fetch_enrollment_transactions(db=db, enrollment=new_enrollments, should_categorize=True) 
+    update_user_credit_cards(user=user, db=db)
     
-async def receive_teller_enrollment(user: User, access_token: AccessTokenSchema, db: Session):
+def receive_teller_enrollment(user: User, access_token: AccessTokenSchema, db: Session):
     '''
     Adds a new enrollment to the user's account
     '''
     # TODO ensure the enrollment is not already in the db
-    await update_user_enrollment(db=db, enrollment_schema=access_token, user_id=user.id)
+    update_user_enrollment(db=db, enrollment_schema=access_token, user_id=user.id)
     return
 
-async def ingest_user_preferences(user: User, db: Session, preferences : PreferencesSchema):
+def ingest_user_preferences(user: User, db: Session, preferences: PreferencesSchema):
     '''
     Updates the user's credit card preferences
     '''
-    await replace_preferences(user=user, db=db, preferences=preferences)
+    replace_preferences(user=user, db=db, preferences=preferences)
     return
 
-async def read_user_preferences(user: User) -> PreferencesSchema:
+def read_user_preferences(user: User) -> PreferencesSchema:
     '''
     Reads the user's credit card preferences
     '''
@@ -45,7 +44,7 @@ async def read_user_preferences(user: User) -> PreferencesSchema:
         return PreferencesSchema()
     return PreferencesSchema.model_validate(user.preferences)
 
-async def read_user_wallets(db: Session, user: User) -> List[WalletSchema]:
+def read_user_wallets(db: Session, user: User) -> List[WalletSchema]:
     if not user.wallets:
         return []
 
@@ -92,7 +91,7 @@ async def read_user_wallets(db: Session, user: User) -> List[WalletSchema]:
 
     return wallets
 
-async def ingest_user_wallet(user: User, db: Session, wallet: WalletsIngestRequest) -> WalletSchema:
+def ingest_user_wallet(user: User, db: Session, wallet: WalletsIngestRequest) -> WalletSchema:
     # Validate and fetch each credit card by name and issuer
     valid_cards = []
     for card in wallet.cards:
@@ -143,7 +142,7 @@ async def ingest_user_wallet(user: User, db: Session, wallet: WalletsIngestReque
 
     return wallet_schema
 
-async def edit_wallet(request: WalletUpdateRequest, db: Session, current_user):
+def edit_wallet(request: WalletUpdateRequest, db: Session, current_user):
     # Find the wallet by ID and ensure it belongs to the current user
     wallet = db.query(Wallet).filter_by(id=request.wallet_id, user_id=current_user.id).first()
 
@@ -176,8 +175,7 @@ async def edit_wallet(request: WalletUpdateRequest, db: Session, current_user):
 
     return {"detail": "Wallet updated successfully"}
 
-
-async def delete_wallet(request: WalletDeleteRequest, db: Session, current_user: User):
+def delete_wallet(request: WalletDeleteRequest, db: Session, current_user: User):
     # Find the wallet by ID and ensure it belongs to the current user
     wallet = db.query(Wallet).filter_by(id=request.wallet_id, user_id=current_user.id).first()
 

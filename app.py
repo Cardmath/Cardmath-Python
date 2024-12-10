@@ -1,3 +1,4 @@
+from auth.onboarding import create_onboarding_token, OnboardingSavingsRequest, get_onboarding_recommendation
 from auth.recovery import request_password_recovery, PasswordResetForm, reset_password, PasswordResetRequest, create_email_verification_token, send_verification_email, verify_email
 from auth.schemas import Token
 from auth.schemas import User, UserCreate
@@ -22,20 +23,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from insights.cache_context import CacheContext
 from insights.heavyhitters import read_heavy_hitters
 from insights.moving_averages import compute_categories_moving_averages
 from insights.optimal_cards.endpoint import optimize_credit_card_selection_milp
 from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, CategoriesMovingAveragesRequest, CategoriesMovingAveragesResponse
 from insights.schemas import OptimalCardsAllocationRequest, OptimalCardsAllocationResponse
+from pathlib import Path
 from payments.stripe_checkout_session import create_checkout_session, CheckoutSessionRequest, CheckoutSessionIDRequest, CheckoutSessionResponse, stripe_webhook, get_checkout_session
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
 import auth.utils as auth_utils
-from auth.onboarding import create_onboarding_token, OnboardingSavingsRequest, get_onboarding_recommendation
 import database.auth.crud as auth_crud
 import teller.endpoints as teller_endpoints
-from pathlib import Path
 
 import logging
 import os
@@ -48,6 +49,7 @@ pkl_file_path = Path(__file__).parent / "server_download_location" / "20241109_0
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    CacheContext.initialize(cache_ttl_seconds=3600)  # 1 hour cache
     for db in get_sync_db():
         await parse(
             request=ParseRequest(
@@ -60,8 +62,10 @@ async def lifespan(app: FastAPI):
             db=db
         )
     yield
+    CacheContext.clear()
 
 app = FastAPI(lifespan=lifespan)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Adjust this to your needs
@@ -137,21 +141,21 @@ async def verify_email_endpoint(token: str, db: Session = Depends(get_sync_db)):
     return await verify_email(token=token, db=db)
 
 @app.post("/process_new_enrollment")
-async def process_new_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
+def process_new_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                            db: Session = Depends(get_sync_db)):
-    return await teller_endpoints.process_new_enrollment(current_user, db)
+    return teller_endpoints.process_new_enrollment(current_user, db)
 
 @app.post("/receive_teller_enrollment")
-async def receive_teller_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
+def receive_teller_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                  access_token: AccessTokenSchema,
                  db: Session = Depends(get_sync_db)):
-    return await teller_endpoints.receive_teller_enrollment(db=db, access_token=access_token, user=current_user) 
+    return teller_endpoints.receive_teller_enrollment(db=db, access_token=access_token, user=current_user) 
 
 @app.post("/save_user_preferences")
-async def ingest_user_preferences(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
+def ingest_user_preferences(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                  preferences: PreferencesSchema,
                  db: Session = Depends(get_sync_db)):
-    return await teller_endpoints.ingest_user_preferences(preferences=preferences, db=db, user=current_user)
+    return teller_endpoints.ingest_user_preferences(preferences=preferences, db=db, user=current_user)
 
 @app.post("/download")
 def download_endpoint(request: DownloadRequest) -> DownloadResponse:
@@ -193,26 +197,26 @@ async def read_user_held_cards_endpoint(current_user: Annotated[User, Depends(au
 
 @app.post("/read_user_preferences")
 async def read_user_preferences_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], db: Session = Depends(get_sync_db)) -> PreferencesSchema:
-    return await teller_endpoints.read_user_preferences(user=current_user)
+    return teller_endpoints.read_user_preferences(user=current_user)
 
 @app.post("/read_user_wallets")
 async def read_user_wallets_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], db: Session = Depends(get_sync_db)) -> List[WalletSchema]:
-    return await teller_endpoints.read_user_wallets(user=current_user, db=db)
+    return teller_endpoints.read_user_wallets(user=current_user, db=db)
 
 @app.post("/ingest_user_wallet")
 async def ingest_user_wallet_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
                    wallet: WalletsIngestRequest, db: Session = Depends(get_sync_db)) -> WalletSchema:
-    return await teller_endpoints.ingest_user_wallet(wallet=wallet, user=current_user, db=db)
+    return teller_endpoints.ingest_user_wallet(wallet=wallet, user=current_user, db=db)
 
 @app.post("/delete_user_wallet")
 async def delete_user_wallet_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
                    wallet: WalletDeleteRequest, db: Session = Depends(get_sync_db)):
-    return await teller_endpoints.delete_wallet(request=wallet, current_user=current_user, db=db)
+    return teller_endpoints.delete_wallet(request=wallet, current_user=current_user, db=db)
 
 @app.post("/edit_user_wallet")
 async def edit_user_wallet_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
                    wallet: WalletUpdateRequest, db: Session = Depends(get_sync_db)):
-    return await teller_endpoints.edit_wallet(request=wallet, current_user=current_user, db=db)
+    return teller_endpoints.edit_wallet(request=wallet, current_user=current_user, db=db)
 
 @app.get("/api/is_user_logged_in")
 def is_user_logged_in(current_user: Annotated[User, Depends(auth_utils.get_current_user)]) -> dict:

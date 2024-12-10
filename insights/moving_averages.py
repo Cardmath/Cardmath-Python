@@ -17,7 +17,7 @@ async def compute_categories_moving_averages(
 
     # Initialize Teller client and fetch accounts
     teller_client = teller_utils.Teller() 
-    accounts: List[Account] = await teller_client.get_list_enrollments_accounts(
+    accounts: List[Account] = teller_client.get_list_enrollments_accounts(
         enrollments=user.enrollments, 
         db=db
     )

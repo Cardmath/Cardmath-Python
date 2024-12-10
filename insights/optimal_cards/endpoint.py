@@ -11,6 +11,7 @@ from typing import Union
 async def optimize_credit_card_selection_milp(db: Session, user: Union[User, Onboarding], request: OptimalCardsAllocationRequest) -> OptimalCardsAllocationResponse:
     # Step 1: Compute the reward matrix
     rmatrix: RMatrixDetails = await compute_r_matrix(db=db, user=user, request=request)
+    print(f"Computed reward matrix")
     model, x, z, s_il, credit_reduction = setup_model(request=request, rmatrix=rmatrix)
     
     solutions = []

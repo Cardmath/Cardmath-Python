@@ -3,10 +3,8 @@ from database.auth.user import Account
 from database.auth.user import User, Onboarding
 from typing import Union
 from database.teller.transactions import Transaction
-from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema, VENDOR_CONST, CATEGORY_CONST, CategorizationProgressSummary
-from insights.schemas import MonthlyTimeframe
+from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema, MonthlyTimeframe, VENDOR_CONST, CATEGORY_CONST
 from insights.utils import get_user_cc_eligible_transactions, CCEligibleTransactionsResponse
-from pydantic import TypeAdapter
 from sqlalchemy.orm import Session
 from teller.schemas import TransactionSchema
 from typing import List
@@ -95,9 +93,9 @@ async def read_heavy_hitters(db: Session, user : Union[User , Onboarding], reque
         teller_client = teller_utils.Teller() 
         accounts = None
         if isinstance(user, User):
-            accounts: List[Account] = await teller_client.get_list_enrollments_accounts(enrollments=user.enrollments, db=db)
+            accounts: List[Account] = teller_client.get_list_enrollments_accounts(enrollments=user.enrollments, db=db)
         elif isinstance(user, Onboarding):
-            accounts: List[Account] = await teller_client.get_list_enrollments_accounts(enrollments=[user.enrollment], db=db)
+            accounts: List[Account] = teller_client.get_list_enrollments_accounts(enrollments=[user.enrollment], db=db)
         
         if not accounts or len(accounts) == 0:
             logging.warning(f"No accounts found for {type(user)}, {user.id}")
