@@ -7,7 +7,7 @@ const Hero = () => {
     const navigate = useNavigate();
     return (
         <div
-            className="relative p-5 overflow-hidden grid"
+            className="relative p-5 overflow-hidden flex flex-column md:flex-row align-items-center"
             style={{
                 background: `linear-gradient(
                     135deg,
@@ -76,28 +76,29 @@ const Hero = () => {
             />
 
             {/* Text content */}
-            <div className="text-center col-5 my-4 relative" style={{ position: 'relative', zIndex: 2 }}>
+            <div className="text-center lg:col-6 sm:col-12 my-4 relative" style={{ position: 'relative', zIndex: 2 }}>
                 <div
-                    className="text-4xl text-white mb-1 logo-font"
+                    className="text-4xl text-white mb-3 logo-font"
                     style={{
                         textShadow: '1px 1px 5px rgba(0, 0, 0, 0.3)', // Subtle text shadow for readability
                         animation: 'tracking-in-expand 0.7s cubic-bezier(0.215, 0.61, 0.355, 1.000) both', // Animation for text
                     }}
                 >
-                    Maximize Your Rewards
+                    Maximum Rewards with the Best Credit Card Wallet
                 </div>
                 <p
-                    className="mt-0 mb-4 line-height-3 text-center mx-auto text-white logo-secondary text-base text-2xl px-2 md:px-0"
+                    className="mt-0 mb-3 line-height-3 text-center mx-auto text-white logo-secondary text-base text-2xl px-2 md:px-0"
                     style={{
                         maxWidth: '500px',
                         fontWeight: '600', // Slightly increased font weight for readability
                         textShadow: '1px 1px 3px rgba(0, 0, 0, 0.2)', // Lighter shadow for paragraph text
+                        lineHeight: '1.5',
                     }}
                 >
-                    Smart Spending Starts Here: Personalized Credit Card and Wallet Optimization.
+                    We calculate the perfect combination of credit cards tailored to your spending habits, maximizing cashback, points, and savings.
                 </p>
                 <ResponsiveButton onClick={() => navigate('/register')}>
-                    Get Started
+                    Start Optimizing My Rewards
                 </ResponsiveButton>
             </div>
 

@@ -13,7 +13,10 @@ const OnboardingFlow = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
-    purpose: ''
+    purpose: '',
+    walletSize: '',
+    income: '',
+    creditScore: ''
   });
   const [contactInfo, setContactInfo] = useState(null);
   const [solutions, setSolutions] = useState(null);
@@ -91,15 +94,17 @@ const OnboardingFlow = () => {
       const data = await response.json();
       console.log('Enrollment processed:', data);
       
+      if (!data.token) {
+        throw new Error('No token found in response');
+      }
+
       if (data.contact) {
         setContactInfo(data.contact);
       }
-      
-      if (data.token) {
-        await computeOptimalAllocation(data.token);
-      }
-      
-      return data;
+
+      const solution = await computeOptimalAllocation(data.token);
+      setSolutions(solution);
+      return solution;
     } catch (error) {
       console.error('Error processing enrollment:', error);
       throw error;

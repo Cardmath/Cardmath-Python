@@ -2,7 +2,7 @@ import React from 'react';
 
 const ResponsiveButton = ({ onClick, children, className = '' }) => {
     const buttonStyle = {
-        fontSize: '50px',
+        fontSize: '30px',
         padding: '10px 30px',
         margin: '30px',
         border: '0',

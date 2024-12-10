@@ -1,128 +1,143 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Chart } from 'primereact/chart';
 
 const SavingsComparisonChart = () => {
-    // Parameters
-    const P = 30000; // Annual purchases
-    const r = 0.05;  // Growth rate
+    const chartRef = useRef(null);
+
+    useEffect(() => {
+        const chartElement = document.querySelector('.p-chart');
+        if (chartElement) {
+            const canvas = chartElement.querySelector('canvas');
+            if (canvas) {
+                let width, height;
+                
+                // Get viewport width
+                const vw = window.innerWidth;
+                
+                // Set dimensions based on viewport
+                if (vw < 480) { // Mobile
+                    width = Math.min(vw - 40, 320); // 40px for padding
+                    height = width * 1; // 4:3 ratio
+                } else if (vw < 768) { // Tablet
+                    width = Math.min(vw - 60, 480);
+                    height = width * 0.6;
+                } else if (vw < 1024) { // Small laptop
+                    width = Math.min(vw - 80, 640);
+                    height = width * 0.5;
+                } else { // Desktop
+                    width = 787;
+                    height = 390;
+                }
+                
+                // Set the canvas attributes for render size
+                canvas.setAttribute('width', width.toString());
+                canvas.setAttribute('height', height.toString());
+                
+                // Set the display size through styles
+                canvas.style.width = `${width}px`;
+                canvas.style.height = `${height}px`;
+                
+                // Set the parent container size
+                chartElement.style.width = `${width}px`;
+                chartElement.style.height = `${height}px`;
+            }
+        }    
+    }, []);
+
+    const P = 30000;
+    const r = 0.05;
     const years = Array.from({length: 11}, (_, i) => i);
 
-    // Calculate savings for User B without reinvestment (1%)
-    const calculateUserBSavings = (year) => {
-        return P * 0.01 * year;
-    };
-
-    // Calculate savings for User C (4.2% with reinvestment)
+    const calculateUserBSavings = (year) => P * 0.01 * year;
     const calculateUserCSavings = (year) => {
         const annualReward = P * 0.042;
-        return r > 0 ?
-            annualReward * (Math.pow(1 + r, year) - 1) / r :
-            annualReward * year;
+        return r > 0 ? annualReward * (Math.pow(1 + r, year) - 1) / r : annualReward * year;
     };
   
     const data = {
-      labels: years.map(year => `Year ${year}`),
-      datasets: [
-          {
-            label: '4.2% Cashback (Reinvested)',
-            data: years.map(year => Math.round(calculateUserCSavings(year))),
-            fill: false,
-            borderColor: '#00E5FF',  // Bright light blue
-            tension: 0.4
-          },
-          {
-              label: '1% Cashback (No Reinvestment)',
-              data: years.map(year => Math.round(calculateUserBSavings(year))),
-              fill: false,
-              borderColor: 'rgba(255, 255, 255, 0.5)',  // Semi-transparent white
-              tension: 0.4
-          }
-      ]
-  };
+        labels: years.map(year => `Year ${year}`),
+        datasets: [
+            {
+                label: 'Average Cardmath Wallet',
+                data: years.map(year => Math.round(calculateUserCSavings(year))),
+                fill: false,
+                borderColor: '#00E5FF',
+                tension: 0.4
+            },
+            {
+                label: 'Average American Wallet',
+                data: years.map(year => Math.round(calculateUserBSavings(year))),
+                fill: false,
+                borderColor: 'rgba(255, 255, 255, 0.5)',
+                tension: 0.4
+            }
+        ]
+    };
   
-      const options = {
-          maintainAspectRatio: false,
-          aspectRatio: 0.9,
-          plugins: {
-              title: {
-                  display: true,
-                  text: 'The Sooner You Start, The More You Earn',
-                  color: '#FFFFFF',
-                  font: {
-                      size: 20,
-                      weight: 'bold'
-                  },
-                  padding: {
-                      bottom: 10
-                  }
-              },
-              legend: {
-                  position: 'bottom',
-                  labels: {
-                      padding: 15,
-                      boxWidth: 10,
-                      usePointStyle: true,
-                      color: '#FFFFFF'  // White text for legend
-                  },
-              },
-              tooltip: {
-                  callbacks: {
-                      label: function(context) {
-                          let label = context.dataset.label || '';
-                          if (label) {
-                              label += ': ';
-                          }
-                          if (context.parsed.y !== null) {
-                              label += new Intl.NumberFormat('en-US', { 
-                                  style: 'currency', 
-                                  currency: 'USD' 
-                              }).format(context.parsed.y);
-                          }
-                          return label;
-                      }
-                  },
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                  titleColor: '#FFFFFF',
-                  bodyColor: '#FFFFFF',
-                  borderColor: '#333333'
-              }
-          },
-          scales: {
-              x: {
-                  ticks: {
-                      color: '#FFFFFF'  // White text for x-axis
-                  }
-              },
-              y: {
-                  title: {
-                      display: true,
-                      text: 'Total Savings ($)',
-                      color: '#FFFFFF'  // White text for y-axis title
-                  },
-                  ticks: {
-                      color: '#FFFFFF',  // White text for y-axis
-                      callback: function(value) {
-                          return new Intl.NumberFormat('en-US', { 
-                              style: 'currency', 
-                              currency: 'USD',
-                              maximumFractionDigits: 0
-                          }).format(value);
-                      }
-                  }
-              }
-          }
-      };
-  
-      return (
-          <div className="bg-gray-900 border-round-xl p-3" style={{
-              background: 'rgba(0, 0, 0, 0.2)',  // Semi-transparent dark background
-              backdropFilter: 'blur(10px)'  // Glassmorphism effect
-          }}>
-              <div style={{ height: '330px', width: '700px' }}>
-                  <Chart type="line" data={data} options={options} />
-              </div>
-          </div>
-      );
-  };
-  
-  export default SavingsComparisonChart;
+    const options = {
+        responsive: false, // Turn off ChartJS's built-in responsiveness
+        maintainAspectRatio: false,
+        plugins: {
+            title: {
+                display: true,
+                text: 'See How Much You Could Save Over 10 Years!',
+                color: '#FFFFFF',
+                font: {
+                    size: 20,
+                    weight: 'bold'
+                }
+            },
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#FFFFFF'
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return `${context.dataset.label}: ${new Intl.NumberFormat('en-US', { 
+                            style: 'currency', 
+                            currency: 'USD' 
+                        }).format(context.parsed.y)}`;
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: '#FFFFFF' }
+            },
+            y: {
+                ticks: {
+                    color: '#FFFFFF',
+                    callback: value => new Intl.NumberFormat('en-US', { 
+                        style: 'currency', 
+                        currency: 'USD',
+                        maximumFractionDigits: 0
+                    }).format(value)
+                }
+            }
+        }
+    };
+
+    return (
+        <div style={{
+            padding: '20px',
+            background: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            display: 'flex',
+            justifyContent: 'center'
+        }}>
+            <Chart 
+                ref={chartRef}
+                type="line" 
+                data={data} 
+                options={options} 
+            />
+        </div>
+    );
+};
+
+export default SavingsComparisonChart;

@@ -177,4 +177,4 @@ async def get_onboarding_recommendation(request: OnboardingSavingsRequest, db: S
         request=optimization_request
     )
 
-    return optimization_result.solutions[0].total_reward_usd
+    return optimization_result.solutions[0]

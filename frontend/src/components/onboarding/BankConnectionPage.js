@@ -1,56 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from 'primereact/button';
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
-import { fetchWithAuth } from '../../pages/AuthPage';
-import { getBackendUrl } from '../../utils/urlResolver';
 import './LoadingQuestions.css';
 
 const BankConnectionForm = ({ onSelect }) => {
   const [tellerConnectReady, setTellerConnectReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isEnrollmentComplete, setIsEnrollmentComplete] = useState(false);
-  const [contactInfo, setContactInfo] = useState(null);
+  const [solution, setSolution] = useState(null);
   const [formData, setFormData] = useState({
     paymentMethods: [],
     creditKnowledge: ''
   });
   const tellerConnectRef = useRef(null);
-
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.teller.io/connect/connect.js';
-    script.onload = () => {
-      if (window.TellerConnect) {
-        const tellerConnect = window.TellerConnect.setup({
-          applicationId: 'app_p3oodma27qfrj3hs8a000',
-          selectAccount: 'disabled',
-          environment: 'sandbox',
-          products: ['transactions'],
-          onInit: () => setTellerConnectReady(true),
-          onSuccess: async (enrollment) => {
-            setIsProcessing(true);
-            try {
-              await onSelect(enrollment);
-              setIsEnrollmentComplete(true);
-            } catch (error) {
-              handleError('Failed to process enrollment');
-            }
-          },
-          onExit: () => {
-            confirmDialog({
-              header: 'Connection Cancelled',
-              message: 'You have closed the bank connection window. Would you like to try again?',
-              icon: 'pi pi-exclamation-triangle',
-              accept: () => openTellerConnect(),
-              reject: () => null
-            });
-          }
-        });
-        tellerConnectRef.current = tellerConnect;
-      }
-    };
-    document.body.appendChild(script);
-  }, []);
 
   const handleError = (message) => {
     confirmDialog({
@@ -65,93 +26,181 @@ const BankConnectionForm = ({ onSelect }) => {
     if (tellerConnectRef.current) tellerConnectRef.current.open();
   };
 
-  const handleContinue = () => {
-    // Pass both form data and contact info to parent
-    onSelect({
-      ...formData,
-      contactInfo
-    });
+  const handleSuccess = async (enrollment) => {
+    setIsProcessing(true);
+    try {
+      const result = await onSelect(enrollment);
+      console.log('API Response:', result);
+      if (result) {
+        setSolution(result);
+      }
+    } catch (error) {
+      console.error('Error in handleSuccess:', error);
+      handleError('Failed to process enrollment');
+    }
   };
 
-  if (isProcessing) {
-    const showPaymentMethods = !formData.paymentMethods.length > 0;
-    const showCreditKnowledge = !!(formData.paymentMethods.length && !formData.creditKnowledge);
-    const showContinue = !!(isEnrollmentComplete && formData.paymentMethods.length && formData.creditKnowledge);
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.teller.io/connect/connect.js';
+    script.onload = () => {
+      if (window.TellerConnect) {
+        const tellerConnect = window.TellerConnect.setup({
+          applicationId: 'app_p3oodma27qfrj3hs8a000',
+          selectAccount: 'disabled',
+          environment: 'sandbox',
+          products: ['transactions'],
+          onInit: () => setTellerConnectReady(true),
+          onSuccess: handleSuccess,
+          onExit: () => {
+            confirmDialog({
+              header: 'Connection Cancelled',
+              message: 'You have closed the bank connection window. Would you like to try again?',
+              icon: 'pi pi-exclamation-triangle',
+              accept: () => openTellerConnect(),
+              reject: () => null
+            });
+          }
+        });
+        tellerConnectRef.current = tellerConnect;
+      }
+    };
+    document.body.appendChild(script);
     
+    return () => {
+      const scriptElement = document.querySelector('script[src="https://cdn.teller.io/connect/connect.js"]');
+      if (scriptElement) {
+        scriptElement.remove();
+      }
+    };
+  }, []);
+
+  if (!isProcessing) {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="loading-questions">
-          <div className="text-lg mb-4">While we process your bank connection, please answer two quick questions:</div>
+      <div className="flex flex-column gap-4">
+        <p className="text-lg">
+          Cardmath uses Teller Connect to securely link your bank account. We only access transaction data 
+          and never store your banking credentials.
+        </p>
+        <Button 
+          label="Connect Bank Account"
+          icon="pi pi-link"
+          onClick={openTellerConnect}
+          disabled={!tellerConnectReady}
+          className="w-full"
+        />
+        <ConfirmDialog />
+      </div>
+    );
+    }
+  {/* Only showing the relevant solutions display section for brevity */}
+  if (solution) {
+    return (
+      <div className="flex flex-column gap-4">
+        <div className="continue-animate">
+          <div className="text-2xl font-medium mb-3 text-white">
+            Here's your optimal card allocation
+          </div>
+          <div className="text-base mb-4 text-white-alpha-70">
+            {`Analysis period: TODO`}
+          </div>
           
-          {showPaymentMethods && (
-            <div className="question-animate">
-              <p className="mb-2">Do you use any of these?</p>
-              <div className="flex flex-col gap-2">
-                <Button
-                  label="Apple Pay"
-                  variant="outlined"
-                  onClick={() => setFormData(prev => ({
-                    ...prev,
-                    paymentMethods: [...prev.paymentMethods, 'apple']
-                  }))}
-                />
-                <Button
-                  label="Google Pay"
-                  variant="outlined"
-                  onClick={() => setFormData(prev => ({
-                    ...prev,
-                    paymentMethods: [...prev.paymentMethods, 'google']
-                  }))}
-                />
+          <div className="bg-black-alpha-70 p-4 border-round mb-3">
+            <div className="flex align-items-center gap-3 mb-3">
+              <i className="pi pi-dollar text-primary text-2xl"></i>
+              <div>
+                <div className="text-white-alpha-70 mb-1">Total Rewards</div>
+                <div className="text-3xl font-medium text-white">
+                  ${solution.total_reward_usd.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
+                </div>
               </div>
             </div>
-          )}
-
-          {showCreditKnowledge && (
-            <div className="question-animate">
-              <p className="mb-2">How much do you know about credit cards?</p>
-              <div className="flex flex-col gap-2">
-                <Button
-                  label="A little"
-                  variant="outlined"
-                  onClick={() => setFormData(prev => ({ ...prev, creditKnowledge: 'little' }))}
-                />
-                <Button
-                  label="A lot"
-                  variant="outlined"
-                  onClick={() => setFormData(prev => ({ ...prev, creditKnowledge: 'lot' }))}
-                />
-              </div>
+            <div className="border-top-1 surface-border pt-3">
+              {[
+                { label: 'Regular Rewards', value: solution.total_regular_rewards_usd },
+                { label: 'Sign-up Bonuses', value: solution.total_sign_on_bonus_usd },
+                { label: 'Statement Credits', value: solution.total_statement_credits_usd }
+              ].map((detail, index) => (
+                <div key={index} className="flex justify-content-between align-items-center py-2">
+                  <span className="text-white-alpha-70">{detail.label}</span>
+                  <span className="text-white font-medium">
+                    ${detail.value.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })}
+                  </span>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
 
-          {showContinue && (
-            <div className="continue-animate">
-              <Button
-                label="Continue"
-                onClick={handleContinue}
-                style={{ width: '100%' }}
-              />
-            </div>
-          )}
+          <Button 
+            label="See Full Analysis" 
+            className="w-full p-button-outlined"
+            style={{ borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}
+          />
         </div>
+        <ConfirmDialog />
       </div>
     );
   }
 
   return (
     <div className="flex flex-column gap-4">
-      <p className="text-lg">
-        Cardmath uses Teller Connect to securely link your bank account. We only access transaction data 
-        and never store your banking credentials.
-      </p>
-      <Button 
-        label="Connect Bank Account"
-        icon="pi pi-link"
-        onClick={openTellerConnect}
-        disabled={!tellerConnectReady}
-        style={{ width: '100%' }}
-      />
+      <div className="question-animate">
+        <div className="flex align-items-center gap-3 mb-4">
+          <i className="pi pi-sync pi-spin text-xl text-blue-500"></i>
+          <div>
+            <div className="font-medium">Analyzing your transactions</div>
+            <div className="text-sm text-gray-300">Processing your spending patterns</div>
+          </div>
+        </div>
+
+        {!formData.paymentMethods.length && (
+          <div className="mb-4">
+            <p className="text-lg mb-2">While we analyze your transactions, do you use any of these?</p>
+            <div className="flex flex-column gap-2">
+              <Button
+                label="Apple Pay"
+                outlined
+                onClick={() => setFormData(prev => ({
+                  ...prev,
+                  paymentMethods: [...prev.paymentMethods, 'apple']
+                }))}
+              />
+              <Button
+                label="Google Pay"
+                outlined
+                onClick={() => setFormData(prev => ({
+                  ...prev,
+                  paymentMethods: [...prev.paymentMethods, 'google']
+                }))}
+              />
+            </div>
+          </div>
+        )}
+
+        {formData.paymentMethods.length > 0 && !formData.creditKnowledge && (
+          <div className="question-animate">
+            <p className="text-lg mb-2">How much do you know about credit cards?</p>
+            <div className="flex flex-column gap-2">
+              <Button
+                label="A little"
+                outlined
+                onClick={() => setFormData(prev => ({ ...prev, creditKnowledge: 'little' }))}
+              />
+              <Button
+                label="A lot"
+                outlined
+                onClick={() => setFormData(prev => ({ ...prev, creditKnowledge: 'lot' }))}
+              />
+            </div>
+          </div>
+        )}
+      </div>
       <ConfirmDialog />
     </div>
   );

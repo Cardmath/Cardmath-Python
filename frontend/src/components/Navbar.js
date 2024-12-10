@@ -62,8 +62,23 @@ const Navbar = () => {
                     height="50"
                 />
             </div>
+            <StyleClass
+                nodeRef={rootBtnRef6}
+                selector="@next"
+                enterClassName="hidden"
+                leaveToClassName="hidden"
+                hideOnOutsideClick
+            >
+                <a
+                    ref={rootBtnRef6}
+                    className="p-ripple cursor-pointer block lg:hidden text-gray-400"
+                >
+                    <i className="pi pi-bars text-4xl"></i>
+                    <Ripple />
+                </a>
+            </StyleClass>
             <div className="align-items-center flex-grow-1 justify-content-between hidden lg:flex absolute lg:static w-full bg-gray-900 left-0 top-100 px-6 lg:px-0 shadow-2 lg:shadow-none">
-                <section></section>
+            <section></section>
                 <ul className="list-none p-0 m-0 flex lg:align-items-center text-gray-400 select-none flex-column lg:flex-row">
                     <li>
                         <StyleClass
@@ -173,7 +188,7 @@ const Navbar = () => {
                         <>
                             <Button
                                 label="Login"
-                                className="bg-green-400 text-lg text-white font-bold"
+                                className="bg-green-400 text-lg text-gray-900 font-bold border-none"
                                 onClick={() => navigate('/login')}
                             />
                             <Button
