@@ -1,5 +1,5 @@
 from database.sql_alchemy_db import Base
-from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Index
 from sqlalchemy.orm import relationship
 
 class Transaction(Base):
@@ -24,6 +24,9 @@ class Transaction(Base):
     running_balance = Column(Float, nullable=True)
     type = Column(String, nullable=False)
 
+    __table_args__ = (
+        Index('ix_transactions_status', 'status', postgresql_using='btree'),
+    )
         
 class TransactionDetails(Base):
     __tablename__ = 'transaction_details'
@@ -39,6 +42,10 @@ class TransactionDetails(Base):
         cascade="all"
     )
     transaction = relationship("Transaction", back_populates="details", uselist=False)
+
+    __table_args__ = (
+        Index('ix_transaction_details_category', 'category', postgresql_using='btree'),
+    )
 
 class Counterparty(Base):
     __tablename__ = 'counterparty'

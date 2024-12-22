@@ -14,8 +14,9 @@ from creditcard.endpoints.parse import ParseRequest, ParseResponse
 from creditcard.endpoints.read_database import CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
 from creditcard.endpoints.read_database import read_credit_cards_database
 from creditcard.schemas import *
-from database.creditcard import creditcard
-from database.sql_alchemy_db import sync_engine, async_engine, get_async_db, get_sync_db, print_sql_schema
+from database.sql_alchemy_db import sync_engine, get_sync_db, print_sql_schema, Base
+from auth.secrets import load_essential_secrets
+from dotenv import load_dotenv
 from datetime import timedelta
 from fastapi import Request, Depends, FastAPI, HTTPException, status
 from fastapi.exceptions import RequestValidationError
@@ -41,26 +42,12 @@ import teller.endpoints as teller_endpoints
 import logging
 import os
 
-DEFAULT_DOWNLOAD_DIR = Path("/tmp") if os.getenv("GAE_ENV", "") == "standard" else Path.home() / "Cardmath" / "./server_download_location"
-SAFE_LOCAL_DOWNLOAD_SPOT = DEFAULT_DOWNLOAD_DIR / "cardratings.html"
-DEFAULT_DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
-creditcard.Base.metadata.create_all(bind=sync_engine)
-pkl_file_path = Path(__file__).parent / "server_download_location" / "20241109_002033_cardratings_dict.pkl"
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    CacheContext.initialize(cache_ttl_seconds=3600)  # 1 hour cache
-    for db in get_sync_db():
-        await parse(
-            request=ParseRequest(
-                return_json=False,
-                max_items_to_parse=0,
-                save_to_db=False,
-                from_pkl=False,
-                pkl_file_path=str(pkl_file_path)
-            ),
-            db=db
-        )
+    CacheContext.initialize(cache_ttl_seconds=3600)
+    load_dotenv(override=True)
+    load_essential_secrets()
+    Base.metadata.create_all(bind=sync_engine)
     yield
     CacheContext.clear()
 

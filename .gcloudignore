@@ -1,6 +1,3 @@
 /frontend/
-cardmath.db
-test.db
-/cardmath_venv/
-/dbviz_venv/
-/__pycache__/
+cmvenv
+__pycache__

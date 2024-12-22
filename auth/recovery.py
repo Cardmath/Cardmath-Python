@@ -11,7 +11,6 @@ from auth.utils import get_password_hash
 import os
 import jwt
 
-# Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
