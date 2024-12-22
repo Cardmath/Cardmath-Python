@@ -22,10 +22,6 @@ if not DB_PASSWORD or len(DB_PASSWORD) == 0:
 DB_HOST = os.getenv("DB_HOST", "cardmath-llc:northamerica-northeast2:cardmathdb")
 HOST_PREFIX = "/cloudsql"
 
-SQLALCHEMY_DATABASE_URL_ASYNC = (
-    f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}?"
-    f"host={HOST_PREFIX}/{DB_HOST}"
-)
 SQLALCHEMY_DATABASE_URL_SYNC = (
     f"postgresql://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}?"
     f"host={HOST_PREFIX}/{DB_HOST}"
