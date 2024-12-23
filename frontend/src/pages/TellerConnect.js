@@ -131,10 +131,10 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
             // Initialize TellerConnect but do not open it yet
             if (window.TellerConnect) {
                 const tellerConnect = window.TellerConnect.setup({
-                    applicationId: 'app_p3oodma27qfrj3hs8a000',
+                    applicationId: 'app_p79ra9mqcims8r8gqa000',
                     selectAccount: 'disabled',
-                    environment: 'sandbox', // Change to 'production' in production environment
-                    products: ['transactions'],
+                    environment: 'sandbox',
+                    products: ["verify", "verify.instant", "transactions", "identity", "payments"],
                     onInit: function () {
                         console.log('Teller Connect has initialized');
                     },

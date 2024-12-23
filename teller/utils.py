@@ -1,26 +1,31 @@
 from auth.schemas import User
+from contextlib import contextmanager
+from creditcard.endpoints.read_database import read_credit_cards_database, CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
+from cryptography.hazmat.primitives.serialization import (
+    load_pem_private_key,
+    PrivateFormat,
+    Encoding,
+    NoEncryption
+)
+from cryptography.x509 import load_pem_x509_certificate
 from database.auth import crud as user_crud
 from database.auth.user import Enrollment, Account
 from database.creditcard.creditcard import CreditCard
 from database.teller import crud as teller_crud
 from database.teller.transactions import Transaction
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
 from insights.categorize import run_categorize_transactions_in_new_thread
-from creditcard.endpoints.read_database import read_credit_cards_database, CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
-from pathlib import Path
+from requests_toolbelt.adapters.x509 import X509Adapter
 from sqlalchemy.orm import Session
 from teller.schemas import TransactionSchema, AccountSchema
 from typing import List, Union
 from typing import Optional
-from contextlib import contextmanager
-
 import database.teller.crud as teller_crud 
-
-import time
 import os
-import requests
+
 import random
+import requests
+import time
 
 
 TELLER_API_ENTRYPOINT = "https://api.teller.io/"
@@ -90,33 +95,59 @@ def get_account_credit_cards(account: Account, db: Session) -> List[CreditCard]:
 
 class Teller:
     def __init__(self):
-        env_path = Path('/home/johannes/Cardmath/Cardmath-Python/.env')
-        if env_path.exists():
-            overriden = load_dotenv(dotenv_path=env_path, override=True)
-            if overriden:
-                print("[INFO] Loaded .env file.")
-        else:
-            print("[WARNING] .env file does not exist. Using environment variables.")
-        self.cert = os.getenv("TELLER_CERT")
-        self.cert_key = os.getenv("TELLER_CERT_KEY")
-        if not self.cert or not self.cert_key:
-            raise RuntimeError("could not find TLS certificate")
-        self.session = requests.Session()
-
-    def fetch(self, uri: str, access_token: str):
+        cert = os.getenv("TELLER_CERT", "").encode("utf-8")
+        if not cert:
+            raise RuntimeError("TELLER_CERT environment variable is missing or empty.")
         try:
-            response = self.session.get(
-                uri,
-                auth=(access_token, ""),
-                cert=(self.cert, self.cert_key)
+            cert = load_pem_x509_certificate(data=cert)
+            cert_bytes = cert.public_bytes(encoding=Encoding.PEM)
+        except Exception as e:
+            raise RuntimeError(f"Invalid or incompatible certificate format: {str(e)}")
+        
+        key = os.getenv("TELLER_CERT_KEY", "").encode("utf-8")
+        if not key:
+            raise RuntimeError("TELLER_CERT_KEY environment variable is missing or empty.")
+        try:
+            key = load_pem_private_key(key, password=None)
+            key_bytes = key.private_bytes(
+                encoding=Encoding.PEM,
+                format=PrivateFormat.PKCS8,
+                encryption_algorithm=NoEncryption()
             )
-            if response.status_code != 200:
-                print(f"[ERROR] Failed to fetch {uri} from Teller API: {response.status_code}")
-            return response
-        except requests.RequestException as e:
-            print(f"[ERROR] Request failed for {uri}: {str(e)}")
-            raise
-    
+        except Exception as e:
+            raise RuntimeError(f"Invalid or incompatible private key format: {str(e)}")
+        
+        adapter = X509Adapter(
+            max_retries=3,
+            cert_bytes=cert_bytes,
+            pk_bytes=key_bytes,
+        )
+        self.session = requests.Session()
+        self.session.mount('https://api.teller.io/', adapter=adapter)
+        
+        self._validate_tls_config()
+
+    def _validate_tls_config(self):
+        """
+        Validates the TLS setup by performing a test handshake with Teller.
+        """
+        test_url = "https://api.teller.io/"  # Use the full URL
+        try:
+            response = self.session.get(url=test_url, verify=False)
+            response.raise_for_status()
+            print("TLS handshake and connection succeeded.")
+        except requests.exceptions.SSLError as ssl_error:
+            raise RuntimeError(f"TLS handshake failed: {ssl_error}")
+        except requests.exceptions.HTTPError as http_error:
+            raise RuntimeError(f"HTTP error during handshake: {http_error}")
+        except Exception as e:
+            raise RuntimeError(f"Unexpected error during TLS handshake: {str(e)}")
+
+    def fetch(self, path: str, token: str):
+        response = self.session.get(path, auth=(token, ''), verify=False) # Figure out how to stop using verify=False cuz its sorta dangerous
+        response.raise_for_status()
+        return response
+
     def fetch_enrollment_accounts(self, enrollment: Enrollment) -> List[AccountSchema]:
         response = self.fetch(TELLER_ACCOUNTS, enrollment.access_token)
         response = response.json()

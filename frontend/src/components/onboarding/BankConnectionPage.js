@@ -46,7 +46,7 @@ const BankConnectionForm = ({ onSelect }) => {
     script.onload = () => {
       if (window.TellerConnect) {
         const tellerConnect = window.TellerConnect.setup({
-          applicationId: 'app_p3oodma27qfrj3hs8a000',
+          applicationId: 'app_p79ra9mqcims8r8gqa000',
           selectAccount: 'disabled',
           environment: 'sandbox',
           products: ['transactions'],
