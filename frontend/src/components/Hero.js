@@ -78,7 +78,7 @@ const Hero = () => {
             {/* Text content */}
             <div className="text-center lg:col-6 sm:col-12 my-4 relative" style={{ position: 'relative', zIndex: 2 }}>
                 <div
-                    className="text-4xl text-white mb-3 logo-font"
+                    className="text-4xl text-white mb-3"
                     style={{
                         textShadow: '1px 1px 5px rgba(0, 0, 0, 0.3)', // Subtle text shadow for readability
                         animation: 'tracking-in-expand 0.7s cubic-bezier(0.215, 0.61, 0.355, 1.000) both', // Animation for text

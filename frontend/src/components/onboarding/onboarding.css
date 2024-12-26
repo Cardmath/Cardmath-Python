@@ -159,17 +159,21 @@
   .onboarding-container .p-float-label label {
     color: rgba(255, 255, 255, 0.7);
   }
-  
+
   .onboarding-container .p-button {
     background: rgba(255, 255, 255, 0.2);
-    border: none;
-  }
-  
-  .onboarding-container .p-button:enabled:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
-  
-  .onboarding-container .p-button:disabled {
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    width: 100%;
+    justify-content: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.onboarding-container .p-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
+}
+
+.onboarding-container .p-button.selected {
+    border-color: rgb(204, 229, 215);
+}

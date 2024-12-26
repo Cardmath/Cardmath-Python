@@ -1,8 +1,6 @@
-import os
-import logging
 from google.cloud import secretmanager
 
-logging.basicConfig(level=logging.INFO)
+import os
 
 def load_secret(secret_name, env_var_name=None, project_id=1084246205015, version_id="latest", set_env=True):
     project_id = project_id or os.getenv("GOOGLE_CLOUD_PROJECT", "cardmath-llc")

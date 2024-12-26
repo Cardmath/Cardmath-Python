@@ -19,7 +19,8 @@ const OnboardingFlow = () => {
     creditScore: ''
   });
   const [contactInfo, setContactInfo] = useState(null);
-  const [solutions, setSolutions] = useState(null);
+  const [emailProcessed, setEmailProcessed] = useState(false);
+  const [solution, setSolution] = useState(null);
   const [computationLoading, setComputationLoading] = useState(false);
 
   useEffect(() => {
@@ -40,7 +41,7 @@ const OnboardingFlow = () => {
     setActiveIndex(nextIndex);
   };
 
-  const computeOptimalAllocation = async (onboardingToken) => {
+  const computeOptimalAllocation = async () => {
     setComputationLoading(true);
     try {
       const response = await fetchWithAuth(
@@ -49,7 +50,6 @@ const OnboardingFlow = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            token: onboardingToken,
             answers: {
               num_cards: 4,
               credit_score: 3
@@ -64,7 +64,7 @@ const OnboardingFlow = () => {
 
       const data = await response.json();
       console.log('Optimal allocation computed:', data);
-      setSolutions(data);
+      setSolution(data);
       return data;
     } catch (error) {
       console.error('Error computing optimal allocation:', error);
@@ -92,19 +92,17 @@ const OnboardingFlow = () => {
       if (!response.ok) throw new Error('Failed to process enrollment');
       
       const data = await response.json();
-      console.log('Enrollment processed:', data);
       
       if (!data.token) {
         throw new Error('No token found in response');
       }
+      localStorage.setItem('cardmath_access_token', data.token);
 
       if (data.contact) {
         setContactInfo(data.contact);
       }
-
       const solution = await computeOptimalAllocation(data.token);
-      setSolutions(solution);
-      return solution;
+      setSolution(solution);
     } catch (error) {
       console.error('Error processing enrollment:', error);
       throw error;
@@ -117,6 +115,23 @@ const OnboardingFlow = () => {
       handleTransition(nextIndex);
     }
   };
+
+  const handlePrimaryEmail = async (primary_email) => {
+    const response = await fetchWithAuth(
+    `${getBackendUrl()}/ingest-onboarding-primary-email`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            first_name: formData.name,
+            primary_email: primary_email
+          }),
+        }
+      )
+    if (response.ok) {
+      setEmailProcessed(true)
+    }
+  }
 
   const pages = [
     {
@@ -153,7 +168,11 @@ const OnboardingFlow = () => {
     {
       ...BankConnectionPage,
       additionalContent: <BankConnectionPage.additionalContent 
-        onSelect={handleEnrollment}
+        handleEnrollment={handleEnrollment}
+        handlePrimaryEmail={handlePrimaryEmail}
+        emailProcessed={emailProcessed}
+        solution={solution}
+        contactInfo={contactInfo}
       />
     }
   ];

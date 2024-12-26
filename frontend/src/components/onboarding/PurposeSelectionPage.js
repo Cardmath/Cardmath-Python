@@ -54,24 +54,16 @@ const PurposeSelectionForm = ({ onSelect }) => {
 
   return (
     <div>
-      {options.map((option) => (
-        <div key={option.label} style={{ marginBottom: '0.5rem' }}>
-          <Button
-            label={option.label}
-            icon={option.icon}
-            style={{
-              width: '100%', 
-              justifyContent: 'flex-start',
-              border: '3px solid',
-              borderRadius: '8px',
-              borderColor: selectedPurposes.includes(option.label) 
-                ? 'rgb(204, 229, 215)' 
-                : 'rgba(255, 255, 255, 0.2)'
-            }}
-            onClick={() => handleToggle(option.label)}
-          />
-        </div>
-      ))}
+        {options.map((option) => (
+            <div key={option.label}>
+                <Button
+                    label={option.label}
+                    icon={option.icon}
+                    className={`p-button ${selectedPurposes.includes(option.label) ? 'selected' : ''}`}
+                    onClick={() => handleToggle(option.label)}
+                />
+            </div>
+        ))}
       {selectedPurposes.length > 0 && (
         <div style={{ marginTop: '1.5rem' }}>
           <Button 

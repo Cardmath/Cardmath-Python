@@ -2,14 +2,17 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from 'primereact/button';
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
 import './LoadingQuestions.css';
+import { InputText } from 'primereact/inputtext';
 
-const BankConnectionForm = ({ onSelect }) => {
+const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, handleEnrollment, solution, contactInfo }) => {
   const [tellerConnectReady, setTellerConnectReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [solution, setSolution] = useState(null);
+  const [primaryEmail, setPrimaryEmail] = useState("");
+  const [formsComplete, setFormsComplete] = useState(false);
   const [formData, setFormData] = useState({
-    paymentMethods: [],
-    creditKnowledge: ''
+    primaryEmail: "", 
+    paymentMethods: "", // Either Google Pay or Apple Pay
+    creditKnowledge: ""
   });
   const tellerConnectRef = useRef(null);
 
@@ -29,16 +32,18 @@ const BankConnectionForm = ({ onSelect }) => {
   const handleSuccess = async (enrollment) => {
     setIsProcessing(true);
     try {
-      const result = await onSelect(enrollment);
-      console.log('API Response:', result);
-      if (result) {
-        setSolution(result);
-      }
+      await handleEnrollment(enrollment);
     } catch (error) {
       console.error('Error in handleSuccess:', error);
       handleError('Failed to process enrollment');
     }
   };
+
+  useEffect(() => {
+    if (formData.paymentMethods.length > 0) {
+      setFormsComplete(true)
+    }
+  }, [formData])
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -94,7 +99,7 @@ const BankConnectionForm = ({ onSelect }) => {
     );
     }
   {/* Only showing the relevant solutions display section for brevity */}
-  if (solution) {
+  if (solution && formsComplete) {
     return (
       <div className="flex flex-column gap-4">
         <div className="continue-animate">
@@ -158,8 +163,34 @@ const BankConnectionForm = ({ onSelect }) => {
             <div className="text-sm text-gray-300">Processing your spending patterns</div>
           </div>
         </div>
+            {!emailProcessed && (
+        <div className="mb-4">
+            <p className="text-lg mb-2">
+                Please select a primary email to associate with your Cardmath account
+            </p>
+            <div className="flex flex-column gap-2">
+                {contactInfo &&
+                    contactInfo.emails.map((email) => (
+                        <Button
+                            label={email}
+                            className={`p-button ${primaryEmail === email ? 'selected' : ''}`}
+                            onClick={() => setPrimaryEmail(email)}
+                        />
+                    ))}
+                <InputText id="email" onChange={(e) => setPrimaryEmail(e.target.value)} aria-describedby="email-help" />
+                <small id="email-help">
+                    Preferred email not in the list? Pick a custom email.
+                </small>
+                <Button
+                    label="Submit Chosen Email"
+                    onClick={()=>handlePrimaryEmail(primaryEmail)}
+                    className='mt-3'
+                />
+            </div>
+        </div>
+    )}
 
-        {!formData.paymentMethods.length && (
+        {emailProcessed && !formData.paymentMethods.length && (
           <div className="mb-4">
             <p className="text-lg mb-2">While we analyze your transactions, do you use any of these?</p>
             <div className="flex flex-column gap-2">
