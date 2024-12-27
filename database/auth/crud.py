@@ -1,5 +1,5 @@
 from auth.schemas import UserCreate
-from database.auth.user import User, UserInDB, Enrollment, Account, Wallet, Subscription, wallet_card_association
+from database.auth.user import User, UserInDB, Enrollment, Account, Wallet, Subscription, wallet_card_association, Onboarding
 from database.creditcard.creditcard import CreditCard
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
@@ -27,15 +27,15 @@ def get_users(db: Session, skip: int = 0, limit: int = 10) -> List[User]:
 def get_account_by_id(db: Session, account_id: str) -> Optional[Account]:
     return db.query(Account).filter(Account.id == account_id).first()
 
-def create_user(db: Session, user: UserCreate):
-    hashed_password = get_password_hash(user.password)
+def create_user(db: Session, onboarding: Onboarding, first_name: str, primary_email: str):
     db_user = UserInDB(
-        username=user.username,
-        email=user.email,
-        full_name=user.full_name,
-        disabled=user.disabled,
-        hashed_password=hashed_password
+        email=primary_email,
+        teller_ids=[onboarding.teller_id],
+        first_name=first_name,
+        hashed_password=None
     )
+    db_user.onboarding = onboarding
+    db_user.enrollments = [onboarding.enrollment]
     db.add(db_user)
     db.commit()
     db.refresh(db_user)

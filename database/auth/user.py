@@ -1,5 +1,5 @@
 from database.sql_alchemy_db import Base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, JSON, Table, Date, CheckConstraint
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, JSON, Table, Date, CheckConstraint, ARRAY, Enum
 from sqlalchemy.orm import relationship
 
 user_credit_card_association = Table(
@@ -20,36 +20,34 @@ wallet_card_association = Table(
 class Onboarding(Base):
     __tablename__ = 'onboarding'
     
-    id = Column(Integer, primary_key=True, index=True)
-    token = Column(String, unique=True, nullable=False, index=True)
-    created_at = Column(Date, nullable=False)
+    id= Column(Integer, primary_key=True, index=True, autoincrement=True)
+    teller_id= Column(String, unique=True, index=True)
     expires_at = Column(Date, nullable=False)
-    is_used = Column(Boolean, default=False)
-    associated_user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
-    
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+
     emails = Column(JSON(String), nullable=False)
     phone_numbers = Column(JSON(String), nullable=False)
 
-    associated_user = relationship("User", backref="onboarding_sessions")
-    enrollment = relationship("Enrollment", back_populates="onboarding", uselist=False)
+    user = relationship("User", back_populates="onboarding", uselist=False)
+    enrollment = relationship("Enrollment", uselist=False, back_populates="onboarding", lazy='joined')
 
 class User(Base):
     __tablename__ = 'users'
     
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    teller_ids = Column(ARRAY(String), index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
-    full_name = Column(String, nullable=True)
-    disabled = Column(Boolean, default=False)
+    first_name = Column(String, nullable=True)
     
+    onboarding = relationship("Onboarding", back_populates="user", uselist=False)
     subscription = relationship("Subscription", uselist=False, back_populates="user", cascade="all, delete-orphan")
-    enrollments = relationship("Enrollment", back_populates="user", cascade="all, delete-orphan")
+    enrollments = relationship("Enrollment", back_populates="user", uselist=True, cascade="all, delete-orphan")
     credit_cards = relationship("CreditCard", secondary=user_credit_card_association, back_populates="users")
     preferences = relationship("Preferences", uselist=False, cascade="all, delete-orphan")
     wallets = relationship("Wallet", back_populates="user", cascade="all, delete-orphan")
 
 class UserInDB(User):
-    hashed_password = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=True)
 
 class Wallet(Base):
     __tablename__ = 'wallets'
@@ -74,13 +72,12 @@ class Enrollment(Base):
     last_updated = Column(Date, nullable=False)
     
     user = relationship("User", back_populates="enrollments")
-    onboarding = relationship("Onboarding", back_populates="enrollment")
+    onboarding = relationship("Onboarding", uselist=False, back_populates="enrollment")
     accounts = relationship("Account", back_populates="enrollment", cascade="all, delete-orphan")
         
     __table_args__ = (
         CheckConstraint(
-            '(user_id IS NULL AND onboarding_id IS NOT NULL) OR '
-            '(user_id IS NOT NULL AND onboarding_id IS NULL)',
+            '(user_id IS NOT NULL OR onboarding_id IS NOT NULL)',
             name='enrollment_owner_check'
         ),
     )

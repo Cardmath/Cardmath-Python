@@ -1,9 +1,10 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, declarative_base
 from auth.secrets import load_secret
-from sqlalchemy.schema import CreateTable
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+
 import os
+
+Base = declarative_base()
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 DB_NAME = None
@@ -35,20 +36,9 @@ SyncSessionLocal = sessionmaker(
     bind=sync_engine
 )
 
-Base = declarative_base()
-
 def get_sync_db():
     db = SyncSessionLocal()
     try:
         yield db
     finally:
         db.close()
-
-def print_sql_schema(out_name='schema.sql'):
-    output_file = out_name
-    with open(output_file, 'w') as file:
-        for table in Base.metadata.sorted_tables:
-            sql = str(CreateTable(table).compile(sync_engine))  # Use the sync engine for schema printing
-            file.write(sql)
-            file.write("\n\n")
-    print(f"SQL schema has been written to {output_file}")

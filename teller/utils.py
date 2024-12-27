@@ -1,4 +1,4 @@
-from auth.schemas import User
+from database.auth.user import User
 from contextlib import contextmanager
 from creditcard.endpoints.read_database import read_credit_cards_database, CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
 from cryptography.hazmat.primitives.serialization import (

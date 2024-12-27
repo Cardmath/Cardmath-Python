@@ -1,7 +1,8 @@
-from auth.onboarding import create_onboarding_token, OnboardingSavingsRequest, get_onboarding_recommendation
+from auth.onboarding import create_onboarding_token, OnboardingSavingsRequest, get_onboarding_recommendation, ingest_primary_email, IngestOnboardingPrimaryEmailRequest, get_current_onboarding
 from auth.recovery import request_password_recovery, PasswordResetForm, reset_password, PasswordResetRequest, create_email_verification_token, send_verification_email, verify_email
 from auth.schemas import Token
-from auth.schemas import User, UserCreate
+from database.auth.user import User, Onboarding
+from auth.schemas import UserCreate
 from chat.endpoint import chat 
 from chat.schemas import ChatRequest
 from contextlib import asynccontextmanager
@@ -82,7 +83,7 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=auth_utils.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth_utils.create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.email}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
 
@@ -241,8 +242,12 @@ async def process_onboarding_complete_endpoint(teller_connect_response: AccessTo
     return await create_onboarding_token(db=db, teller_connect_response=teller_connect_response, answers=answers) 
 
 @app.post("/compute-onboarding-savings")
-async def compute_onboarding_savings_endpoint( request: OnboardingSavingsRequest, db: Session = Depends(get_sync_db)):
-    return await get_onboarding_recommendation(db=db, request=request)
+async def compute_onboarding_savings_endpoint( request: OnboardingSavingsRequest, onboarding: Annotated[Onboarding, Depends(get_current_onboarding)], db: Session = Depends(get_sync_db)):
+    return await get_onboarding_recommendation(db=db, request=request, onboarding=onboarding)
+
+@app.post("/ingest-onboarding-primary-email")
+def ingest_onboarding_primary_email_endpoint(request: IngestOnboardingPrimaryEmailRequest, onboarding: Annotated[Onboarding, Depends(get_current_onboarding)], db: Session = Depends(get_sync_db)):
+    ingest_primary_email(request=request, onboarding=onboarding, db=db)
 
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest) -> StreamingResponse:

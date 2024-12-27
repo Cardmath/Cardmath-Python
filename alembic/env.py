@@ -19,7 +19,6 @@ fileConfig(config.config_file_name)
 # Setup logger
 logger = logging.getLogger("alembic")
 
-# Import Base and models to include metadata
 from database.sql_alchemy_db import Base
 target_metadata = Base.metadata
 from database.auth.user import (
@@ -42,7 +41,7 @@ from database.teller.preferences import (
     RewardsProgramsPreferences,
     Preferences,
 )
-from database.teller.transactions import Transaction, TransactionDetails, Counterparty
+from database.teller.transactions import Transaction, TransactionDetails, Counterparty, HeavyHittersMatView
 
 print("Tables in target_metadata:")
 print(target_metadata.tables.keys())

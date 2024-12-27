@@ -1,15 +1,19 @@
 from database.auth.user import Enrollment, Onboarding
+from auth.schemas import UserCreate
+import auth.utils as auth_utils
+from database.auth.crud import create_user
 from datetime import datetime, timedelta
-from datetime import datetime, timedelta
-from datetime import timedelta
+from database.sql_alchemy_db import get_sync_db
 from insights.optimal_cards.endpoint import optimize_credit_card_selection_milp, OptimalCardsAllocationRequest, OptimalCardsAllocationResponse
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict, field_validator, validate_email
 from requests import Response
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema
-from typing import List, Tuple, Union
-from uuid import uuid4
+from typing import List, Union
+from fastapi import Depends
+from typing import Annotated
 import json
+import jwt
 import teller.utils as teller_utils
 
 class ContactInfo(BaseModel):
@@ -67,31 +71,29 @@ def extract_contact_info(identity_response: Union[Response, dict]) -> ContactInf
         raise ValueError(f"Error processing identity response: {str(e)}")
 
 async def create_onboarding_token(db: Session, teller_connect_response: AccessTokenSchema, answers: dict) -> dict:
-    token = str(uuid4()) 
-    expiration = datetime.now() + timedelta(minutes=30)
+    onboarding_token_expires = timedelta(minutes=auth_utils.ONBOARDING_TOKEN_EXPIRE_MINUTES)
+    onboarding_token = auth_utils.create_access_token(
+        data={"teller_id": teller_connect_response.user.id}, expires_delta=onboarding_token_expires
+    )
+    expiration = datetime.now() + onboarding_token_expires
     enr_id = teller_connect_response.enrollment.id
     
-    # Check if enrollment exists
     if db.query(Enrollment).filter(Enrollment.id == enr_id).first():
         raise ValueError(f"Enrollment ID {enr_id} already present in the database.")
     
-    # Create onboarding first
     onboarding = Onboarding(
-        token=token,
-        created_at=datetime.now(),
+        teller_id = teller_connect_response.user.id,
         expires_at=expiration,
-        is_used=False,
         phone_numbers=[],
         emails=[]
     )
     db.add(onboarding)
-    db.flush()  # This gets us the onboarding ID
+    db.flush()
     
-    # Now create enrollment with onboarding_id
     enrollment = Enrollment(
         id=enr_id,
         user_id=None,
-        onboarding_id=onboarding.id,  # Set this explicitly
+        onboarding_id=onboarding.id,
         access_token=teller_connect_response.accessToken,
         institution_name=teller_connect_response.enrollment.institution.name,
         signatures=teller_connect_response.signatures,
@@ -101,20 +103,17 @@ async def create_onboarding_token(db: Session, teller_connect_response: AccessTo
     
     teller_client = teller_utils.Teller()
     identity = teller_client.fetch_identity(access_token=teller_connect_response.accessToken)
-    
     contact_info: ContactInfo = extract_contact_info(identity)
     
-    # Update onboarding with contact info
     onboarding.phone_numbers = contact_info.phone_numbers
     onboarding.emails = contact_info.emails
     
     db.commit()
     db.refresh(onboarding)
     
-    return OnboardingCreationResponse(token=token, contact=contact_info, expires_at=expiration)
+    return OnboardingCreationResponse(token=onboarding_token, contact=contact_info)
 
 class OnboardingSavingsRequest(BaseModel):
-    token: str
     answers: OnboardingQuestionsAnswers
 
 class OnboardingSavingsResponse(BaseModel):
@@ -124,29 +123,17 @@ class OnboardingSavingsResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)  
 
-def get_onboarding_token_enrollment(token: str, db: Session) -> Tuple[Onboarding, Enrollment]:
-    onboarding: Onboarding = db.query(Onboarding).filter(Onboarding.token == token).first()
-    if not onboarding:
-        raise ValueError(f"No onboarding found for token {token}")
-
-    enrollment: Enrollment = None
-    if not onboarding.enrollment:
-        print(f"Enrollment not found for onboarding of token {token}, falling back to enrollment_id")
-        enrollment = db.query(Enrollment).filter(Enrollment.id == onboarding.enrollment_id).first()
-    else :
-        print(f"Enrollment found for onboarding of token {token}")
-        enrollment = onboarding.enrollment
-
-    if not enrollment:
-        raise ValueError(f"No enrollment found for onboarding of token {token}")
+def get_current_onboarding(token: Annotated[str, Depends(auth_utils.oauth2_scheme)], db: Session = Depends(get_sync_db)):
+    payload = jwt.decode(token, auth_utils.SECRET_KEY, algorithms=[auth_utils.ALGORITHM])
+    teller_id: str = payload.get("teller_id")
+    onboarding = db.query(Onboarding).where(Onboarding.teller_id == teller_id and Onboarding.expires_at > datetime.now()).first()
     
-    return onboarding, enrollment
+    if onboarding == None:
+        raise ValueError("No unexpired Onboarding found with matching teller_id")
+    
+    return onboarding
 
-async def get_onboarding_recommendation(request: OnboardingSavingsRequest, db: Session):
-    # Get the onboarding and the enrollment
-    onboarding, enrollment = get_onboarding_token_enrollment(request.token, db)
-    print(f"Got onboarding and enrollment for token {request.token}")
-
+async def get_onboarding_recommendation(request: OnboardingSavingsRequest, db: Session, onboarding: Annotated[Onboarding, Depends(get_current_onboarding)]):
     optimization_request = OptimalCardsAllocationRequest(
         to_use=request.answers.num_cards,
         to_add=2,
@@ -158,13 +145,11 @@ async def get_onboarding_recommendation(request: OnboardingSavingsRequest, db: S
         save_to_db=False,
     )
     
-    print(f"Created optimization request for token {request.token}")
     teller_client = teller_utils.Teller()
     
-    # Optimize for onboarding by setting bulk_mode=True and using a larger batch size
     teller_client.fetch_enrollment_transactions(
         db=db, 
-        enrollment=enrollment, 
+        enrollment=onboarding.enrollment, 
         should_categorize=False,
         bulk_mode=True,
         batch_size=200,  # Larger batch size for onboarding
@@ -178,3 +163,16 @@ async def get_onboarding_recommendation(request: OnboardingSavingsRequest, db: S
     )
 
     return optimization_result.solutions[0]
+
+class IngestOnboardingPrimaryEmailRequest(BaseModel):
+    first_name: str
+    primary_email: str
+
+    @field_validator('primary_email', mode='before')
+    @classmethod
+    def validate_primary_email(cls, v):
+        name, email = validate_email(v)
+        return email
+
+def ingest_primary_email(request: IngestOnboardingPrimaryEmailRequest, onboarding: Onboarding, db: Session):
+    create_user(db=db, onboarding=onboarding, primary_email=request.primary_email, first_name=request.first_name)

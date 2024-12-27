@@ -1,5 +1,5 @@
-from auth.schemas import User, TokenData
-from database.auth.crud import get_user_by_email 
+from database.auth.user import User
+from database.auth.crud import get_user_by_email
 from database.sql_alchemy_db import get_sync_db
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
@@ -13,11 +13,10 @@ import os
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# to get a string like this run:
-# openssl rand -hex 32
 SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 90
+ONBOARDING_TOKEN_EXPIRE_MINUTES = 20 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -56,13 +55,12 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        email: str = payload.get("sub")
+        if email is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
     except InvalidTokenError:
         raise credentials_exception
-    user = get_user_by_email(db, username=token_data.username)
+    user = get_user_by_email(db, username=email)
     if user is None:
         raise credentials_exception
     return user
