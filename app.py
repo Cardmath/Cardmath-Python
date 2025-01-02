@@ -15,7 +15,7 @@ from creditcard.endpoints.parse import ParseRequest, ParseResponse
 from creditcard.endpoints.read_database import CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
 from creditcard.endpoints.read_database import read_credit_cards_database
 from creditcard.schemas import *
-from database.sql_alchemy_db import sync_engine, get_sync_db, print_sql_schema, Base
+from database.sql_alchemy_db import sync_engine, get_sync_db, Base
 from auth.secrets import load_essential_secrets
 from dotenv import load_dotenv
 from datetime import timedelta

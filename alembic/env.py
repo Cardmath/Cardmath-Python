@@ -41,7 +41,7 @@ from database.teller.preferences import (
     RewardsProgramsPreferences,
     Preferences,
 )
-from database.teller.transactions import Transaction, TransactionDetails, Counterparty, HeavyHittersMatView
+from database.teller.transactions import Transaction, TransactionDetails, Counterparty
 
 print("Tables in target_metadata:")
 print(target_metadata.tables.keys())
