@@ -4,7 +4,7 @@ import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
 import './LoadingQuestions.css';
 import { InputText } from 'primereact/inputtext';
 
-const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, handleEnrollment, solution, contactInfo }) => {
+const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, onSelect, handleEnrollment, solution, dateRange, contactInfo, accounts, preferredAccount, setPreferredAccount}) => {
   const [tellerConnectReady, setTellerConnectReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [primaryEmail, setPrimaryEmail] = useState("");
@@ -99,7 +99,7 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, handleEnrollme
     );
     }
   {/* Only showing the relevant solutions display section for brevity */}
-  if (solution && formsComplete) {
+  if (solution && dateRange && formsComplete) {
     return (
       <div className="flex flex-column gap-4">
         <div className="continue-animate">
@@ -107,7 +107,7 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, handleEnrollme
             Here's your optimal card allocation
           </div>
           <div className="text-base mb-4 text-white-alpha-70">
-            {`Analysis period: TODO`}
+            from {dateRange.start_month} to {dateRange.start_month}
           </div>
           
           <div className="bg-black-alpha-70 p-4 border-round mb-3">
@@ -146,6 +146,7 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, handleEnrollme
             label="See Full Analysis" 
             className="w-full p-button-outlined"
             style={{ borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}
+            onClick={() => onSelect()}
           />
         </div>
         <ConfirmDialog />
@@ -163,34 +164,61 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, handleEnrollme
             <div className="text-sm text-gray-300">Processing your spending patterns</div>
           </div>
         </div>
-            {!emailProcessed && (
-        <div className="mb-4">
+
+        {!emailProcessed && (
+          <div className="mb-4">
             <p className="text-lg mb-2">
-                Please select a primary email to associate with your Cardmath account
+              Please select a primary email to associate with your Cardmath account
             </p>
             <div className="flex flex-column gap-2">
-                {contactInfo &&
-                    contactInfo.emails.map((email) => (
-                        <Button
-                            label={email}
-                            className={`p-button ${primaryEmail === email ? 'selected' : ''}`}
-                            onClick={() => setPrimaryEmail(email)}
-                        />
-                    ))}
-                <InputText id="email" onChange={(e) => setPrimaryEmail(e.target.value)} aria-describedby="email-help" />
-                <small id="email-help">
-                    Preferred email not in the list? Pick a custom email.
-                </small>
-                <Button
-                    label="Submit Chosen Email"
-                    onClick={()=>handlePrimaryEmail(primaryEmail)}
-                    className='mt-3'
-                />
+              {contactInfo &&
+                contactInfo.emails.map((email) => (
+                  <Button
+                    label={email}
+                    className={`p-button ${primaryEmail === email ? 'selected' : ''}`}
+                    onClick={() => setPrimaryEmail(email)}
+                  />
+                ))}
+              <InputText id="email" onChange={(e) => setPrimaryEmail(e.target.value)} aria-describedby="email-help" />
+              <small id="email-help">
+                Preferred email not in the list? Pick a custom email.
+              </small>
+              <Button
+                label="Submit Chosen Email"
+                onClick={() => handlePrimaryEmail(primaryEmail)}
+                className='mt-3'
+              />
             </div>
-        </div>
-    )}
+          </div>
+        )}
 
-        {emailProcessed && !formData.paymentMethods.length && (
+        {emailProcessed && (!preferredAccount.confirmed) && (
+          <div className="mb-4">
+            <p className="text-lg mb-2">
+              Please select a primary payment account
+            </p>
+            <div className="flex flex-column gap-2">
+              {accounts && 
+                Object.entries(accounts).map(([id, name]) => (
+                  <Button
+                    key={id}
+                    label={name}
+                    className={`p-button ${preferredAccount.preferred === id ? 'selected' : ''}`}
+                    onClick={() => setPreferredAccount(prev => ({...prev, preferred: id}))}
+                  />
+                ))
+              }
+              <Button
+                label="Submit Preferred Payment Account"
+                onClick={() => setPreferredAccount(prev => ({...prev, confirmed: true}))}
+                className="mt-3"
+                disabled={!preferredAccount.preferred}
+              />
+            </div>
+          </div>
+        )}
+
+        {emailProcessed && preferredAccount.confirmed && !formData.paymentMethods.length && (
           <div className="mb-4">
             <p className="text-lg mb-2">While we analyze your transactions, do you use any of these?</p>
             <div className="flex flex-column gap-2">

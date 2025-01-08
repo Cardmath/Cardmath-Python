@@ -7,6 +7,7 @@ import WalletSizePage from '../components/onboarding/WalletSizePage';
 import IncomePage from '../components/onboarding/IncomePage';
 import CreditScorePage from '../components/onboarding/CreditScorePage';
 import BankConnectionPage from '../components/onboarding/BankConnectionPage';
+import PaymentPage from '../components/onboarding/PaymentPage';
 import "../components/onboarding/onboarding.css";
 
 const OnboardingFlow = () => {
@@ -19,8 +20,11 @@ const OnboardingFlow = () => {
     creditScore: ''
   });
   const [contactInfo, setContactInfo] = useState(null);
+  const [accounts, setAccounts] = useState(null);
+  const [preferredAccount, setPreferredAccount] = useState({preferred: null, confirmed: false}); 
   const [emailProcessed, setEmailProcessed] = useState(false);
   const [solution, setSolution] = useState(null);
+  const [dateRange, setDateRange] = useState(null);
   const [computationLoading, setComputationLoading] = useState(false);
 
   useEffect(() => {
@@ -93,16 +97,26 @@ const OnboardingFlow = () => {
       
       const data = await response.json();
       
+      // onboarding token necessary to authenticate the session
       if (!data.token) {
         throw new Error('No token found in response');
       }
       localStorage.setItem('cardmath_access_token', data.token);
 
+      // to give the user primary email options
       if (data.contact) {
         setContactInfo(data.contact);
       }
+
+      // To give the user payment account options
+      if (data.accounts) {
+        setAccounts(data.accounts);
+      }
+
+      // Compute the recommendation
       const solution = await computeOptimalAllocation(data.token);
-      setSolution(solution);
+      setSolution(solution.solutions[0]);
+      setDateRange(solution.timeframe);
     } catch (error) {
       console.error('Error processing enrollment:', error);
       throw error;
@@ -168,11 +182,23 @@ const OnboardingFlow = () => {
     {
       ...BankConnectionPage,
       additionalContent: <BankConnectionPage.additionalContent 
+        onSelect={(score) => handleFormSubmit('contactInfo', contactInfo, 6)}
         handleEnrollment={handleEnrollment}
         handlePrimaryEmail={handlePrimaryEmail}
         emailProcessed={emailProcessed}
         solution={solution}
+        dateRange={dateRange}
         contactInfo={contactInfo}
+        accounts={accounts}
+        preferredAccount={preferredAccount}
+        setPreferredAccount={setPreferredAccount}
+      />
+    },
+    {
+      ...PaymentPage,
+      additionalContent: <PaymentPage.additionalContent 
+      onPaymentComplete={(score) => handleFormSubmit('creditScore', score, 5)}
+      preferredAccount={preferredAccount}
       />
     }
   ];

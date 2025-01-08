@@ -39,7 +39,7 @@ const WalletSizeForm = ({ onSelect }) => {
   return (
     <div>
       {options.map((option) => (
-        <div key={option.label} style={{ marginBottom: '0.5rem' }}>
+        <div key={option.label}>
           <Button
             label={option.label}
             variant="outlined"

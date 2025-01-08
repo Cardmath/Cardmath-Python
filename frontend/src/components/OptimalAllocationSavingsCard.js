@@ -116,6 +116,11 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
         });
         console.log(JSON.stringify(body));
         let data = await response.json();
+
+        if (!response.ok) {
+          throw new Error('Error requesting the optimal allocation of held cards.')
+        }
+
         data = data.solutions[0];
         console.log(data)
         setNetRewardsCurrent(data.net_rewards_usd);
