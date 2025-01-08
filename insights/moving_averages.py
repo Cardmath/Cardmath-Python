@@ -24,7 +24,7 @@ async def compute_categories_moving_averages(
 
     if len(accounts) == 0:
         logging.warning(f"No accounts found for user {user.id}")
-        return CategoriesMovingAveragesResponse(vendors=[], categories=[])
+        return
 
     # Use the utility function to retrieve eligible transactions
     date_range = request.date_range if isinstance(request.date_range, tuple) and len(request.date_range) == 2 else None

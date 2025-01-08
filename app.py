@@ -1,8 +1,8 @@
-from auth.onboarding import create_onboarding_token, OnboardingSavingsRequest, get_onboarding_recommendation, ingest_primary_email, IngestOnboardingPrimaryEmailRequest, get_current_onboarding
+from auth.onboarding import create_onboarding_token, OnboardingSavingsRequest, get_onboarding_recommendation, ingest_primary_email, IngestOnboardingPrimaryEmailRequest, get_current_onboarding, get_onboarding_user_token
 from auth.recovery import request_password_recovery, PasswordResetForm, reset_password, PasswordResetRequest, create_email_verification_token, send_verification_email, verify_email
 from auth.schemas import Token
-from database.auth.user import User, Onboarding
 from auth.schemas import UserCreate
+from auth.secrets import load_essential_secrets
 from chat.endpoint import chat 
 from chat.schemas import ChatRequest
 from contextlib import asynccontextmanager
@@ -15,10 +15,10 @@ from creditcard.endpoints.parse import ParseRequest, ParseResponse
 from creditcard.endpoints.read_database import CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
 from creditcard.endpoints.read_database import read_credit_cards_database
 from creditcard.schemas import *
+from database.auth.user import User, Onboarding
 from database.sql_alchemy_db import sync_engine, get_sync_db, Base
-from auth.secrets import load_essential_secrets
-from dotenv import load_dotenv
 from datetime import timedelta
+from dotenv import load_dotenv
 from fastapi import Request, Depends, FastAPI, HTTPException, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,8 +31,8 @@ from insights.moving_averages import compute_categories_moving_averages
 from insights.optimal_cards.endpoint import optimize_credit_card_selection_milp
 from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, CategoriesMovingAveragesRequest, CategoriesMovingAveragesResponse
 from insights.schemas import OptimalCardsAllocationRequest, OptimalCardsAllocationResponse
-from pathlib import Path
 from payments.stripe_checkout_session import create_checkout_session, CheckoutSessionRequest, CheckoutSessionIDRequest, CheckoutSessionResponse, stripe_webhook, get_checkout_session
+from payments.teller import initiate_zelle_payment, verify_zelle_payment, ZellePaymentInitiationRequest, ZellePaymentVerficationRequest
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
@@ -159,12 +159,12 @@ def parse_endpoint(request: ParseRequest, db: Session = Depends(get_sync_db)) ->
 
 @app.post("/read_heavy_hitters") 
 async def heavy_hitters_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
-                   request: HeavyHittersRequest, db: Session = Depends(get_sync_db)) -> HeavyHittersResponse:
+                   request: HeavyHittersRequest, db: Session = Depends(get_sync_db)) -> Optional[HeavyHittersResponse]:
     return await read_heavy_hitters(db=db, user=current_user, request=request)
 
 @app.post("/compute_categories_moving_averages")
 async def compute_categories_moving_averages_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
-                   request: CategoriesMovingAveragesRequest, db: Session = Depends(get_sync_db)) -> CategoriesMovingAveragesResponse:
+                   request: CategoriesMovingAveragesRequest, db: Session = Depends(get_sync_db)) -> Optional[CategoriesMovingAveragesResponse]:
     return await compute_categories_moving_averages(db=db, user=current_user, request=request)
 
 @app.post("/read_credit_cards_database")
@@ -173,7 +173,7 @@ async def read_credit_cards_database_endpoint(request: CreditCardsDatabaseReques
 
 @app.post("/compute_optimal_allocation")
 async def compute_optimal_allocation_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
-                   request: OptimalCardsAllocationRequest, db: Session = Depends(get_sync_db)) -> OptimalCardsAllocationResponse:
+                   request: OptimalCardsAllocationRequest, db: Session = Depends(get_sync_db)) -> Optional[OptimalCardsAllocationResponse]:
     print(request)
     return await optimize_credit_card_selection_milp(db=db, user=current_user, request=request)
 
@@ -238,7 +238,7 @@ async def delete_user_data_endpoint(current_user: Annotated[User, Depends(auth_u
     return auth_crud.delete_user_data(user=current_user, db=db)
 
 @app.post("/process-onboarding-enrollment")
-async def process_onboarding_complete_endpoint(teller_connect_response: AccessTokenSchema, answers: dict,  db: Session = Depends(get_sync_db)):
+async def process_onboarding_complete_endpoint(teller_connect_response: AccessTokenSchema, answers: dict, db: Session = Depends(get_sync_db)):
     return await create_onboarding_token(db=db, teller_connect_response=teller_connect_response, answers=answers) 
 
 @app.post("/compute-onboarding-savings")
@@ -248,6 +248,18 @@ async def compute_onboarding_savings_endpoint( request: OnboardingSavingsRequest
 @app.post("/ingest-onboarding-primary-email")
 def ingest_onboarding_primary_email_endpoint(request: IngestOnboardingPrimaryEmailRequest, onboarding: Annotated[Onboarding, Depends(get_current_onboarding)], db: Session = Depends(get_sync_db)):
     ingest_primary_email(request=request, onboarding=onboarding, db=db)
+
+@app.post("/initiate-zelle-payment")
+def initiate_zelle_payment_endpoint(request: ZellePaymentInitiationRequest, onboarding: Annotated[Onboarding, Depends(get_current_onboarding)]):
+    return initiate_zelle_payment(request=request, onboarding=onboarding)
+
+@app.post("/validate-zelle-payment")
+def validate_zelle_payment_endpoint(request: ZellePaymentVerficationRequest, onboarding: Annotated[Onboarding, Depends(get_current_onboarding)], db: Session = Depends(get_sync_db)):
+    return verify_zelle_payment(request=request, onboarding=onboarding)
+
+@app.post("/get-onboarding-user-token")
+def get_onboarding_user_token_endpoint(onboarding: Annotated[Onboarding, Depends(get_current_onboarding)]):
+    return get_onboarding_user_token(onboarding=onboarding)
 
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest) -> StreamingResponse:

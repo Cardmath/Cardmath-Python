@@ -99,7 +99,7 @@ async def read_heavy_hitters(db: Session, user : Union[User , Onboarding], reque
         
         if not accounts or len(accounts) == 0:
             logging.warning(f"No accounts found for {type(user)}, {user.id}")
-            return HeavyHittersResponse(vendors=[], heavyhitters=[])
+            return
         
         date_range = None
         if request.timeframe:

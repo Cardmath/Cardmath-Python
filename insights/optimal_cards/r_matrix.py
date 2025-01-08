@@ -21,6 +21,9 @@ async def compute_r_matrix(db: Session, user: Union[User, Onboarding], request: 
         db=db, user=user, request=HeavyHittersRequest(account_ids="all", timeframe=request.timeframe)
     )
 
+    if not heavy_hitters_response:
+        return 
+
     ccs_used = []
     ccs_added = []
     is_new_flags = []  # Keep track of whether each card is new

@@ -1,4 +1,4 @@
-from database.auth.user import Enrollment, Onboarding
+from database.auth.user import Enrollment, Onboarding, User 
 from auth.schemas import UserCreate
 import auth.utils as auth_utils
 from database.auth.crud import create_user
@@ -9,9 +9,10 @@ from pydantic import BaseModel, EmailStr, ConfigDict, field_validator, validate_
 from requests import Response
 from sqlalchemy.orm import Session
 from teller.schemas import AccessTokenSchema
+from auth.schemas import Token
 from typing import List, Union
-from fastapi import Depends
-from typing import Annotated
+from fastapi import Depends, HTTPException
+from typing import Annotated, Dict
 import json
 import jwt
 import teller.utils as teller_utils
@@ -25,6 +26,7 @@ class ContactInfo(BaseModel):
 class OnboardingCreationResponse(BaseModel):
     token: str
     contact: ContactInfo
+    accounts: Dict
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -49,7 +51,6 @@ def extract_contact_info(identity_response: Union[Response, dict]) -> ContactInf
         for account in identity_data:
             owners = account.get('owners', [])
             for owner in owners:
-                # Extract emails
                 emails = owner.get('emails', [])
                 for email in emails:
                     if email_data := email.get('data'):
@@ -102,6 +103,8 @@ async def create_onboarding_token(db: Session, teller_connect_response: AccessTo
     db.add(enrollment)
     
     teller_client = teller_utils.Teller()
+    payment_accounts = teller_client.get_enrollment_zelle_accounts(enrollment=enrollment, db=db)
+
     identity = teller_client.fetch_identity(access_token=teller_connect_response.accessToken)
     contact_info: ContactInfo = extract_contact_info(identity)
     
@@ -111,7 +114,7 @@ async def create_onboarding_token(db: Session, teller_connect_response: AccessTo
     db.commit()
     db.refresh(onboarding)
     
-    return OnboardingCreationResponse(token=onboarding_token, contact=contact_info)
+    return OnboardingCreationResponse(token=onboarding_token, contact=contact_info, accounts={acc.id: acc.name for acc in payment_accounts})
 
 class OnboardingSavingsRequest(BaseModel):
     answers: OnboardingQuestionsAnswers
@@ -129,7 +132,7 @@ def get_current_onboarding(token: Annotated[str, Depends(auth_utils.oauth2_schem
     onboarding = db.query(Onboarding).where(Onboarding.teller_id == teller_id and Onboarding.expires_at > datetime.now()).first()
     
     if onboarding == None:
-        raise ValueError("No unexpired Onboarding found with matching teller_id")
+        raise HTTPException(status_code=401, detail="No unexpired Onboarding found with matching teller_id")
     
     return onboarding
 
@@ -162,7 +165,7 @@ async def get_onboarding_recommendation(request: OnboardingSavingsRequest, db: S
         request=optimization_request
     )
 
-    return optimization_result.solutions[0]
+    return optimization_result
 
 class IngestOnboardingPrimaryEmailRequest(BaseModel):
     first_name: str
@@ -176,3 +179,11 @@ class IngestOnboardingPrimaryEmailRequest(BaseModel):
 
 def ingest_primary_email(request: IngestOnboardingPrimaryEmailRequest, onboarding: Onboarding, db: Session):
     create_user(db=db, onboarding=onboarding, primary_email=request.primary_email, first_name=request.first_name)
+
+def get_onboarding_user_token(onboarding: Onboarding):
+    user: User = onboarding.user
+    access_token_expires = timedelta(minutes=auth_utils.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth_utils.create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")

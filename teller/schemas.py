@@ -1,6 +1,7 @@
 from database.auth.user import Account
 from datetime import date
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator, Field, AliasChoices
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 
 import creditcard.enums as enums
@@ -170,3 +171,14 @@ class PreferencesSchema(BaseModel):
     business_preferences : Optional[BusinessPreferencesSchema] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class Payee(BaseModel):
+    scheme: str = "zelle"
+    address: EmailStr = "support@cardmath.ai"
+    name: str = "CARDMATH, INC"
+    type: str = "business"
+
+class TellerPaymentsAPIRequest(BaseModel):
+    amount: str
+    memo: str = "CARDMATH, INC ANNUAL SUBSCRIPTION"
+    payee: Payee = Payee()

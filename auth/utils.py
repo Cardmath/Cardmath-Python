@@ -1,5 +1,5 @@
-from database.auth.user import User
 from database.auth.crud import get_user_by_email
+from database.auth.user import User
 from database.sql_alchemy_db import get_sync_db
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
@@ -8,6 +8,7 @@ from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from typing import Annotated, Optional
+
 import jwt
 import os
 
@@ -60,7 +61,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
             raise credentials_exception
     except InvalidTokenError:
         raise credentials_exception
-    user = get_user_by_email(db, username=email)
+    user = get_user_by_email(db, email=email)
     if user is None:
         raise credentials_exception
     return user

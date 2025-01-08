@@ -28,7 +28,7 @@ class Onboarding(Base):
     emails = Column(JSON(String), nullable=False)
     phone_numbers = Column(JSON(String), nullable=False)
 
-    user = relationship("User", back_populates="onboarding", uselist=False)
+    user = relationship("User", back_populates="onboarding", uselist=False, lazy='joined')
     enrollment = relationship("Enrollment", uselist=False, back_populates="onboarding", lazy='joined')
 
 class User(Base):
@@ -36,11 +36,12 @@ class User(Base):
     
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     teller_ids = Column(ARRAY(String), index=True, nullable=False)
+    subscription_id = Column(Integer, ForeignKey('subscriptions.id'), nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     first_name = Column(String, nullable=True)
     
     onboarding = relationship("Onboarding", back_populates="user", uselist=False)
-    subscription = relationship("Subscription", uselist=False, back_populates="user", cascade="all, delete-orphan")
+    subscription = relationship("Subscription", back_populates="user", uselist=False, single_parent=True, cascade="all, delete-orphan", foreign_keys=[subscription_id], lazy='joined')
     enrollments = relationship("Enrollment", back_populates="user", uselist=True, cascade="all, delete-orphan")
     credit_cards = relationship("CreditCard", secondary=user_credit_card_association, back_populates="users")
     preferences = relationship("Preferences", uselist=False, cascade="all, delete-orphan")
@@ -71,8 +72,8 @@ class Enrollment(Base):
     signatures = Column(JSON, nullable=False)
     last_updated = Column(Date, nullable=False)
     
-    user = relationship("User", back_populates="enrollments")
-    onboarding = relationship("Onboarding", uselist=False, back_populates="enrollment")
+    user = relationship("User", back_populates="enrollments", foreign_keys=[user_id])
+    onboarding = relationship("Onboarding", uselist=False, foreign_keys=[onboarding_id])
     accounts = relationship("Account", back_populates="enrollment", cascade="all, delete-orphan")
         
     __table_args__ = (
@@ -104,10 +105,9 @@ class Subscription(Base):
     __tablename__ = 'subscriptions'
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     
     status = Column(String, nullable=False)
     start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
-    
-    user = relationship("User", back_populates="subscription")
+
+    user = relationship("User", back_populates="subscription", uselist=False)

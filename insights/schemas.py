@@ -92,7 +92,7 @@ class CategorizationProgressSummary(BaseModel):
 class HeavyHittersResponse(BaseModel):
     total: Optional[int] = None
     heavyhitters: List[HeavyHitterSchema]
-    timeframe: MonthlyTimeframe
+    timeframe: Optional[MonthlyTimeframe]
     categorization_progress_summary: CategorizationProgressSummary
 
     @field_validator("total")

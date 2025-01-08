@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 from insights.categorize import run_categorize_transactions_in_new_thread
 from requests_toolbelt.adapters.x509 import X509Adapter
 from sqlalchemy.orm import Session
-from teller.schemas import TransactionSchema, AccountSchema
+from teller.schemas import TransactionSchema, AccountSchema, TellerPaymentsAPIRequest
 from typing import List, Union
 from typing import Optional
 import database.teller.crud as teller_crud 
@@ -143,8 +143,18 @@ class Teller:
         except Exception as e:
             raise RuntimeError(f"Unexpected error during TLS handshake: {str(e)}")
 
-    def fetch(self, path: str, token: str):
+    def fetch(self, path: str, token: str) -> requests.Response:
         response = self.session.get(path, auth=(token, ''), verify=False) # Figure out how to stop using verify=False cuz its sorta dangerous
+        response.raise_for_status()
+        return response
+    
+    def post(self,path: str, token: str, json: dict) -> requests.Response:
+        response = self.session.post(path, auth=(token, ''), verify=False, json=json)
+        response.raise_for_status()
+        return response
+    
+    def options(self, path: str, token: str) -> requests.Response:
+        response = self.session.options(path, auth=(token, ''), verify=False) # Figure out how to stop using verify=False cuz its sorta dangerous
         response.raise_for_status()
         return response
 
@@ -169,7 +179,31 @@ class Teller:
             temp_account = teller_crud.create_account(db=db, account=account)
             temp_accounts.append(temp_account)  
         return temp_accounts
-                    
+    
+    def account_supports_zelle(self, account: Account, accessToken: str) -> bool:
+        response = self.options(f"{TELLER_ACCOUNTS}/{account.id}/payments", accessToken)
+        response = response.json()
+        return ('schemes' in response and 
+            any(scheme.get('name') == 'zelle' for scheme in response['schemes']))
+
+    def get_enrollment_zelle_accounts(self, enrollment: Enrollment, db: Session) -> List[Account]:
+        accs: List[Account] = self.get_enrollment_accounts(enrollment=enrollment, db=db)
+        return list(filter(lambda acc: self.account_supports_zelle(
+            account=acc, 
+            accessToken=enrollment.access_token
+        ), accs))
+    
+    def initiate_subscription_zelle_payment(self, acc_id, accessToken: str, payment: TellerPaymentsAPIRequest) -> str:
+        '''
+        Returns a teller connect token for the user to verify the purchase
+        '''
+        response: requests.Response = self.post(f"{TELLER_ACCOUNTS}/{acc_id}/payments", token=accessToken, json=payment.model_dump())
+        return response.json()
+    
+    def validate_payment(self, pid: str, acc_id: str, accessToken: str):
+        response: requests.Response = self.fetch(f"{TELLER_ACCOUNTS}/{acc_id}/payments/{pid}", token=accessToken)
+        return response.status_code == 200
+    
     def get_list_enrollments_accounts(self, db: Session, enrollments: List[Enrollment]) -> List[Account]:
         if enrollments is None:
             return []
@@ -188,6 +222,7 @@ class Teller:
             if transactions_temp is not None:
                 fetched_transactions.extend(transactions_temp)
         return fetched_transactions     
+
     def fetch_enrollment_transactions(
         self, 
         enrollment: Optional[Enrollment], 

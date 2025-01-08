@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 def get_user(db: Session, user_id: int) -> Optional[User]:
     return db.query(User).filter(User.id == user_id).first()
 
-def get_user_by_email(db: Session, username: str) -> Optional[UserInDB]:
-    return db.query(UserInDB).filter(UserInDB.username == username).first()
+def get_user_by_email(db: Session, email: str) -> Optional[UserInDB]:
+    return db.query(UserInDB).filter(UserInDB.email == email).first()
 
 def get_users(db: Session, skip: int = 0, limit: int = 10) -> List[User]:
     return db.query(User).offset(skip).limit(limit).all()
@@ -28,19 +28,8 @@ def get_account_by_id(db: Session, account_id: str) -> Optional[Account]:
     return db.query(Account).filter(Account.id == account_id).first()
 
 def create_user(db: Session, onboarding: Onboarding, first_name: str, primary_email: str):
-    db_user = UserInDB(
-        email=primary_email,
-        teller_ids=[onboarding.teller_id],
-        first_name=first_name,
-        hashed_password=None
-    )
-    db_user.onboarding = onboarding
-    db_user.enrollments = [onboarding.enrollment]
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    # create a new subscription
     subscription = Subscription(
-        user_id=db_user.id,
         status='unverified',
         start_date=None,
         end_date=None
@@ -48,6 +37,20 @@ def create_user(db: Session, onboarding: Onboarding, first_name: str, primary_em
     db.add(subscription)
     db.commit()
     db.refresh(subscription)
+    db_user = UserInDB(
+        subscription_id = subscription.id,
+        email=primary_email,
+        teller_ids=[onboarding.teller_id],
+        first_name=first_name,
+        hashed_password=None
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    onboarding.enrollment.user_id = db_user.id
+    onboarding.user_id = db_user.id
+    db.commit()
+    db.refresh(onboarding)
     return db_user
 
 def get_password_hash(password: str) -> str:
