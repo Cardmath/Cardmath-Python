@@ -1,5 +1,6 @@
-body {
+html, body {
   margin: 0;
+  background-color: #212121; /* Or your dark theme background color */
   font-family: 'Inter', sans-serif !important ; 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

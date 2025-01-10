@@ -9,10 +9,8 @@ import TeamPage from './pages/TeamPage';
 import PreferencesPage from './pages/PreferencesPage';
 import DashboardPage from './pages/DashboardPage';
 import CreditCardDatabase from './pages/CreditCardDatabase';
-import ContactUsPage from './pages/ContactUsPage';
 import ResetPassword from './pages/ResetPasswordPage';
 import ArticleDetailPage from './components/articles/ArticleDetailPage';
-import BlogPage from './pages/BlogPage';
 import OnboardingFlow from './pages/OnboardingFlowPage';
 
 const App = () => {
@@ -21,8 +19,7 @@ const App = () => {
             <Routes>
                 <Route path="/" element={<LandingPageComponent />}/>
                 <Route path="/articles/:id" element={<ArticleDetailPage/>} />
-                <Route path="/blog" element={<BlogPage/>} />
-                <Route path="/contact-us" element={<ContactUsPage />} />
+                <Route path="/contact-us" element={<TeamPage />} />
                 <Route path="/creditcards" element={<CreditCardDatabase />} />
                 <Route path="/dashboard" element={ <DashboardPage /> } />
                 <Route path="/login" element={<AuthPage userHasAccount={true} />} />

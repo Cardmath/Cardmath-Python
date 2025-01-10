@@ -2,25 +2,18 @@ import React, { useEffect } from 'react';
 import './IsometricCreditCard.css';
 
 const cardText = [
-  {issuer: "Visa", name:"Don Joel",position:"Web Developer",email:"donjoel@example.com",phone:"216-362-0665",address:"2699 Glenwood Avenue",city:"Brook Park, OH 44142"},
-  {issuer: "Mastercard",name:"Joe Schmoe",position:"Graphic Designer",email:"joeschmoe@example.com",phone:"407-712-8549",address:"469 Grand Avenue",city:"Winter Park, FL 32789"},
-  {issuer: "Citi" ,name:"Clint Westwood",position:"Customer Support",email:"clintwestwood@example.com",phone:"865-217-3165",address:"2212 Brown Avenue",city:"Hartford, TN 37753"},
-  {issuer: "Bank of America", name:"Ann Thrax",position:"Project Manager",email:"annthrax@example.com",phone:"808-293-4613",address:"3801 Stratford Drive",city:"Laie, HI 96762"}
+  { name: "Ava Banks", date: "12/25", number: "5555-6666-7777-8888" },
+  { name: "Eli Manning", date: "01/30", number: "1234-5678-9012-3456" },
+  { name: "Liam Harper", date: "05/14", number: "9876-5432-1098-7654" },
+  { name: "Sophia Lane", date: "09/08", number: "1111-2222-3333-4444" },
+  { name: "Max Ryder", date: "02/14", number: "9999-8888-7777-6666" },
 ];
 
-const CardText = ({ issuer, name, position, email, phone, address, city }) => (
+const CardText = ({ number, date, name}) => (
   <div className="icc-contents">
-    <h2>{issuer}</h2>
-    <h3>{name}</h3>
-    {position}
-    <br />
-    {email}
-    <br />
-    {phone}
-    <br />
-    {address}
-    <br />
-    {city}
+    <h1>{number}</h1>
+    <h2>{date}</h2>
+    <h2>{name}</h2>
   </div>
 );
 
@@ -34,7 +27,7 @@ const IsometricCreditCard = () => {
   useEffect(() => {
     function updateGridSize() {
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
-      const gridSize = isMobile ? 2 : 5;
+      const gridSize = isMobile ? 2 : 4;
       document.documentElement.style.setProperty('--gridSize', gridSize.toString());
     }
 
@@ -42,7 +35,7 @@ const IsometricCreditCard = () => {
       const wrapperHeight = document.querySelector(".wrapper").offsetHeight;
       const cards = document.querySelector(".icc-cards");
       const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight));
-      const transY = scrollPercent * -100 + 50;
+      const transY = scrollPercent * 100 - 90;
       
       cards.style.setProperty("--scroll", `${transY}%`);
     }
@@ -64,7 +57,7 @@ const IsometricCreditCard = () => {
   }, []);
 
   // Get current grid size for card count
-  const gridSize = window.matchMedia('(max-width: 768px)').matches ? 2 : 5;
+  const gridSize = window.matchMedia('(max-width: 768px)').matches ? 2 : 4;
   const totalCards = gridSize * gridSize;
 
   return (

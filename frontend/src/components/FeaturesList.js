@@ -1,43 +1,114 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const FeaturesList = ({ features }) => {
+    const [activeSection, setActiveSection] = useState('exhaustive');
+
     return (
-        <div className="bg-gray-900 px-4 lg:py-4 sm:py-1 md:py-1 md:px-6 lg:px-8">
+        <div className="bg-gray-900 mt-8">
             <div className="grid">
-                <div className="col-12 md:col-6">
-                    <div className="pr-0 md:pr-8">
-                        <div className="text-blue-500 font-bold text-5xl mb-5">Unlike Other Sites</div>
+                <div className="col-6">
+                    <div className="pr-6">
+                        <div className="text-blue-500 font-bold text-5xl mb-5">Sophisticated Algorithm</div>
 
-                        <div className="mb-5 border-blue-500 pl-3" style={{ borderLeft: '4px solid' }}>
-                            <span className="text-white font-bold text-2xl">Independent</span>
-                            <div className="text-gray-400 line-height-3 text-xl mt-3"> We have no affiliations with credit card companies, ensuring our recommendations are entirely data-driven and unbiased, focused solely on your best interest.</div>
+                        <div 
+                            className="mb-5"
+                            style={{ 
+                                borderLeft: activeSection === 'exhaustive' ? '4px solid #3B82F6' : '4px solid transparent',
+                                paddingLeft: '1rem',
+                                transition: 'border-color 0.3s ease'
+                            }}
+                            onMouseEnter={() => setActiveSection('exhaustive')}
+                        >
+                            <span className="text-white font-bold text-2xl">Exhaustive</span>
+                            <div className="text-gray-400 line-height-3 text-xl mt-3">
+                                There are roughly <span className='font-bold'> 42,000,000,000</span> ways to pick four credit cards. 
+                                Our algorithm efficiently analyzes the value of everyone one of these combinations based on your 
+                                purchase history and preferences.
+                            </div>
                         </div>
 
-                        <div className="mb-5 border-blue-500 pl-3">
-                            <span className="text-white font-bold text-2xl">Data Driven</span>
-                            <div className="text-gray-400 line-height-3 mt-3 text-xl">Tired of reading endless articles and sharing your data? Simply sign into your bank accounts, and we'll handle the numbers for you, delivering personalized insights without the hassle.</div>
+                        <div 
+                            className="mb-5"
+                            style={{ 
+                                borderLeft: activeSection === 'realtime' ? '4px solid #3B82F6' : '4px solid transparent',
+                                paddingLeft: '1rem',
+                                transition: 'border-color 0.3s ease'
+                            }}
+                            onMouseEnter={() => setActiveSection('realtime')}
+                        >
+                            <span className="text-white font-bold text-2xl">Real-time Recommendations</span>
+                            <div className="text-gray-400 line-height-3 mt-3 text-xl">
+                                Cardmath tracks your spending journey and notifies you when it's 
+                                <span className='font-bold'> mathematically optimal</span> to get a new credit card or replace an existing one.
+                            </div>
                         </div>
 
-                        <div className="mb-5 border-blue-500 pl-3">
-                            <span className="text-white font-bold text-2xl">Privacy is our Priority</span>
-                            <div className="text-gray-400 line-height-3 mt-3 text-xl">We only retain the data necessary to provide you with personalized insights, and once it's used, it’s securely discarded. With multiple layers of encryption, your information is always protected and kept private.</div>
+                        <div 
+                            className="mb-5"
+                            style={{ 
+                                borderLeft: activeSection === 'know' ? '4px solid #3B82F6' : '4px solid transparent',
+                                paddingLeft: '1rem',
+                                transition: 'border-color 0.3s ease'
+                            }}
+                            onMouseEnter={() => setActiveSection('know')}
+                        >
+                            <span className="text-white font-bold text-2xl">Know Which Card to Use</span>
+                            <div className="text-gray-400 line-height-3 mt-3 text-xl">
+                                All of our recommendations come with a <span className="font-bold">spending strategy</span> that 
+                                tells you which stores to use your cards at so you can realize your savings.
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div className="col-12 md:col-6 relative" style={{padding: '10px', borderRadius: '8px' }}>
-                    <img 
-                        src="credit-cards.jpg" 
-                        alt="Credit Cards" 
-                        className="w-full" 
-                        style={{
-                            borderRadius: '8px', 
-                            boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.3)', 
-                            opacity: 0.60
-                        }} 
-                    />
+                <div className="col-6" style={{ padding: '10px', borderRadius: '8px', height: '600px'}}>
+                    {activeSection === 'exhaustive' && (
+                        <img
+                            src="exhaustive.jpg"
+                            alt="Credit Cards"
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                                height: 'auto',
+                                width: 'auto',
+                                zoom: '2',
+                                borderRadius: '8px',
+                                boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.3)',
+                                opacity: 0.6,
+                                objectFit: 'contain',
+                            }}
+                        />
+                    )}
+                    {activeSection === 'realtime' && (
+                        <img 
+                            src="realtime.png" 
+                            alt="iPhone notification" 
+                            className="w-full h-full" 
+                            style={{
+                                borderRadius: '8px', 
+                                opacity: 0.60,
+                                objectFit: 'contain',
+                                transform: 'scale(1.4)'
+                            }} 
+                        />
+                    )}
+                    {activeSection === 'know' && (
+                        <img
+                            src="know.jpg"
+                            alt="Person paying"
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                                height: 'auto',
+                                width: 'auto',
+                                borderRadius: '8px',
+                                opacity: 0.6,
+                                objectFit: 'contain',
+                            }}
+                        />
+                    )}
                 </div>
-            </div>
         </div>
+    </div>
     );
 };
 

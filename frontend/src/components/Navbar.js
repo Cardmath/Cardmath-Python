@@ -151,18 +151,6 @@ const Navbar = () => {
                             </div>
                         </div>
                     </li>
-                    <li onClick={() => navigate('/blog')}>
-                        <a className="p-ripple flex px-0 lg:px-5 py-3 hover:text-blue-600 font-medium transition-colors transition-duration-150 cursor-pointer">
-                            <span>Blog</span>
-                            <Ripple />
-                        </a>
-                    </li>
-                    <li onClick={() => navigate('/team')}>
-                        <a className="p-ripple flex px-0 lg:px-5 py-3 hover:text-blue-600 font-medium transition-colors transition-duration-150 cursor-pointer">
-                            <span>Our Team </span>
-                            <Ripple />
-                        </a>
-                    </li>
                     <li onClick={() => navigate('/contact-us')}>
                         <a className="p-ripple flex px-0 lg:px-5 py-3 hover:text-blue-600 font-medium transition-colors transition-duration-150 cursor-pointer">
                             <span>Contact Us</span>

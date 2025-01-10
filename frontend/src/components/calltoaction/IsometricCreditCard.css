@@ -2,7 +2,7 @@
   --cardW: 14em;
   --cardH: 8em;
   --cardZInc: 2em;
-  --gridSize: 5;  /* default value */
+  --gridSize: 4;  /* default value */
 }
 
 .icc-cards {
@@ -21,6 +21,8 @@
 
 
 .wrapper {
+  margin-left: auto;
+  margin-right: auto;
   border-radius: 30px;
   width: min(85vw, 850px);
   height: 400px;
@@ -47,7 +49,9 @@
 }
  
 .icc-contents {
-  color: #000;
+  position: absolute;
+  bottom: 10px;
+  color: white;
   font-size: 0.5em;
   line-height: 1.25;
 }
@@ -56,9 +60,15 @@
   color: #fff;
 }
 
+.icc-contents h1 {
+  font-family: 'cc font', monospace;
+  font-size: 1.5em;
+  font-weight: 400;
+
+}
+
 .icc-contents h2 {
-  color: #aff;
-  font-size: 2em;
+  font-size: 1em;
   font-weight: 400;
 }
 
@@ -66,17 +76,22 @@
   margin-right: 0.75em;
 }
 
-.icc-stack:nth-of-type(4n + 2) .icc-card {
-  background-position: 0 100%;
-}
-
-.icc-stack:nth-of-type(4n + 3) .icc-card {
-  background-position: 100% 0;
-}
-
-.icc-stack:nth-of-type(4n + 4) .icc-card {
-  background-position: 100% 100%;
-}
+.icc-stack:nth-of-type(16n + 1) .icc-card { background-position: 0 0; }
+.icc-stack:nth-of-type(16n + 2) .icc-card { background-position: 0 100%; }
+.icc-stack:nth-of-type(16n + 3) .icc-card { background-position: 0 200%; }
+.icc-stack:nth-of-type(16n + 4) .icc-card { background-position: 0 300%; }
+.icc-stack:nth-of-type(16n + 5) .icc-card { background-position: 100% 0; }
+.icc-stack:nth-of-type(16n + 6) .icc-card { background-position: 100% 100%; }
+.icc-stack:nth-of-type(16n + 7) .icc-card { background-position: 100% 200%; }
+.icc-stack:nth-of-type(16n + 8) .icc-card { background-position: 100% 300%; }
+.icc-stack:nth-of-type(16n + 9) .icc-card { background-position: 200% 0; }
+.icc-stack:nth-of-type(16n + 10) .icc-card { background-position: 200% 100%; }
+.icc-stack:nth-of-type(16n + 11) .icc-card { background-position: 200% 200%; }
+.icc-stack:nth-of-type(16n + 12) .icc-card { background-position: 200% 300%; }
+.icc-stack:nth-of-type(16n + 13) .icc-card { background-position: 300% 0; }
+.icc-stack:nth-of-type(16n + 14) .icc-card { background-position: 300% 100%; }
+.icc-stack:nth-of-type(16n + 15) .icc-card { background-position: 300% 200%; }
+.icc-stack:nth-of-type(16n + 16) .icc-card { background-position: 300% 300%; }
 
 .icc-stack:hover .top,
 .icc-stack:focus .top {
@@ -96,8 +111,9 @@
 }
 
 .icc-card {
-  background-image: url("https://assets.codepen.io/416221/business-card-backgrounds.png");
-  background-size: 200% 200%;
+  background-image: url("icc.png");
+  background-size: 400% 400%;
+  border-radius: 9px;
   box-shadow: -1px -1px 0 hsla(0,0%,0%,0.2) inset;
   color: #000;
   padding-left: 0.5em;

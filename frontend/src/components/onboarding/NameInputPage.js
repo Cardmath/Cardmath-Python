@@ -41,8 +41,8 @@ const NameInputForm = ({ onSubmit }) => {
 const NameInputPage = {
   title: "Let's get to know you",
   content: "Please share your first name with us",
-  primaryColor: 'var(--onb-purple)',
-  secondaryColor: 'var(--onb-pink)',
+  primaryColor: 'var(--onb-cyan)',
+  secondaryColor: 'var(--onb-green)',
   additionalContent: NameInputForm // Export the component directly instead of wrapping it
 };
 

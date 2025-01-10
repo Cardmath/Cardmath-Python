@@ -5,11 +5,11 @@ import Footer from '../components/Footer';
 
 const TeamPage = () => {
     return (
-        <div>
+        <>
             <Navbar/>
             <Team/>
             <Footer/>
-        </div>
+        </>
     );
 };
 
