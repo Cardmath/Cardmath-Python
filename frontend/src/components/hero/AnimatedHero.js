@@ -85,7 +85,7 @@ const AnimatedHero = () => {
       animation: 'bg-pan-diagonal-reverse 8s ease-in-out infinite'
     },
     buttonContainer: {
-      position: 'absolute',
+      position: 'relative',
       textAlign: 'center',
       marginLeft: 'auto',
       marginRight: 'auto',
