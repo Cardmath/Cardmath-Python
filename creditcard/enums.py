@@ -101,7 +101,6 @@ class RewardUnit(str, Enum):
         }
         return _values.get(reward_unit, 0.0)
 
-# Define an enum for benefits
 class Benefit(str, Enum):
     AIRPORT_LOUNGE_ACCESS = "airport lounge access"
     CELL_PHONE_PROTECTION = "cell phone protection"
@@ -122,7 +121,6 @@ class Benefit(str, Enum):
     TRAVEL_INSURANCE = "travel insurance"
     
     
-# Define an enum for credit needed
 class CreditNeeded(str, Enum):
     EXCELLENT = "Excellent" # 720-850
     GOOD = "Good" # 690-719

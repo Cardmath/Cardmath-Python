@@ -1,6 +1,6 @@
 from creditcard.enums import PurchaseCategory
 from creditcard.utils.openai import structure_with_openai
-from database.sql_alchemy_db import SyncSessionLocal
+from database.sql_alchemy_db import SyncSessionGenerator
 from database.teller.transactions import Transaction, TransactionDetails
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -23,7 +23,7 @@ class BatchCategorizationResponse(BaseModel):
 # Function to run in a thread
 def categorize_transactions_in_thread(txn_ids: List[int], batch_size: int):
     # Create a new session for this thread
-    db: Session = SyncSessionLocal()
+    db: Session = SyncSessionGenerator()
 
     try:
         # Call your categorize_transactions function with the session

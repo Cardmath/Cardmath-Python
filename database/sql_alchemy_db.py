@@ -30,14 +30,14 @@ SQLALCHEMY_DATABASE_URL_SYNC = (
 
 sync_engine = create_engine(SQLALCHEMY_DATABASE_URL_SYNC)
 
-SyncSessionLocal = sessionmaker(
+SyncSessionGenerator = sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=sync_engine
 )
 
 def get_sync_db():
-    db = SyncSessionLocal()
+    db = SyncSessionGenerator()
     try:
         yield db
     finally:
