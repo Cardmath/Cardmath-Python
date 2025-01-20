@@ -55,6 +55,7 @@ class Preferences(Base):
     
     user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
     
+    user = relationship('User', backref="preferences", uselist=False)
     credit_profile = relationship("CreditProfilePreferences", uselist=False, back_populates="preferences")
     banks_preferences = relationship("BanksPreferences", uselist=False, back_populates="preferences")
     rewards_programs_preferences = relationship("RewardsProgramsPreferences", uselist=False, back_populates="preferences")

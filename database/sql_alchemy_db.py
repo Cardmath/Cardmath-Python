@@ -1,17 +1,17 @@
 from auth.secrets import load_secret
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base, DeclarativeMeta
 
 import os
 
-Base = declarative_base()
+Base: DeclarativeMeta = declarative_base()
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 DB_NAME = None
 if ENVIRONMENT == "prod":
     DB_NAME = os.getenv("DB_NAME", "postgres")
     print("Using prod database")
-else :
+else:
     DB_NAME = os.getenv("DB_NAME", "postgres_dev")
     print("Using development database")
 

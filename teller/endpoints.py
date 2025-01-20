@@ -1,4 +1,5 @@
-from creditcard.schemas import WalletSchema, CardInWalletSchema, WalletsIngestRequest, WalletUpdateRequest, WalletDeleteRequest
+from creditcard.endpoints.schemas import CardInWalletSchema, WalletDeleteRequest, WalletSchema, WalletsIngestRequest
+from creditcard.endpoints.schemas import WalletUpdateRequest
 from database.auth.crud import update_user_enrollment
 from database.auth.user import User, Wallet, wallet_card_association
 from database.creditcard.creditcard import CreditCard

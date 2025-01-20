@@ -1,5 +1,5 @@
 from creditcard.enums import PurchaseCategory
-from creditcard.utils.openai import structure_with_openai
+from creditcard.structure.openai.utils import structure_with_openai
 from database.sql_alchemy_db import SyncSessionGenerator
 from database.teller.transactions import Transaction, TransactionDetails
 from pydantic import BaseModel
@@ -95,11 +95,11 @@ def categorize_transactions(txn_ids: List[int], batch_size: int, db: Session) ->
 def categorize_batch(batch_transactions: List[TransactionSchema]) -> BatchCategorizationResponse:
     prompt = batch_categorization_prompt(batch_transactions)
     
-    return asyncio.run(structure_with_openai(
+    return structure_with_openai(
         prompt=prompt, 
         response_format=batch_categorization_response_format(), 
         schema=BatchCategorizationResponse
-    ))
+    )
 
 def batch_categorization_response_format() -> dict:
     enum_category = json.dumps([purchase_category.value for purchase_category in PurchaseCategory], ensure_ascii=False)

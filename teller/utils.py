@@ -1,6 +1,8 @@
+from creditcard.endpoints.read_database import CreditCardsDatabaseResponse
+from creditcard.endpoints.schemas import CreditCardsDatabaseRequest
 from database.auth.user import User
 from contextlib import contextmanager
-from creditcard.endpoints.read_database import read_credit_cards_database, CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
+from creditcard.endpoints.read_database import read_credit_cards_database
 from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
     PrivateFormat,
@@ -124,24 +126,6 @@ class Teller:
         )
         self.session = requests.Session()
         self.session.mount('https://api.teller.io/', adapter=adapter)
-        
-        self._validate_tls_config()
-
-    def _validate_tls_config(self):
-        """
-        Validates the TLS setup by performing a test handshake with Teller.
-        """
-        test_url = "https://api.teller.io/"  # Use the full URL
-        try:
-            response = self.session.get(url=test_url, verify=False)
-            response.raise_for_status()
-            print("TLS handshake and connection succeeded.")
-        except requests.exceptions.SSLError as ssl_error:
-            raise RuntimeError(f"TLS handshake failed: {ssl_error}")
-        except requests.exceptions.HTTPError as http_error:
-            raise RuntimeError(f"HTTP error during handshake: {http_error}")
-        except Exception as e:
-            raise RuntimeError(f"Unexpected error during TLS handshake: {str(e)}")
 
     def fetch(self, path: str, token: str) -> requests.Response:
         response = self.session.get(path, auth=(token, ''), verify=False) # Figure out how to stop using verify=False cuz its sorta dangerous

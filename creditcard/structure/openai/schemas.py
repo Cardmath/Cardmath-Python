@@ -1,76 +1,79 @@
-from creditcard.enums import PurchaseCategory, RewardUnit, Benefit, Vendors, APRType, CreditCardKeyword
-from openai import OpenAI
-from pydantic import BaseModel, TypeAdapter
-from typing import Union
-import json
-import os
-import traceback
-
-separator = "\n - "
-MODEL = "gpt-4o-2024-08-06"
-
-async def prompt_openai_for_json(prompt, response_format):    
-    client = OpenAI(
-        api_key=os.getenv('OPENAI_API_KEY', "your_openai_api_key")
-    )
-    try:
-        chat_completion = client.chat.completions.create(
-            model=MODEL,
-            messages=[
-                {
-                    "role": "system",
-                    "content": prompt,
-                    "max_tokens" : 2000,
-                    "temperature" : 0.0
-                }
-            ],
-            response_format=response_format
-        )
-        response= chat_completion.choices[0].message.content
-        return response
-    
-    except Exception as e:
-        error_details = traceback.format_exc()
-        raise ConnectionError(f"Connection to OpenAI failed: {e}\nDetails: {error_details}")
-
-async def structure_with_openai(prompt: str, response_format: dict, schema: Union[BaseModel, TypeAdapter]):
-    attempt = 0
-    while True:
-        if attempt >= 3:
-            print("OpenAI failed 3 times. Aborting.")
-            return
-
-        attempt += 1
-        openai_response = await prompt_openai_for_json(prompt=prompt, response_format=response_format)  
-        validated_schema = None  
-        try:
-            if isinstance(schema, TypeAdapter):
-                validated_schema = schema.validate_json(openai_response)
-            else :
-                validated_schema = schema.model_validate_json(openai_response)
-
-        except Exception as e:
-            print(f"OpenAI failed with attempt {attempt}: {e}")
-            continue
-
-        print(f"OpenAI succeeded with attempt {attempt}")
-        return validated_schema
-
-def purchase_category_map_prompt(card_attributes) : 
-    return f"""
-    Your goal is to analyze the provided text that describes credit card benefits and map it to the following transaction types and reward units.
-    Avoid duplicating the categories or vendors associated with the rewards.
-
-    valid values for the "amount" json field:
-    A small positive number that represents the number of points awarded to the transaction. 
-    This number should be between 0 and 100. We are ignoring sign-on bonuses 
-
-    Here is the text you should analyze:
-    "{card_attributes}"
-
-    """
+from creditcard.enums import PurchaseCategory, RewardUnit, Benefit, Vendors, APRType, CreditCardKeyword, Issuer, Network, CardKey, CreditNeeded
+from creditcard.schemas import ConditionalSignOnBonus, APR, PeriodicStatementCredit, RewardCategoryRelation, RewardCategoryMap, AnnualFee
+from database.creditcard.creditcard import CreditCard
+from pydantic import BaseModel
+from typing import List
 
 import json
+
+from abc import ABC, abstractmethod
+from pydantic import BaseModel
+from typing import List, TypeVar, Generic
+
+T = TypeVar('T')
+
+class BaseResponse(BaseModel, ABC, Generic[T]):
+    @abstractmethod
+    def handle_update(self, target: CreditCard) -> None:
+        pass
+
+class RewardCategoryMapResponse(BaseResponse[RewardCategoryRelation]):
+    reward_category_map: List[RewardCategoryRelation]
+
+    def handle_update(self, target: CreditCard) -> None:
+        target.reward_category_map = [r.model_dump() for r in self.reward_category_map]
+        # Also update the primary reward unit
+        reward_map = RewardCategoryMap(reward_category_map=self.reward_category_map)
+        target.primary_reward_unit = reward_map.get_primary_reward_unit()
+
+class ConditionalSignOnBonusResponse(BaseResponse[ConditionalSignOnBonus]):
+    conditional_sign_on_bonus: List[ConditionalSignOnBonus]
+
+    def handle_update(self, target: CreditCard) -> None:
+        target.sign_on_bonus = [bonus.model_dump() for bonus in self.conditional_sign_on_bonus]
+
+class APRResponse(BaseResponse[APR]):
+    apr_list: List[APR]
+
+    def handle_update(self, target: CreditCard) -> None:
+        target.apr = [apr.model_dump() for apr in self.apr_list]
+
+class CreditNeededResponse(BaseResponse[CreditNeeded]):
+    credit_needed_list: List[CreditNeeded]
+
+    def handle_update(self, target: CreditCard) -> None:
+        target.credit_needed = self.credit_needed_list
+
+
+class BenefitResponse(BaseResponse[Benefit]):
+    benefits_list: List[Benefit]
+
+    def handle_update(self, target: CreditCard) -> None:
+        target.benefits = [benefit.value for benefit in self.benefits_list]
+
+class PeriodicStatementCreditResponse(BaseResponse[PeriodicStatementCredit]):
+    periodic_statement_credit: List[PeriodicStatementCredit]
+
+    def handle_update(self, target: CreditCard) -> None:
+        target.statement_credit = [
+            credit.model_dump() for credit in self.periodic_statement_credit
+        ]
+
+class CreditCardKeywordResponse(BaseResponse[CreditCardKeyword]):
+    card_keywords: List[CreditCardKeyword]
+
+    def handle_update(self, target: CreditCard) -> None:
+        target.keywords = [keyword.value for keyword in self.card_keywords]
+
+class AnnualFeeResponse(BaseResponse[AnnualFee]):
+    fee_usd: float
+    waived_for: int
+
+    def handle_update(self, target: CreditCard) -> None:
+        target.annual_fee = AnnualFee(
+            fee_usd=self.fee_usd,
+            waived_for=self.waived_for
+        ).model_dump()
 
 def reward_category_map_response_format():
     return {
@@ -134,32 +137,11 @@ def reward_category_map_response_format():
         }
     }
 
-def benefits_prompt(card_attributes) : 
-    return f""" 
-    You are operating in a data understanding pipeline. 
-    You are being given a string that descrbes a credit card and its benefits in plain english.
-    You goal is to output a list of benefits found in the text. 
-    You should respond with a list of benefits found in the text.
-    This list should consist of benefits from the following list:
-    
-    CREDIT CARD BENEFITS ENUM LIST :
-    {separator.join([benefit.value for benefit in Benefit])}
-
-    EXAMPLE OUTPUT:
-    airport lounge access, cell phone protection, concierge service
-    
-    
-    Now I will start with the text that you should analyze:
-    
-    "{card_attributes}"
-    
-    """  
-
 def benefits_response_format():
     enum_benefits = json.dumps([benefit.value for benefit in Benefit], ensure_ascii=False)
     return { "type": "json_schema",
             "json_schema": {
-                "name": "benefits_response",
+                "name": "benefits_list",
                 "schema": {
                     "type": "object",
                     "properties": {
@@ -171,15 +153,6 @@ def benefits_response_format():
                 "strict": True
             }
     }
-def conditional_sign_on_bonus_prompt(card_attributes):
-    return f"""
-    Your task is to extract any and all conditional sign-on bonuses described in the following credit card details. Conditional sign-on bonuses are typically bonuses that require certain actions to be completed (e.g., spending a specific amount within a time frame) in order to qualify.
-    Timeframe should be a number that represents months 
-
-    Here is the text you need to analyze:
-    "{card_attributes}"
-
-    """
 
 def conditional_sign_on_bonus_response_format():
     return {"type": "json_schema",
@@ -210,16 +183,6 @@ def conditional_sign_on_bonus_response_format():
                 "strict": True
             },
         }
-
-def apr_prompt(card_attributes):
-    return f"""
-    Your task is to extract any and all APRs described in the following credit card details.
-    Output a list of APRs that have type and amount attributes.
-
-    Here is the text you need to analyze:
-    "{card_attributes}"
-
-    """
 
 def apr_response_format():
     return {
@@ -256,57 +219,29 @@ def apr_response_format():
         }
     }
 
-def annual_fee_prompt(card_attributes):
-    return f"""
-    Your task is to identify and extract any mentioned annual fees from the following credit card details, along with information on how long, if at all, the annual fee is waived after sign-up.
-    For example if you see "Low $95 annual fee." that means fee_usd should be 95
-    If you see no annual fee, then fee_usd should be 0. 
-
-    Here is the text describing the credit card you need to analyze:
-    "{card_attributes}"
-
-    """
-
 def annual_fee_response_format():
     return {
         "type": "json_schema",
         "json_schema": {
-            "name": "annual_fee_response",
+            "name": "annual_fee",
             "schema": {
                 "type": "object",
                 "properties": {
-                    "annual_fee": {
-                        "type": "object",
-                        "properties": {
-                            "fee_usd": {
-                                "type": "number",
-                                "description": "amount of annual fee in USD"
-                            },
-                            "waived_for": {
-                                "type": "number",
-                                "description": "number of years the annual fee is waived for after sign-up, non-negative number typically 0 or 1 but may be greater than 1"
-                            }
-                        },
-                        "required": ["fee_usd", "waived_for"],
-                        "additionalProperties": False,
+                    "fee_usd": {
+                        "type": "number",
+                        "description": "amount of annual fee in USD"
+                    },
+                    "waived_for": {
+                        "type": "number",
+                        "description": "number of years the annual fee is waived for after sign-up, non-negative number typically 0 or 1 but may be greater than 1"
                     }
                 },
-                "required": ["annual_fee"],
+                "required": ["fee_usd", "waived_for"],
                 "additionalProperties": False,
-            },
+                },
             "strict": True
-        }
+        },
     }
-
-def card_keywords_prompt(card_attributes):
-    return f"""
-    Your task is to identify and extract any mentioned keywords from the following credit card details. 
-    Output a list of keywords that have been mentioned in the text.
-
-    Here is the text you need to analyze:
-    "{card_attributes}"
-
-    """
 
 def card_keywords_response_format():
     return {"type": "json_schema",
@@ -331,18 +266,31 @@ def card_keywords_response_format():
             },
         }
 
-def statement_credit_prompt(card_attributes):
-    return f"""
-    Your task is to extract any and all annual statement credits described in the following credit card details.
-    Note that statement credits which are associated with sign-on bonuses are not considered statement credits.
-    We have a separate sign on bonus object, and you should ignore sign on bonuses for this object. It is fine if the list is empty. 
+def credit_needed_response_format():
+    return {"type": "json_schema",
+            "json_schema": {
+                "name": "credit_needed_response",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "credit_needed_list": {
+                            "type":"array",
+                            "description" : "One or two credit needed enum values.",
+                            "items": {
+                                    "type": "string",
+                                    "enum": [credit_needed.value for credit_needed in CreditNeeded],
+                                    "description": "Fico score equivalents: CreditNeeded.EXCELLENT: 850, CreditNeeded.GOOD: 719, CreditNeeded.FAIR: 689, CreditNeeded.POOR: 629"
+                            }
+                        }
+                    },
+                    "required": ["credit_needed_list"],
+                    "additionalProperties": False,
+                },
+                "strict": True
+            },
+        }
 
-    Here is the text describing a credit card that you need to analyze:
-    "{card_attributes}"
-
-    """
-
-def periodic_statement_credit_response_format():
+def statement_credit_response_format():
     return {
         "type": "json_schema",
         "json_schema": {
@@ -409,4 +357,48 @@ def periodic_statement_credit_response_format():
             },
             "strict": True,
         },
+    }
+
+def credit_card_metadata_response_format():
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "CreditCardMetadata",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the supplied credit card. This name should not include the Issuer or Network."
+                    },
+                    "issuer": {
+                        "type": "string",
+                        "description": "Issuer of the described credit card.",
+                        "enum": [
+                            issuer.value
+                            for issuer in Issuer
+                        ]
+                    },
+                    "network": {
+                        "type": "string",
+                        "description": "Network of the described credit card.",
+                        "enum": [
+                            network.value
+                            for network in Network
+                        ]
+                    },
+                    "key": {
+                        "type": ["string"],
+                        "description": "Optional lowercase identifier: issuer-name. Can also be NOT FOUND.",
+                        "enum": [
+                            key.value
+                            for key in CardKey
+                        ]
+                    }
+                },
+                "required": ["name", "issuer", "key", "network"],
+                "additionalProperties": False
+            },
+            "strict": True
+        }
     }

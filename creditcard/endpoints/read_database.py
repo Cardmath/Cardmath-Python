@@ -1,15 +1,19 @@
-from creditcard.schemas import CreditCardSchema, CreditCardsFilter
+from creditcard.endpoints.schemas import CreditCardsDatabaseRequest, CreditCardsFilter
 from creditcard.enums import CreditNeeded, CreditCardKeyword
-from creditcard.schemas import CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
-from teller.schemas import PreferencesSchema
+from creditcard.schemas import CreditCardSchema
+from database.auth.user import User
 from database.creditcard.creditcard import CreditCard
 from database.teller.preferences import Preferences
-from sqlalchemy.orm import Session
-from database.auth.user import User
+from pydantic import BaseModel
 from sqlalchemy import cast
 from sqlalchemy.dialects.postgresql import JSONB, array
+from sqlalchemy.orm import Session
+from teller.schemas import PreferencesSchema
+from typing import List, Optional
 import logging
-from typing import Optional
+
+class CreditCardsDatabaseResponse(BaseModel):
+    credit_card: List[CreditCardSchema]
 
 async def read_credit_cards_database(
     request: CreditCardsDatabaseRequest,

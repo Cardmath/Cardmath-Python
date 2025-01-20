@@ -1,5 +1,6 @@
 from copy import deepcopy
-from creditcard.endpoints.read_database import read_credit_cards_database, CreditCardsDatabaseRequest
+from creditcard.endpoints.read_database import read_credit_cards_database
+from creditcard.endpoints.schemas import CreditCardsDatabaseRequest
 from creditcard.enums import PurchaseCategory, RewardUnit
 from creditcard.schemas import CreditCardSchema
 from database.creditcard.creditcard import CreditCard

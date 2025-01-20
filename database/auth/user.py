@@ -1,20 +1,34 @@
 from database.sql_alchemy_db import Base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, JSON, Table, Date, CheckConstraint, ARRAY, Enum
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, ForeignKeyConstraint, JSON, Table, Date, CheckConstraint, ARRAY, Enum
 from sqlalchemy.orm import relationship
 
 user_credit_card_association = Table(
     'user_credit_card_association',
     Base.metadata,
     Column('user_id', Integer, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True),
-    Column('credit_card_id', Integer, ForeignKey('credit_cards.id', ondelete='CASCADE'), primary_key=True)
+    Column('credit_card_name', String, nullable=False, primary_key=True),
+    Column('credit_card_issuer', String, nullable=False, primary_key=True),
+    Column('credit_card_network', String, nullable=False, primary_key=True),
+    ForeignKeyConstraint(
+        ['credit_card_name', 'credit_card_issuer', 'credit_card_network'],
+        ['credit_cards.name', 'credit_cards.issuer', 'credit_cards.network'],
+        ondelete='CASCADE'
+    )
 )
 
 wallet_card_association = Table(
     'wallet_new_card_association',
     Base.metadata,
     Column('wallet_id', Integer, ForeignKey('wallets.id', ondelete='CASCADE'), primary_key=True),
-    Column('credit_card_id', Integer, ForeignKey('credit_cards.id', ondelete='CASCADE'), primary_key=True),
-    Column('is_held', Boolean, default=False, nullable=False, primary_key=False)
+    Column('credit_card_name', String, nullable=False, primary_key=True),
+    Column('credit_card_issuer', String, nullable=False, primary_key=True),
+    Column('credit_card_network', String, nullable=False, primary_key=True),
+    Column('is_held', Boolean, default=False, nullable=False),
+    ForeignKeyConstraint(
+        ['credit_card_name', 'credit_card_issuer', 'credit_card_network'],
+        ['credit_cards.name', 'credit_cards.issuer', 'credit_cards.network'],
+        ondelete='CASCADE'
+    )
 )
 
 class Onboarding(Base):
@@ -44,7 +58,6 @@ class User(Base):
     subscription = relationship("Subscription", back_populates="user", uselist=False, single_parent=True, cascade="all, delete-orphan", foreign_keys=[subscription_id], lazy='joined')
     enrollments = relationship("Enrollment", back_populates="user", uselist=True, cascade="all, delete-orphan")
     credit_cards = relationship("CreditCard", secondary=user_credit_card_association, back_populates="users")
-    preferences = relationship("Preferences", uselist=False, cascade="all, delete-orphan")
     wallets = relationship("Wallet", back_populates="user", cascade="all, delete-orphan")
 
 class UserInDB(User):
@@ -99,7 +112,6 @@ class Account(Base):
     status = Column(String, nullable=False)
     
     enrollment = relationship("Enrollment", back_populates="accounts")
-    transactions = relationship("Transaction", back_populates="account", cascade="all, delete-orphan")
 
 class Subscription(Base):
     __tablename__ = 'subscriptions'

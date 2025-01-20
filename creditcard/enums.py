@@ -3,29 +3,11 @@ from typing import List
 
 import re
 
-def strip_up_to_period(text):
-    parts = text.split('.', 1) 
-    if len(parts) > 1:
-        return parts[1].strip()
-    return text.strip()
-
-def single_nearest(text: str, enum : Enum):
-    if text is None:
-        return None
-    
-    for enum_element in enum:
-        if strip_up_to_period(enum_element) in text:
-            return enum_element
-        
-def multiple_nearest(text: str, enum : Enum):
-    if text is None:
-        return None
-    
-    out_enums = []
-    for enum_element in enum:
-        if strip_up_to_period(enum_element) in text:
-            out_enums.append(enum_element)
-    return out_enums
+class Network(str, Enum):
+    VISA = "Visa"
+    MASTERCARD = "MasterCard"
+    AMERICAN_EXPRESS = "American Express"
+    DISCOVER = "Discover"
 
 class Issuer(str, Enum):
     CAPITAL_ONE = "Capital One"
@@ -252,14 +234,11 @@ class Vendors(str, Enum):
                         return vendor
             return None
 
-        # First check in name
         out = check_string_for_vendor_name(name)
         
-        # If not found in name, check the full description
         if out is None:
             out = check_string_for_vendor_name(description)
 
-        # Return found vendor or UNKNOWN if no vendor is found
         return out if out else Vendors.UNKNOWN
     
 
@@ -307,3 +286,173 @@ class CardAction(str, Enum):
     keep = "Keep this card"
     cancel = "Cancel this card"
     add = "Add this card"
+
+class CardKey(str, Enum):
+    WELLSFARGO_NOT_FOUND = "wellsfargo-not-found"
+    USBANK_LATAMSECURED = "usbank-latamsecured"
+    USBANK_LATAMVISA = "usbank-latamvisa"
+    CHASE_MARRIOTTBOLD = "chase-marriottbold"
+    CHASE_AMAZONPRIME = "chase-amazonprime"
+    CITI_PREMIERPASSEXPEDIA = "citi-premierpassexpedia"
+    USBANK_RADISSONPREMIER = "usbank-radissonpremier"
+    CITI_SIMPLICITYCASH = "citi-simplicitycash"
+    USBANK_POLARIS = "usbank-polaris"
+    PNC_BIZ_VISABUSINESS = "pnc-biz-visabusiness"
+    BARCLAYS_MASTERCARDBLACK = "barclays-mastercardblack"
+    CAPITALONE_BIZ_SPARKCLASSIC = "capitalone-biz-sparkclassic"
+    PNC_PREMIERTRAVELERVISA = "pnc-premiertravelervisa"
+    CITI_REWARDSPLUSSTUDENT = "citi-rewardsplusstudent"
+    BOA_SUSANKOMEN = "boa-susankomen"
+    DISCOVER_STUDENTCHROME = "discover-studentchrome"
+    CITI_PREMIERPASSEXPEDIAELITE = "citi-premierpassexpediaelite"
+    DISCOVER_CASHBACK = "discover-cashback"
+    BOA_TRAVELREWARDSSTUDENTS = "boa-travelrewardsstudents"
+    BARCLAYS_BREEZE = "barclays-breeze"
+    BOA_ALLEGIANT = "boa-allegiant"
+    BOA_CELECRITYCRUISES = "boa-celecritycruises"  # (Note potential typo in original)
+    CHASE_INKPREMIER = "chase-inkpremier"
+    CAPITALONE_QUICKSILVERSTUDENTS = "capitalone-quicksilverstudents"
+    AMEX_MORGANSTANLEYPLATINUM = "amex-morganstanleyplatinum"
+    USBANK_CASHREWARDSVISA = "usbank-cashrewardsvisa"
+    CHASE_MARRIOTTBONVOYPREMIER = "chase-marriottbonvoypremier"
+    USBANK_BIZ_ALTITUDECONNECT = "usbank-biz-altitudeconnect"
+    CITI_BIZ_COSTCOANYWHEREVISA = "citi-biz-costcoanywherevisa"
+    CHASE_IBERIA = "chase-iberia"
+    CAPITALONE_QUICKSILVERSECURED = "capitalone-quicksilversecured"
+    CITI_RADIOSHACK = "citi-radioshack"
+    BARCLAYS_UBERVISA = "barclays-ubervisa"
+    USBANK_STARTFARMPREMIER = "usbank-startfarmpremier"
+    USBANK_BIZ_RADISSON = "usbank-biz-radisson"
+    USBANK_LATAMVISASIGNATURE = "usbank-latamvisasignature"
+    BOA_AAAVISASIGNATURE = "boa-aaavisasignature"
+    BOA_ELITEVISA = "boa-elitevisa"
+    WELLSFARGO_ADVISORS = "wellsfargo-advisors"
+    CHASE_MARRIOTTBONVOYVISASIGNATURE = "chase-marriottbonvoyvisasignature"
+    CITI_TSC = "citi-tsc"
+    USBANK_INFINITE = "usbank-infinite"
+    PNC_BIZ_BUSINESSOPTIONSVISA = "pnc-biz-businessoptionsvisa"
+    BARCLAYS_PRINCESSCRUISES = "barclays-princesscruises"
+    USBANK_BIZ_LEVERAGE = "usbank-biz-leverage"
+    CHASE_MARRIOTTBOUNDLESS = "chase-marriottboundless"
+    CITI_SECUREDMASTERCARD = "citi-securedmastercard"
+    CAPITALONE_PLATINUMSECURED = "capitalone-platinumsecured"
+    TDBANK_CASHSECURED = "tdbank-cashsecured"
+    USBANK_SMARTLY = "usbank-smartly"
+    BARCLAYS_FRONTIER = "barclays-frontier"
+    CAPITALONE_WESTELM = "capitalone-westelm"
+    DISCOVER_STUDENTCASHBACK = "discover-studentcashback"
+    AMEX_MARRIOTBONVOYAMEX = "amex-marriotbonvoyamex"
+    BOA_AMERICARDSTUDENT = "boa-americardstudent"
+    AMEX_HILTONSURPASS = "amex-hiltonsurpass"
+    BOA_CUSTOMIZEDCASHREWARDS = "boa-customizedcashrewards"
+    BOA_NYUAACUSTOMIZEDCASH = "boa-nyuaacustomizedcash"
+    AMEX_BIZ_CORPORATEPLATINUM = "amex-biz-corporateplatinum"
+    PNC_COREVISA = "pnc-corevisa"
+    CAPITALONE_SAVORONESTUDENTS = "capitalone-savoronestudents"
+    BARCLAYS_EMIRATESSKYWARDSPREMIUM = "barclays-emiratesskywardspremium"
+    USBANK_SHOPPERCASHREWARDS = "usbank-shoppercashrewards"
+    USBANK_SECUREDVISA = "usbank-securedvisa"
+    USBANK_ALTITUDECONNECT = "usbank-altitudeconnect"
+    BARCLAYS_HOLLANDAMERICA = "barclays-hollandamerica"
+    AMEX_HILTON = "amex-hilton"
+    AMEX_HILTONASPIRE = "amex-hiltonaspire"
+    USBANK_CASHPLUSSECUREDVISA = "usbank-cashplussecuredvisa"
+    DISCOVER_SECURED = "discover-secured"
+    HSBC_PREMIER = "hsbc-premier"
+    AMEX_BIZ_MARRIOTTBONVOY = "amex-biz-marriottbonvoy"
+    PNC_CASHREWARDSVISA = "pnc-cashrewardsvisa"
+    BOA_ALASKA = "boa-alaska"
+    USBANK_STATEFARMGOODNEIGHBOR = "usbank-statefarmgoodneighbor"
+    CAPITALONE_POTTERYBARN = "capitalone-potterybarn"
+    AMEX_MARRIOTTBONVOYBRILLIANT = "amex-marriottbonvoybrilliant"
+    USBANK_BIZ_TRIPLECASH = "usbank-biz-triplecash"
+    CHASE_IHGREWARDSCLASSIC = "chase-ihgrewardsclassic"
+    BOA_AMERICARDSECURED = "boa-americardsecured"
+    USBANK_PLATINUM = "usbank-platinum"
+    BOA_USPRIDECUSTOMIZED = "boa-uspridecustomized"
+    BOA_ABAVISA = "boa-abavisa"
+    WELLSFARGO_MICROCENTER = "wellsfargo-microcenter"
+    WELLSFARGO_CASHWISE = "wellsfargo-cashwise"
+    CHASE_SOUTHWESTPREMIER = "chase-southwestpremier"
+    CITI_PREMIER = "citi-premier"
+    BOA_ROYALCARRIBEAN = "boa-royalcarribean"
+    USBANK_RADISSONVISA = "usbank-radissonvisa"
+    BOA_ASIANA = "boa-asiana"
+    CHASE_SAPPHIRE = "chase-sapphire"
+    BARCLAYS_EMIRATESSKYWARDS = "barclays-emiratesskywards"
+    CHASE_FREEDOMSTUDENT = "chase-freedomstudent"
+    WELLSFARGO_BIZ_SECURED = "wellsfargo-biz-secured"
+    USBANK_SKYPASSSELECT = "usbank-skypassselect"
+    USBANK_COLLEGEVISA = "usbank-collegevisa"
+    CITI_BESTBUY = "citi-bestbuy"
+    USBANK_PERKSPLUSVISA = "usbank-perksplusvisa"
+    TDBANK_FIRSTCLASS = "tdbank-firstclass"
+    BARCLAYS_VISAAPPLEREWARDS = "barclays-visaapplerewards"
+    WELLSFARGO_SECURED = "wellsfargo-secured"
+    CHASE_UNITEDMILEAGEPLUSVISA = "chase-unitedmileageplusvisa"
+    CHASE_JPMORGANRESERVE = "chase-jpmorganreserve"
+    PNC_BIZ_TRAVELREWARDSVISABUSINESS = "pnc-biz-travelrewardsvisabusiness"
+    PNC_SECUREDVISA = "pnc-securedvisa"
+    BOA_CUSTOMIZEDCASHREWARDSSECURED = "boa-customizedcashrewardssecured"
+    WELLSFARGO_CARRIER = "wellsfargo-carrier"
+    CHASE_AMAZON = "chase-amazon"
+    BOA_CUSTOMIZEDCASHREWARDSSTUDENTS = "boa-customizedcashrewardsstudents"
+    PNC_POINTSVISA = "pnc-pointsvisa"
+    AMEX_BIZ_CORPORATEGREEN = "amex-biz-corporategreen"
+    WELLSFARGO_HOTELSCOM = "wellsfargo-hotelscom"
+    CITI_CASHRETURNS = "citi-cashreturns"
+    AMEX_MORGANSTANLEYBLUECASHPREFERRED = "amex-morganstanleybluecashpreferred"
+    BOA_UNLIMITEDCASHREWARDSSECURED = "boa-unlimitedcashrewardssecured"
+    USBANK_SKYBLUESKYPASS = "usbank-skyblueskypass"
+    BOA_UNLIMITEDCASHREWARDSSTUDENTS = "boa-unlimitedcashrewardsstudents"
+    BOA_AMSACUSTOMIZEDCASH = "boa-amsacustomizedcash"
+    BOA_AMERICARDPOWERREWARDS = "boa-americardpowerrewards"
+    CHASE_STARBUCKSREWARDSVISA = "chase-starbucksrewardsvisa"
+    AMEX_BIZ_CORPORATEGOLD = "amex-biz-corporategold"
+    BOA_MERRILLPLUS = "boa-merrillplus"
+    CHASE_DISNEYPREMIER = "chase-disneypremier"
+    PNC_CASHUNLIMITED = "pnc-cashunlimited"
+    USBANK_BIZ_SKYPASSVISA = "usbank-biz-skypassvisa"
+    CHASE_BRITISHAIRWAYS = "chase-britishairways"
+    WELLSFARGO_VISASIGNATURE = "wellsfargo-visasignature"
+    CHASE_DISNEY = "chase-disney"
+    USBANK_ALTITUDEGOSECUREDVISA = "usbank-altitudegosecuredvisa"
+    USBANK_ALTITUDEGO = "usbank-altitudego"
+    BOA_VISAPLATPLUS = "boa-visaplatplus"
+    CAPITALONE_WILLIAMSSONOMA = "capitalone-williamssonoma"
+    CAPITALONE_KOHLS = "capitalone-kohls"
+    USBANK_BIZ_ALTITUDEPOWER = "usbank-biz-altitudepower"
+    CHASE_BIZ_IHGPREMIER = "chase-biz-ihgpremier"
+    HSBC_CASHREWARDSSTUDENT = "hsbc-cashrewardsstudent"
+    USBANK_HARRISTEETER = "usbank-harristeeter"
+    BARCLAYS_ARRIVAL = "barclays-arrival"
+    BARCLAYS_ARRIVALPREMIER = "barclays-arrivalpremier"
+    CITI_COSTCOANYWHEREVISA = "citi-costcoanywherevisa"
+    CITI_HDCOMMERCIALREVOLVING = "citi-hdcommercialrevolving"
+    BOA_BIZ_CUSTOMIZEDCASHREWARDS = "boa-biz-customizedcashrewards"
+    PNC_BIZ_POINTSVISABUSINESS = "pnc-biz-pointsvisabusiness"
+    CHASE_IHGPREMIER = "chase-ihgpremier"
+    CHASE_SAPPHIRERESERVE = "chase-sapphirereserve"
+    WELLSFARGO_CASHBACKCOLLEGE = "wellsfargo-cashbackcollege"
+    CHASE_AMAZONREWARDSVISASIGNATURE = "chase-amazonrewardsvisasignature"
+    CHASE_BIZ_SOUTHWESTPREMIER = "chase-biz-southwestpremier"
+    USBANK_CASHPLUS = "usbank-cashplus"
+    CITI_SIMPLICITY = "citi-simplicity"
+    CHASE_BIZ_MARRIOTTBONVOYPREMIERPLUS = "chase-biz-marriottbonvoypremierplus"
+    CAPITALONE_JOURNEYSTUDENT = "capitalone-journeystudent"
+    AMEX_BIZ_HILTON = "amex-biz-hilton"
+    WELLSFARGO_PLATINUMVISA = "wellsfargo-platinumvisa"
+    USBANK_BIZ_STARTFARMBIZCASHREWARDS = "usbank-biz-startfarmbizcashrewards"
+    BOA_TRAVELREWARDSSECURED = "boa-travelrewardssecured"
+    BARCLAYS_ARRIVALPLUS = "barclays-arrivalplus"
+    CHASE_UNITEDEXPLORER = "chase-unitedexplorer"
+    CHASE_SAPPHIREPREFERRED = "chase-sapphirepreferred"
+    USBANK_SKYPASSVISA = "usbank-skypassvisa"
+    CHASE_AERLINGUS = "chase-aerlingus"
+    CAPITALONE_KEYREWARDS = "capitalone-keyrewards"
+    BOA_BIZ_UNLIMITEDCASHREWARDSSECURED = "boa-biz-unlimitedcashrewardssecured"
+    CHASE_MARRIOTTBOUNTIFUL = "chase-marriottbountiful"
+    PNC_CASHBUILDER = "pnc-cashbuilder"
+    BARCLAYS_PRICELINEVIP = "barclays-pricelinevip"
+    PNC_BIZ_CASHREWARDSVISABUSINESS = "pnc-biz-cashrewardsvisabusiness"
+    AMEX_MARRIOTTBONVOYBEVY = "amex-marriottbonvoybevy"

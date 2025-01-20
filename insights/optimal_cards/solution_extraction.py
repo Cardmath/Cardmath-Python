@@ -1,8 +1,9 @@
 from copy import deepcopy  
+from creditcard.endpoints.schemas import CreditCardRecommendationSchema
 from creditcard.schemas import RewardCategoryRelation
 from insights.optimal_cards.r_matrix import RMatrixDetails
 from insights.schemas import OptimalCardsAllocationSolution, CardsUseSummary, SpendingPlanItem, OptimalCardsAllocationRequest
-from creditcard.schemas import CreditCardRecommendationSchema, CreditCardSchema
+from creditcard.schemas import CreditCardSchema
 
 import creditcard.enums as enums
 import logging 

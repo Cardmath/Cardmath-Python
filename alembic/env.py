@@ -1,7 +1,6 @@
 import os
 import sys
 import logging
-import getpass
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy.engine.url import URL
@@ -32,7 +31,7 @@ from database.auth.user import (
     Wallet,
 )
 from database.creditcard.creditcard import CreditCard
-from database.scrapes.cardratings import CardratingsScrape
+from database.creditcard.source import CreditCardSource, CreditCardUpdateTaskQueue, register_update_insert_trigger, insert_update_sql
 from database.teller.preferences import (
     BanksPreferences,
     BusinessPreferences,

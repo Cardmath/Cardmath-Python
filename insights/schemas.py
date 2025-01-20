@@ -1,4 +1,5 @@
-from creditcard.schemas import CreditCardSchema, RewardCategoryRelation, CardLookupSchema, CreditCardRecommendationSchema
+from creditcard.endpoints.schemas import CardLookupSchema, CreditCardRecommendationSchema
+from creditcard.schemas import CreditCardSchema, RewardCategoryRelation
 from datetime import date
 from pydantic import BaseModel
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator

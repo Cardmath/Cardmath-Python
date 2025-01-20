@@ -6,14 +6,10 @@ from auth.secrets import load_essential_secrets
 from chat.endpoint import chat 
 from chat.schemas import ChatRequest
 from contextlib import asynccontextmanager
-from creditcard.endpoints.download import download
-from creditcard.endpoints.download import DownloadRequest, DownloadResponse
-from creditcard.endpoints.extract import extract
-from creditcard.endpoints.extract import ExtractRequest, ExtractResponse
-from creditcard.endpoints.parse import parse
-from creditcard.endpoints.parse import ParseRequest, ParseResponse
-from creditcard.endpoints.read_database import CreditCardsDatabaseRequest, CreditCardsDatabaseResponse
+from creditcard.endpoints.read_database import CreditCardsDatabaseResponse
 from creditcard.endpoints.read_database import read_credit_cards_database
+from creditcard.endpoints.schemas import CreditCardsDatabaseRequest
+from creditcard.endpoints.schemas import CreditCardsDatabaseRequest, WalletDeleteRequest, WalletSchema, WalletUpdateRequest, WalletsIngestRequest
 from creditcard.schemas import *
 from database.auth.user import User, Onboarding
 from database.sql_alchemy_db import sync_engine, get_sync_db, Base
@@ -144,18 +140,6 @@ def ingest_user_preferences(current_user: Annotated[User, Depends(auth_utils.get
                  preferences: PreferencesSchema,
                  db: Session = Depends(get_sync_db)):
     return teller_endpoints.ingest_user_preferences(preferences=preferences, db=db, user=current_user)
-
-@app.post("/download")
-def download_endpoint(request: DownloadRequest) -> DownloadResponse:
-    return download(request)
-    
-@app.post("/extract")
-def extract_endpoint(request: ExtractRequest, db: Session = Depends(get_sync_db)) -> ExtractResponse:
-    return extract(request, db)
-
-@app.post("/parse") 
-def parse_endpoint(request: ParseRequest, db: Session = Depends(get_sync_db)) -> ParseResponse:
-    return parse(request, db)
 
 @app.post("/read_heavy_hitters") 
 async def heavy_hitters_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 

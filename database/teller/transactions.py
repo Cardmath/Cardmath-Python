@@ -8,7 +8,7 @@ class Transaction(Base):
     txn_id = Column(String, primary_key=True, nullable=False)  # returned by teller
     
     account_id = Column(String, ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, index=True)
-    account = relationship("Account", back_populates="transactions")
+    account = relationship("Account", backref="transactions")
     amount = Column(Float, nullable=False)
     date = Column(Date, nullable=False, index=True)
     description = Column(String, nullable=False)

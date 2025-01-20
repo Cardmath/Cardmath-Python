@@ -1,76 +1,171 @@
 from collections import defaultdict
 from creditcard.enums import *  
-from creditcard.utils.parse import *
+from creditcard.enums import CardKey
 from database.creditcard.creditcard import CreditCard
-from database.scrapes.cardratings import CardratingsScrape
-from datetime import date
-from pydantic import BaseModel, ConfigDict, field_validator, TypeAdapter
+from pydantic import BaseModel, ConfigDict, TypeAdapter, Field
 from typing import List
 from typing import Optional, Union
+from creditcard.enums import *
+from creditcard.enums import CardKey
+from pydantic import BaseModel, ConfigDict, field_validator, field_serializer, model_validator
+from typing import List, Union, Optional, Any
+from datetime import timedelta, date
 
-import json
+RIGHTS_RESERVED = '\u00AE'
 
-def get_primary_reward_unit(reward_category_map: List[RewardCategoryRelation]) -> RewardUnit:
-    if not reward_category_map:
-        return RewardUnit.UNKNOWN
+class RewardCategoryThreshold(BaseModel):
+    on_up_to_purchase_amount_usd: float
+    per_timeframe_num_months: int
+    fallback_reward_amount: float
 
-    # Dictionary to count occurrences of each RewardUnit
-    reward_unit_counts = defaultdict(int)
-    
-    # Count each reward unit occurrence
-    for relation in reward_category_map:
-        reward_unit_counts[relation.reward_unit] += 1
+    model_config = ConfigDict(from_attributes=True)
 
-    # Find the RewardUnit with the maximum count
-    primary_reward_unit = max(reward_unit_counts, key=reward_unit_counts.get)
-    return primary_reward_unit
+    @field_validator('fallback_reward_amount', mode="before")
+    @classmethod
+    def amount_must_be_reasonable(cls, v):
+        if v < 0 or v > 10:
+            raise ValueError('Amount must be positive and less than 20 to be reasonable')
+        return v
 
-class CardRatingsScrapeSchema(BaseModel):
-    name: str
-    description_used: int
-    unparsed_issuer: str
-    unparsed_credit_needed: str
-    unparsed_card_attributes: str
+class RewardCategoryRelation(BaseModel):
+    category : Union[PurchaseCategory, Vendors]
+    reward_unit : RewardUnit
+    reward_amount : float
+
+    reward_threshold : Optional[RewardCategoryThreshold] = None
     
     model_config = ConfigDict(from_attributes=True)
 
-    async def credit_card_schema(self):
-        name = self.name.replace('\u00AE', '')
-        issuer = get_issuer(self.unparsed_issuer)
-        benefits = await get_benefits(self.unparsed_card_attributes)
-        credit_needed = get_credit_needed(self.unparsed_credit_needed)
-        reward_category_map = await get_reward_category_map(self.unparsed_card_attributes)
-        primary_reward_unit = get_primary_reward_unit(reward_category_map)
-        apr = await get_apr(self.unparsed_card_attributes)
-        sign_on_bonus = await get_sign_on_bonus(self.unparsed_card_attributes)
-        annual_fee = await get_annual_fee(self.unparsed_card_attributes)
-        statement_credit = await get_statement_credit(self.unparsed_card_attributes, card_tile=name)
-        keywords = await get_keywords(self.unparsed_card_attributes, name)
+    @field_validator('reward_amount', mode="before")
+    @classmethod
+    def amount_must_be_reasonable(cls, v):
+        if v < 0 or v > 30:
+            raise ValueError('Amount must be positive and less than 30 to be reasonable')
+        return v
+    
+    @field_validator('reward_threshold', mode="before")
+    @classmethod
+    def validate_threshold(cls, v):
+        if v is not None:
+            v = RewardCategoryThreshold.model_validate(v)
+            if v.on_up_to_purchase_amount_usd < 0 or v.per_timeframe_num_months < 0:
+                return None
+            else :
+                return v
 
-        return CreditCardSchema(name=name, 
-                          issuer=issuer,
-                          benefits=benefits,
-                          credit_needed=credit_needed,
-                          reward_category_map=reward_category_map,
-                          sign_on_bonus=sign_on_bonus,
-                          apr=apr,
-                          annual_fee=annual_fee,
-                          statement_credit=statement_credit,
-                          primary_reward_unit=primary_reward_unit,
-                          keywords=keywords)
+class RewardCategoryMap(BaseModel):
+    reward_category_map : List[RewardCategoryRelation]
+
+    def get_primary_reward_unit(self) -> RewardUnit:
+        if len(self.reward_category_map) == 0:
+            return RewardUnit.UNKNOWN
         
-    def cardratings_scrape(self):
-        return CardratingsScrape(
-            name = self.name,
-            description_used = self.description_used,
-            unparsed_issuer=self.unparsed_issuer,
-            unparsed_card_attributes=self.unparsed_card_attributes,
-            unparsed_credit_needed=self.unparsed_credit_needed
-        )
+        reward_unit_counts = defaultdict(int)
+        
+        for relation in self.reward_category_map:
+            reward_unit_counts[relation.reward_unit] += 1
+        
+        primary_reward_unit = max(reward_unit_counts, key=reward_unit_counts.get)
+        return primary_reward_unit
+
+
+class ConditionalSignOnBonus(BaseModel):
+    purchase_type: Union[PurchaseCategory, Vendors]
+    condition_amount: float
+    timeframe: timedelta
+
+    reward_type: RewardUnit
+    reward_amount: float
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator('timeframe', mode="before")
+    @classmethod
+    def parse_as_months(cls, v):
+        if isinstance(v, (int, float)):
+            return timedelta(days=30 * v)
+        return v
+
+    @field_serializer('timeframe')
+    @classmethod
+    def serialize_as_months(cls, v):
+        if isinstance(v, timedelta):
+            return v.days / 30
+        
+    def get_timeframe_in_months(self):
+        return self.timeframe.days / 30
+
+class APR(BaseModel):
+    apr : float
+    apr_type : APRType
+    
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator('apr', mode="before")
+    def apr_must_be_reasonable(cls, v):
+        if v < 0 or v > 100:
+            raise ValueError('APR must be positive and less than 100 to be reasonable')
+        return v 
+
+class AnnualFee(BaseModel):
+    fee_usd : float
+    waived_for : int
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator('fee_usd')
+    def fee_usd_must_be_reasonable(cls, v):
+        if v < 0:
+            raise ValueError('Fee must be positive to be reasonable')
+        return v
+    
+    @field_validator('waived_for')
+    def waived_for_must_be_reasonable(cls, v):
+        if v < 0:
+            raise ValueError('Waived for must be positive to be reasonable')
+        return v
+
+class PeriodicStatementCredit(BaseModel): 
+    credit_amount: float
+    unit: RewardUnit 
+    categories: List[PurchaseCategory] # purchase categories where the statement credit can be used
+    vendors: List[Vendors] # stores where the statement credit can be used
+    timeframe_months: int
+    max_uses: int
+
+    description: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator('timeframe_months', mode="before")
+    def timeframe_must_be_reasonable(cls, v):
+        if v < 0:
+            raise ValueError('Timeframe must be positive to be reasonable')
+        return v
+
+class CreditCardKeyMetadata(BaseModel):
+    name: str
+    issuer: Issuer
+    network: Network
+    key: Optional[CardKey]
+
+class CreditCardMetadataSchema(CreditCardKeyMetadata):
+    last_verified: Optional[date] # None means never verified
+    referral_link: Optional[str]
+
+class CreditCardSourceMetadataSchema(CreditCardKeyMetadata):
+    reference_links: Optional[str]
+    source_last_verified: Optional[date] # None means never verified
         
 class CreditCardSchema(BaseModel):
-    name : str 
-    issuer : Issuer
+    name: str
+    issuer: Issuer
+    network: Network
+
+    key: Optional[CardKey]
+    last_verified: Optional[date] # None means never verified
+    referral_link: Optional[str]
+    
     reward_category_map : List[RewardCategoryRelation]
     benefits : List[Benefit]
     credit_needed : List[CreditNeeded]
@@ -81,66 +176,20 @@ class CreditCardSchema(BaseModel):
     primary_reward_unit: RewardUnit
     keywords: List[CreditCardKeyword]
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config=ConfigDict(from_attributes=True)
 
-    # Overriding __eq__ method to compare by name and issuer
+    def __hash__(self):
+        return hash((self.name, self.issuer, self.network))
+    
     def __eq__(self, other):
         if not isinstance(other, CreditCardSchema):
             return False
-        return self.name == other.name and self.issuer == other.issuer
+        return hash(self) == hash(other)
 
-    # Optional: Overriding __hash__ to allow use in sets and dict keys
-    def __hash__(self):
-        return hash((self.name, self.issuer))
-
-    @field_validator('sign_on_bonus', mode='before')
-    @classmethod
-    def validate_sign_on_bonus(cls, v):
-        if isinstance(v, list):
-            return [ConditionalSignOnBonus.model_validate(sign_on_bonus) for sign_on_bonus in v]
-
-        return v
-
-
-    @field_validator('reward_category_map', mode='before')
-    @classmethod
-    def validate_reward_category_map(cls, v):
-        if isinstance(v, str):
-            v = json.loads(v)
-            if isinstance(v, list) and len(v) > 0 and isinstance(v[0], str): 
-                v = [RewardCategoryRelation.model_validate_json(rc_relation) for rc_relation in v]  
-
-        return v 
-    
-    @field_validator('benefits', mode='before')
-    @classmethod
-    def validate_benefits(cls, v):
-        if isinstance(v, str):
-            v = json.loads(v)
-            if isinstance(v, list) and len(v) > 0 and isinstance(v[0], str):
-                v = [single_nearest(benefit, Benefit) for benefit in v]
-        
-        if not isinstance(v, list):
-            raise ValueError("Input should be a valid list")
-
-        return v 
-    
-    @field_validator('credit_needed', mode='before')
-    @classmethod
-    def validate_credit_needed(cls, v):
-        if isinstance(v, str):
-            v = json.loads(v)
-            if isinstance(v, list) and len(v) > 0 and isinstance(v[0], str):
-                v = [single_nearest(credit_needed, CreditNeeded) for credit_needed in v]
-        
-        if not isinstance(v, list):
-            raise ValueError("Input should be a valid list")
-
-        return v 
-    
     def credit_card(self) -> CreditCard:
         return CreditCard(name=self.name, 
                           issuer=self.issuer,
+                          network=self.network,
                           benefits=TypeAdapter(List[Benefit]).dump_python(self.benefits),
                           credit_needed=TypeAdapter(List[CreditNeeded]).dump_python(self.credit_needed),
                           reward_category_map=TypeAdapter(List[RewardCategoryRelation]).dump_python(self.reward_category_map),
@@ -150,87 +199,3 @@ class CreditCardSchema(BaseModel):
                           keywords= TypeAdapter(List[CreditCardKeyword]).dump_python(self.keywords),
                           statement_credit=TypeAdapter(List[PeriodicStatementCredit]).dump_python(self.statement_credit),
                           primary_reward_unit=self.primary_reward_unit)
-    
-class CreditCardRecommendationSchema(CreditCardSchema):
-    status: CardAction
-
-    @classmethod
-    def from_credit_card_schema(cls, schema: CreditCardSchema, status: CardAction):
-        return cls(
-            name=schema.name,
-            issuer=schema.issuer,
-            reward_category_map=schema.reward_category_map,
-            benefits=schema.benefits,
-            credit_needed=schema.credit_needed,
-            apr=schema.apr,
-            sign_on_bonus=schema.sign_on_bonus,
-            annual_fee=schema.annual_fee,
-            statement_credit=schema.statement_credit,
-            primary_reward_unit=schema.primary_reward_unit,
-            keywords=schema.keywords,
-            status=status
-        )
-
-class CreditCardsFilter(BaseModel):
-    id_in_db : Optional[List[int]]
-    issuer : Optional[List[Issuer]]
-    credit_needed : Optional[List[CreditNeeded]]
-    benefits : Optional[List[Benefit]]
-    keywords: Optional[List[CreditCardKeyword]]
-    apr : Optional[float]
-
-class CreditCardsDatabaseRequest(BaseModel):
-    card_details: Union[str, CreditCardsFilter] = "all"
-    use_preferences: bool
-    max_num : Optional[int] = None
-
-    @field_validator('card_details')
-    @classmethod
-    def validate_card_details(cls, v):
-        if isinstance(v, str) and v != "all":
-            raise ValueError('must be all or a filter')
-        
-        return v
-
-class CreditCardsDatabaseResponse(BaseModel):
-    credit_card: List[CreditCardSchema]
-
-class CardInWalletSchema(BaseModel):
-    is_held : bool
-    credit_card_id: int
-    wallet_id: Optional[int]
-    card : CreditCardSchema
-
-    model_config = ConfigDict(from_attributes=True)
-
-class WalletSchema(BaseModel):
-    id : int
-    name : str
-    last_edited : date
-    is_custom : bool
-    cards: List[CardInWalletSchema]
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class CardLookupSchema(BaseModel):
-    name: str
-    issuer: str
-    
-    model_config = ConfigDict(from_attributes=True)
-
-class WalletsIngestRequest(BaseModel):
-    name : str
-    cards : List[CardLookupSchema]
-    is_custom : bool
-
-    model_config = ConfigDict(from_attributes=True)
-
-class WalletDeleteRequest(BaseModel):
-    wallet_id: int
-
-class WalletUpdateRequest(BaseModel):
-    wallet_id: int
-    name: Optional[str]
-    is_custom: Optional[bool]
-    cards: Optional[List[CardLookupSchema]]
