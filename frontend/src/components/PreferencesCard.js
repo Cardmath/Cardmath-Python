@@ -27,61 +27,63 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
         setActiveTab(tab);
     };
 
-    const moveToNextTab = () => {
-        const currentIndex = tabOrder.indexOf(activeTab);
-        debugLog('Moving to next tab from:', activeTab);
-        if (currentIndex < tabOrder.length - 1) {
-            setActiveTab(tabOrder[currentIndex + 1]);
-        } else {
-            debugLog('Already at the last tab. No further movement.');
+    const saveCurrentTabPreferences = async () => {
+        const payload = {};
+        
+        switch (activeTab) {
+            case 'CreditProfile':
+                payload.credit_profile = { 
+                    credit_score: creditScore, 
+                    salary, 
+                    lifestyle: selectedLifestyle 
+                };
+                break;
+            case 'Banks':
+                payload.banks_preferences = {
+                    have_banks: selectedHaveBanks,
+                    preferred_banks: selectedBanks,
+                    avoid_banks: selectedAvoidBanks
+                };
+                break;
+            case 'RewardsPrograms':
+                payload.rewards_programs_preferences = {
+                    preferred_rewards_programs: selectedPointsSystems,
+                    avoid_rewards_programs: selectedAvoidPointsSystems
+                };
+                break;
+            case 'Vendors':
+                payload.consumer_preferences = {
+                    favorite_grocery_stores: selectedGroceries,
+                    favorite_general_goods_stores: selectedShopping
+                };
+                break;
+            case 'Business':
+                payload.business_preferences = {
+                    business_type: selectedIndustries,
+                    business_size: selectedBusinessSize
+                };
+                break;
         }
-    };
 
-    const moveToPreviousTab = () => {
-        const currentIndex = tabOrder.indexOf(activeTab);
-        debugLog('Moving to previous tab from:', activeTab);
-        if (currentIndex > 0) {
-            setActiveTab(tabOrder[currentIndex - 1]);
-        } else {
-            debugLog('Already at the first tab. Triggering onBack.');
-            onBack();
-        }
-    };
-
-    const sendPreferences = () => {
-        debugLog('Sending preferences for active tab:', activeTab);
-
-        // Logic for preference submission
-        const payload = {
-            credit_profile: { credit_score: creditScore, salary, lifestyle: selectedLifestyle },
-            banks_preferences: { have_banks: selectedHaveBanks, preferred_banks: selectedBanks, avoid_banks: selectedAvoidBanks },
-            rewards_programs_preferences: { preferred_rewards_programs: selectedPointsSystems, avoid_rewards_programs: selectedAvoidPointsSystems },
-            consumer_preferences: { favorite_grocery_stores: selectedGroceries, favorite_general_goods_stores: selectedShopping },
-            business_preferences: { business_type: selectedIndustries, business_size: selectedBusinessSize },
-        };
-
-        fetchWithAuth(`${getBackendUrl()}/save_user_preferences`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Failed to save preferences.');
-                }
-                debugLog('Preferences submitted successfully for tab:', activeTab);
-
-                // Move to the next tab or complete registration
-                if (activeTab === 'Business') {
-                    onSuccess();
-                    navigate('/dashboard');
-                } else {
-                    moveToNextTab();
-                }
-            })
-            .catch((error) => {
-                console.error('Error saving preferences:', error);
+        try {
+            const response = await fetchWithAuth(`${getBackendUrl()}/save_user_preferences`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
+
+            if (!response.ok) {
+                throw new Error('Failed to save preferences');
+            }
+
+            // Only navigate to dashboard if saving business preferences
+            if (activeTab === 'Business') {
+                onSuccess();
+                navigate('/dashboard');
+            }
+        } catch (error) {
+            console.error('Error saving preferences:', error);
+        }
     };
 
     // State and preference management
@@ -215,8 +217,25 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
         }
     }, [selectedPointsSystems, selectedAvoidPointsSystems]);
 
+    const renderSaveButton = () => {
+        return (
+            <Button
+                label="Save Preferences In This Tab"
+                icon="pi pi-save"
+                onClick={saveCurrentTabPreferences}
+            />
+        );
+    };
+
+    // [Previous tab content rendering remains the same, but replace Button groups with:]
+    const renderButtonGroup = () => (
+        <div className="flex justify-content-end mt-4">
+            {renderSaveButton()}
+        </div>
+    );
+
     return (
-        <div className="px-4 md:px-6 lg:px-8 pb-8">
+        <div className="px-4 md:px-6 lg:px-8 pb-8 bg-gray-800">
             <div className="grid align-items-start">
                 <div className="col-2">
                     <ul className="border-round bg-gray-300 opacity-70 h-auto list-none p-0 text-lg">
@@ -354,20 +373,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         placeholder="Select your Lifestyle"
                                     />
                                 </div>
-                                <div className="flex justify-content-between mt-4">
-                                    <Button
-                                        label="Back"
-                                        icon="pi pi-arrow-left"
-                                        className="p-button-secondary"
-                                        onClick={moveToPreviousTab}
-                                    />
-                                    <Button
-                                        label="Save and Continue"
-                                        icon="pi pi-arrow-right"
-                                        iconPos="right"
-                                        onClick={moveToNextTab}
-                                    />
-                                </div>
+                                {renderButtonGroup()}
                             </div>
                         </div>
                     </div>
@@ -385,7 +391,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                             <div className="flex-auto p-fluid">
                                 <div className="mb-4">
                                     <label className="block text-lg text-gray-900 mb-2">
-                                        Banks you have Accounts with
+                                        Banks Inclusion Filter
                                     </label>
                                     <MultiSelect
                                         value={selectedHaveBanks}
@@ -399,21 +405,8 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                     />
                                 </div>
                                 <div className="mb-4">
-                                    <label className="block text-lg text-gray-900 mb-2">Preferred Banks</label>
-                                    <MultiSelect
-                                        value={selectedBanks}
-                                        onChange={(e) => setSelectedBanks(e.value)}
-                                        options={banks}
-                                        optionLabel="label"
-                                        optionValue="value"
-                                        placeholder="Select Preferred Banks"
-                                        maxSelectedLabels={3}
-                                        className="w-full md:w-20rem"
-                                    />
-                                </div>
-                                <div className="mb-4">
                                     <label htmlFor="avoidBanks" className="block text-lg text-gray-900 mb-2">
-                                        Banks to Avoid
+                                        Banks Exclusion Filter
                                     </label>
                                     <MultiSelect
                                         value={selectedAvoidBanks}
@@ -426,20 +419,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         className="w-full md:w-20rem"
                                     />
                                 </div>
-                                <div className="flex justify-content-between mt-4">
-                                    <Button
-                                        label="Back"
-                                        icon="pi pi-arrow-left"
-                                        className="p-button-secondary"
-                                        onClick={moveToPreviousTab}
-                                    />
-                                    <Button
-                                        label="Save and Continue"
-                                        icon="pi pi-arrow-right"
-                                        iconPos="right"
-                                        onClick={moveToNextTab}
-                                    />
-                                </div>
+                                {renderButtonGroup()}
                             </div>
                         </div>
                     </div>
@@ -485,20 +465,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         className="w-full md:w-20rem"
                                     />
                                 </div>
-                                <div className="flex justify-content-between mt-4">
-                                    <Button
-                                        label="Back"
-                                        icon="pi pi-arrow-left"
-                                        className="p-button-secondary"
-                                        onClick={moveToPreviousTab}
-                                    />
-                                    <Button
-                                        label="Save and Continue"
-                                        icon="pi pi-arrow-right"
-                                        iconPos="right"
-                                        onClick={moveToNextTab}
-                                    />
-                                </div>
+                                {renderButtonGroup()}
                             </div>
                         </div>
                     </div>
@@ -546,20 +513,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         className="w-full md:w-20rem"
                                     />
                                 </div>
-                                <div className="flex justify-content-between mt-4">
-                                    <Button
-                                        label="Back"
-                                        icon="pi pi-arrow-left"
-                                        className="p-button-secondary"
-                                        onClick={moveToPreviousTab}
-                                    />
-                                    <Button
-                                        label="Save and Continue"
-                                        icon="pi pi-arrow-right"
-                                        iconPos="right"
-                                        onClick={moveToNextTab}
-                                    />
-                                </div>
+                                {renderButtonGroup()}
                             </div>
                         </div>
                     </div>
@@ -604,23 +558,7 @@ const PreferencesCard = ({ onBack, onSuccess }) => {
                                         className="w-full md:w-20rem"
                                     />
                                 </div>
-                                <div className="flex justify-content-between mt-4">
-                                    <Button
-                                        label="Back"
-                                        icon="pi pi-arrow-left"
-                                        className="p-button-secondary"
-                                        onClick={moveToPreviousTab}
-                                    />
-                                    <Button
-                                        label="Save and Complete Registration"
-                                        icon="pi pi-check"
-                                        iconPos="right"
-                                        onClick={() => {
-                                            sendPreferences();
-                                            navigate('/dashboard');
-                                        }}
-                                    />
-                                </div>
+                                {renderButtonGroup()}
                             </div>
                         </div>
                     </div>

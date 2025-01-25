@@ -69,13 +69,12 @@ def update_user_credit_cards(user: User, db: Session) -> List[Account]:
 
 def read_user_new_enrollment(user: User, db: Session) -> Enrollment:
     '''
-    Reads an arbitrary enrollment of the user from the DB that has been updated in the last 10 minutes
+    Reads the most recently updated enrollment for the user from the DB
     '''
-    ten_minutes_ago = datetime.now() - timedelta(minutes=10)
-    enrollments = db.query(Enrollment).filter(
-        (Enrollment.user_id == user.id) & (Enrollment.last_updated >= ten_minutes_ago)
-    ).first()
-    return enrollments
+    enrollment = db.query(Enrollment).filter(
+        Enrollment.user_id == user.id
+    ).order_by(Enrollment.last_updated.desc()).first()
+    return enrollment
 
 def read_enrollment_accounts(enrollment: Enrollment, db: Session) -> List[Account]:
     accounts: List[Account] = db.query(Account).filter(Account.enrollment_id == enrollment.id).all()

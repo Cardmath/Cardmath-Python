@@ -36,7 +36,7 @@ def verify_email_verification_token(token: str):
         logger.error("Invalid token for email verification.")
         raise HTTPException(status_code=400, detail="Invalid token")
 
-def send_verification_email(email: str, verification_link: str):
+def send_verification_email_link(email: str, verification_link: str):
     smtp_email = os.getenv("SMTP_EMAIL")
     smtp_password = os.getenv("SMTP_PASSWORD")
     
@@ -47,10 +47,10 @@ def send_verification_email(email: str, verification_link: str):
     
     body = f"""
     <p>Hi,</p>
-    <p>Thank you for registering with Cardmath! Please verify your email by clicking the link below:</p>
-    <p><a href="{verification_link}">Verify your email</a></p>
+    <p>Thank you for registering with Cardmath! Please verify your email and set a password by clicking the link below:</p>
+    <p><a href="{verification_link}">Verify your email and set a password</a></p>
     <p>If you did not register for this account, please ignore this email or contact support by replying to this email.</p>
-    <p>Best regards,<br>Cardmath Support</p>
+    <p>Best regards,<br>The Cardmath Team</p>
     """
     message.attach(MIMEText(body, "html"))
 
@@ -64,8 +64,14 @@ def send_verification_email(email: str, verification_link: str):
     except Exception as e:
         logger.error("Failed to send verification email to %s: %s", email, str(e))
         raise HTTPException(status_code=500, detail="Failed to send email")
+    
+def send_verification(email: str):
+    token = create_email_verification_token(email)
+    BASE_URL = "cardmath.ai" if os.getenv("ENVIRONMENT", "prod") == "prod" else "localhost:3000"
+    verification_link = f"https://{BASE_URL}/registration-steps?token={token}"
+    send_verification_email_link(email, verification_link)
 
-async def verify_email(token: str, db: Session):
+async def handle_verification_link_clicked(token: str, db: Session):
     email = verify_email_verification_token(token)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid or expired token")
@@ -120,11 +126,11 @@ def send_reset_email(email: str, reset_link: str):
     message = MIMEMultipart()
     message["From"] = smtp_email
     message["To"] = email
-    message["Subject"] = "Cardmath - Password Reset Request"
+    message["Subject"] = "Cardmath - Set Your Password!"
     
     body = f"""
     <p>Hi,</p>
-    <p>To reset your password, click the link below:</p>
+    <p>Thank you for using Cardmath! To set your password, click the link below:</p>
     <p><a href="{reset_link}">Reset your password</a></p>
     <p>If you did not request a password reset, please ignore this email or contact support by relying to this email.</p>
     <p>Best regards,<br>Cardmath Support</p>
@@ -142,8 +148,8 @@ def send_reset_email(email: str, reset_link: str):
         logger.error("Failed to send password reset email to %s: %s", email, str(e))
         raise HTTPException(status_code=500, detail="Failed to send email")
 
-async def request_password_recovery(email: str, db: Session):
-    user = db.query(UserInDB).filter(UserInDB.username == email).first()
+def request_password_recovery(email: str, db: Session):
+    user = db.query(UserInDB).filter(UserInDB.email == email).first()
     if not user:
         logger.warning("User not found for password recovery email: %s", email)
         raise HTTPException(status_code=404, detail="User not found")

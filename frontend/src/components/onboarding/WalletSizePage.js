@@ -5,6 +5,7 @@ const WalletSizeForm = ({ onSelect }) => {
   const [selectedSize, setSelectedSize] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // Ensure all values are integers
   const options = [
     { label: "0", value: 0 },
     { label: "1", value: 1 },
@@ -30,7 +31,7 @@ const WalletSizeForm = ({ onSelect }) => {
         <Button 
           label="Continue" 
           style={{ width: '100%' }}
-          onClick={() => onSelect(selectedSize)}
+          onClick={() => onSelect(parseInt(selectedSize.value, 10))} // Ensure we pass an integer
         />
       </div>
     );
@@ -46,7 +47,7 @@ const WalletSizeForm = ({ onSelect }) => {
             style={{
               width: '100%', 
               justifyContent: 'center',
-              borderColor: selectedSize === option.value 
+              borderColor: selectedSize?.value === option.value 
                 ? 'rgba(255, 255, 255, 0.4)' 
                 : 'rgba(255, 255, 255, 0.2)'
             }}

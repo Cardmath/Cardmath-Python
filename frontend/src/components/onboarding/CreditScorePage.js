@@ -6,10 +6,10 @@ const CreditScoreForm = ({ onSelect }) => {
   const [showSuccess, setShowSuccess] = useState(false);
 
   const options = [
-    { label: "Less than 629", subLabel: "Poor", value: "poor" },
-    { label: "630 - 689", subLabel: "Fair", value: "fair" },
-    { label: "690 - 719", subLabel: "Good", value: "good" },
-    { label: "720 - 850", subLabel: "Excellent", value: "excellent" }
+    { label: "Less than 629", subLabel: "Poor", value: "Bad" },
+    { label: "630 - 689", subLabel: "Fair", value: "Fair" },
+    { label: "690 - 719", subLabel: "Good", value: "Good" },
+    { label: "720 - 850", subLabel: "Excellent", value: "Excellent" }
   ];
 
   const handleSelect = (option) => {

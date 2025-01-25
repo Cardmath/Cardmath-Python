@@ -15,6 +15,7 @@ def load_secret(secret_name, env_var_name=None, project_id=1084246205015, versio
 
 def load_essential_secrets():
     ESSENTIAL_SECRETS = [
+        ("stripe_test", "STRIPE_API_KEY", 1),
         ("openai", "OPENAI_API_KEY", 1),
         ("secret_key", "SECRET_KEY", 1),
         ("teller_certificate", "TELLER_CERT", 4),

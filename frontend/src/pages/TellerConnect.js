@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { fetchWithAuth } from './AuthPage';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { confirmDialog } from 'primereact/confirmdialog';
-import { ConfirmDialog } from 'primereact/confirmdialog';
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { Button } from 'primereact/button';
 import { getBackendUrl } from '../utils/urlResolver';
 
@@ -45,10 +44,7 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
                     },
                 });
                 setProcessingError(true);
-                console.log(
-                    'The server rejected your enrollment. Please confirm that you are logged in and try again.'
-                );
-                return; // Exit the function if response is not ok
+                return;
             }
         } catch (error) {
             confirmDialog({
@@ -65,10 +61,7 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
                 },
             });
             setProcessingError(true);
-            console.log(
-                'A network error occurred while sending your enrollment data. Please check your internet connection and try again.'
-            );
-            return; // Exit the function if there is an error
+            return;
         }
 
         try {
@@ -96,12 +89,8 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
                     },
                 });
                 setProcessingError(true);
-                console.log(
-                    'The server encountered an error while processing your enrollment. Please try again later.'
-                );
-                return; // Exit the function if response is not ok
+                return;
             }
-            // Proceed to next step after successful processing
             onSuccess();
         } catch (error) {
             confirmDialog({
@@ -118,9 +107,6 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
                 },
             });
             setProcessingError(true);
-            console.log(
-                'A network error occurred while processing your enrollment. Please check your internet connection and try again.'
-            );
         }
     };
 
@@ -128,7 +114,6 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
         const script = document.createElement('script');
         script.src = 'https://cdn.teller.io/connect/connect.js';
         script.onload = () => {
-            // Initialize TellerConnect but do not open it yet
             if (window.TellerConnect) {
                 const tellerConnect = window.TellerConnect.setup({
                     applicationId: 'app_p79ra9mqcims8r8gqa000',
@@ -139,21 +124,21 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
                         console.log('Teller Connect has initialized');
                     },
                     onSuccess: function (enrollment) {
-                        console.log('User enrolled successfully', enrollment.accessToken);
                         handleSuccess(enrollment);
                     },
                     onExit: function () {
                         console.log('User closed Teller Connect');
-                        setProcessingError(true);
                         confirmDialog({
                             header: 'Enrollment Cancelled',
                             message:
                                 'You have closed Teller Connect. Please try again to link your bank account.',
                             icon: 'pi pi-exclamation-triangle',
                             accept: () => {
+                                setShowSpinner(false);
                                 setProcessingError(false);
                             },
                             reject: () => {
+                                setShowSpinner(false);
                                 setProcessingError(false);
                             },
                         });
@@ -162,9 +147,7 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
                 tellerConnectRef.current = tellerConnect;
                 setTellerConnectReady(true);
             } else {
-                console.error(
-                    'TellerConnect is not defined. Make sure the script is loaded correctly.'
-                );
+                console.error('TellerConnect is not defined.');
                 setScriptLoadError(true);
             }
         };
@@ -196,6 +179,31 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
         }
     };
 
+    const TellerInfo = () => (
+        <div className="flex flex-column text-white align-items-center">
+            <p className="text-2xl">
+                Cardmath utilizes Teller Connect to securely link users' bank accounts,
+                ensuring that only transaction data is accessed. Teller Connect is a
+                client-side UI component that facilitates the connection between users'
+                financial accounts and applications like Cardmath. It manages credential
+                validation, multi-factor authentication, account selection, and error
+                handling for various financial institutions.
+            </p>
+            <p className="text-2xl">
+                By integrating Teller Connect, Cardmath ensures that sensitive financial
+                information is handled securely and that users have control over their data.
+                Cardmath commits to never selling user data to third parties, and users
+                retain full rights to their information, deciding how it is utilized.
+            </p>
+            <Button
+                label="Connect Bank Account"
+                onClick={openTellerConnect}
+                disabled={!tellerConnectReady}
+                size="large"
+            />
+        </div>
+    );
+
     return (
         <div>
             <div className="flex pt-6 pb-2 text-white font-bold text-6xl">
@@ -210,30 +218,7 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
                     </p>
                 </div>
             )}
-            {!scriptLoadError && !showSpinner && !processingError && (
-                <div className="flex flex-column align-items-center">
-                    <p className="text-2xl">
-                        Cardmath utilizes Teller Connect to securely link users' bank accounts,
-                        ensuring that only transaction data is accessed. Teller Connect is a
-                        client-side UI component that facilitates the connection between users'
-                        financial accounts and applications like Cardmath. It manages credential
-                        validation, multi-factor authentication, account selection, and error
-                        handling for various financial institutions.
-                    </p>
-                    <p className="text-2xl">
-                        By integrating Teller Connect, Cardmath ensures that sensitive financial
-                        information is handled securely and that users have control over their data.
-                        Cardmath commits to never selling user data to third parties, and users
-                        retain full rights to their information, deciding how it is utilized.
-                    </p>
-                    <Button
-                        label="Connect Bank Account"
-                        onClick={openTellerConnect}
-                        disabled={!tellerConnectReady}
-                        size="large"
-                    />
-                </div>
-            )}
+            {!scriptLoadError && !showSpinner && <TellerInfo />}
             {showSpinner && !processingError && (
                 <div className="flex flex-column justify-content-center">
                     <div className="flex align-content-evenly justify-content-center mt-4">

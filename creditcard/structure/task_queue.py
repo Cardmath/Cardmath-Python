@@ -52,7 +52,8 @@ def process_task_queue(db: Session):
         db.delete(task)
         
     except Exception as e:
-        raise e
+        db.delete(task)
+
     
 def pop_task_queue(db: Session) -> Optional[Tuple[CreditCardSource, CreditCard, UpdateableSourceColumns, Optional[dict], CreditCardUpdateTaskQueue]]:
     """

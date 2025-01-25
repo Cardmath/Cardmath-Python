@@ -1,14 +1,14 @@
 from collections import defaultdict
+from datetime import date, timedelta
 from database.auth.user import Account
 from database.auth.user import User, Onboarding
-from typing import Union
-from database.teller.transactions import Transaction
-from insights.schemas import HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema, MonthlyTimeframe, VENDOR_CONST, CATEGORY_CONST
+from database.teller.transactions import MockHeavyHitter, Transaction
+from insights.schemas import CategorizationProgressSummary, HeavyHittersRequest, HeavyHittersResponse, HeavyHitterSchema, MonthlyTimeframe, VENDOR_CONST, CATEGORY_CONST
 from insights.utils import get_user_cc_eligible_transactions, CCEligibleTransactionsResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from teller.schemas import TransactionSchema
-from typing import List
-from typing import Union
+from typing import List, Union, Optional
 
 import creditcard.enums as enums
 import teller.utils as teller_utils
@@ -90,6 +90,10 @@ class TwoPassHeavyHitters:
         return {item: ("{:.2f}%".format(round(amount / total, 4) * 100), amount) for item, amount in exact_amounts.items() if amount >= threshold}
 
 async def read_heavy_hitters(db: Session, user : Union[User , Onboarding], request : HeavyHittersRequest) -> HeavyHittersResponse:
+        
+        if isinstance(user, User) and only_has_mock_txns(user=user):
+            return get_mock_heavy_hitters_response(db=db,user_id=user.id)
+
         teller_client = teller_utils.Teller() 
         accounts = None
         if isinstance(user, User):
@@ -136,3 +140,62 @@ def get_transaction_category_and_vendor(transaction: Union[Transaction, Transact
 
 def get_transaction_amount(transaction: Union[Transaction, TransactionSchema]) -> float:
     return abs(transaction.amount)
+
+def get_mock_heavy_hitters_response(db: Session, user_id: Optional[int] = None, onboarding_id: Optional[int] = None) -> HeavyHittersResponse:
+    # Calculate the total using a subquery
+    if onboarding_id:
+        total_query = (
+            db.query(func.sum(MockHeavyHitter.amount))
+            .filter(MockHeavyHitter.onboarding_id == onboarding_id)
+            .scalar()
+        )
+        heavy_hitters_query = (
+            db.query(MockHeavyHitter)
+            .filter(MockHeavyHitter.onboarding_id == onboarding_id)
+            .all()
+        )
+    elif user_id:
+        total_query = (
+            db.query(func.sum(MockHeavyHitter.amount))
+            .filter(MockHeavyHitter.user_id == user_id)
+            .scalar()
+        )
+        heavy_hitters_query = (
+            db.query(MockHeavyHitter)
+            .filter(MockHeavyHitter.user_id == user_id)
+            .all()
+        )
+    else:
+        raise ValueError("Either user_id or onboarding_id is required")
+
+    total = total_query if total_query else 0
+    today = date.today()
+    last_month = today - timedelta(days=32)
+
+    # Parse database rows into HeavyHitterSchema instances
+    heavy_hitters = [
+        HeavyHitterSchema(
+            type=hh.type,
+            name=hh.name,
+            category=hh.category,
+            percent=f"{round(hh.amount / total, 2)}%" if total > 0 else "0%",
+            amount=hh.amount
+        )
+        for hh in heavy_hitters_query
+    ]
+
+    # Return the HeavyHittersResponse
+    return HeavyHittersResponse(
+        total=total,
+        heavyhitters=heavy_hitters,
+        timeframe=MonthlyTimeframe(start_month=last_month, end_month=today),
+        categorization_progress_summary=CategorizationProgressSummary(
+            categorized_cc_eligible_count=len(heavy_hitters)
+        ),
+    )
+
+def only_has_mock_txns(user: User):
+    if len(user.enrollments) == 0:
+         return True
+    return False
+    

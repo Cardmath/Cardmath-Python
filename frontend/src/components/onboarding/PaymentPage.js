@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 const PaymentForm = ({ preferredAccount }) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [amount] = useState("99.99"); // Fixed amount for the service
+  const [amount] = useState("0.00"); // Fixed amount for the service
   const [paymentError, setPaymentError] = useState(null);
   const [tellerConnectToken, setTellerConnectToken] = useState('');
   const [tellerConnectReady, setTellerConnectReady] = useState(false);
@@ -18,6 +18,7 @@ const PaymentForm = ({ preferredAccount }) => {
 
   const handleError = (message) => {
     setPaymentError(message);
+    setIsProcessing(false);
     confirmDialog({
       header: 'Payment Error',
       message,
@@ -66,10 +67,28 @@ const PaymentForm = ({ preferredAccount }) => {
     };
   }, []);
 
+
+  const handleStripeCheckout = async (product) => {
+    await refreshAccessToken();
+    const response = await fetchWithAuth(
+        `${getBackendUrl()}/create_checkout_session`,
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ product: product }),
+        }
+    );
+
+    const data = await response.json();
+    window.location.href = data.url;
+  }; 
+
   const handleZellePayment = async () => {
     setIsProcessing(true);
     setPaymentError(null);
-
+    await refreshAccessToken();
     try {
       const paymentResponse = await fetchWithAuth(
         `${getBackendUrl()}/initiate-zelle-payment`,
@@ -101,6 +120,7 @@ const PaymentForm = ({ preferredAccount }) => {
       console.error('Payment error:', error);
       handleError(error.message || 'Failed to process payment');
     }
+    navigate("/dashboard")
   };
 
   const handleSuccess = async (tellerResponse) => {
@@ -122,7 +142,6 @@ const PaymentForm = ({ preferredAccount }) => {
       throw new Error('Zelle payment unable to be verified');
     }
     console.log("Zelle payment verified successfully");
-    refreshAccessToken();
   };
 
   const refreshAccessToken = async () => {
@@ -144,7 +163,6 @@ const PaymentForm = ({ preferredAccount }) => {
     
     console.log("New token is", token)
     localStorage.setItem('cardmath_access_token', token);
-    navigate("/dashboard")
   }
 
   if (isProcessing) {
@@ -176,13 +194,12 @@ const PaymentForm = ({ preferredAccount }) => {
         
         <div className="border-top-1 surface-border pt-3">
           <div className="text-white-alpha-70 mb-3">
-            Pay securely using Zelle
+            Pay securely using {preferredAccount.preferred == -1 ? 'Credit Card' : 'Zelle'}
           </div>
           
-          <Button 
-            label="Pay with Zelle"
-            icon="pi pi-check"
-            onClick={handleZellePayment}
+          <Button
+            label={`Pay with ${preferredAccount.preferred === -1 ? 'Credit Card' : 'Zelle'}`}
+            onClick={preferredAccount.preferred == -1 ? () => handleStripeCheckout('beta') : handleZellePayment}
             className="w-full"
             disabled={!tellerConnectReady}
           />

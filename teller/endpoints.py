@@ -6,7 +6,7 @@ from database.creditcard.creditcard import CreditCard
 from database.teller.crud import replace_preferences
 from datetime import datetime
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.orm import aliased, Session
 from teller.schemas import AccessTokenSchema, PreferencesSchema
 from teller.utils import Teller, update_user_credit_cards, read_user_new_enrollment
@@ -51,35 +51,41 @@ def read_user_wallets(db: Session, user: User) -> List[WalletSchema]:
 
     wallets = []
     for wallet in user.wallets:
-        cards_in_wallet = []
-
-        # Use an alias to join the CreditCard and the association table fields
-        card_alias = aliased(CreditCard)
+        # Join wallet_card_association with credit_cards table
         stmt = (
             select(
                 wallet_card_association.c.is_held,
                 wallet_card_association.c.wallet_id,
-                wallet_card_association.c.credit_card_id,
-                card_alias
+                wallet_card_association.c.credit_card_name,
+                wallet_card_association.c.credit_card_issuer,
+                wallet_card_association.c.credit_card_network,
+                CreditCard
             )
-            .join(card_alias, wallet_card_association.c.credit_card_id == card_alias.id)
+            .join(
+                CreditCard,
+                and_(
+                    wallet_card_association.c.credit_card_name == CreditCard.name,
+                    wallet_card_association.c.credit_card_issuer == CreditCard.issuer,
+                    wallet_card_association.c.credit_card_network == CreditCard.network
+                )
+            )
             .where(wallet_card_association.c.wallet_id == wallet.id)
         )
 
         results = db.execute(stmt).fetchall()
 
-        # Populate CardInWalletSchema for each card in the wallet
-        for row in results:
-            cards_in_wallet.append(
-                CardInWalletSchema(
-                    is_held=row.is_held == "held",
-                    credit_card_id=row.credit_card_id,
-                    wallet_id=row.wallet_id,
-                    card=row[3]  # the CreditCard object
-                )
+        cards_in_wallet = [
+            CardInWalletSchema(
+                is_held=row.is_held,
+                ccname=row.credit_card_name,
+                ccissuer=row.credit_card_issuer,
+                ccnetwork=row.credit_card_network,
+                wallet_id=row.wallet_id,
+                card=row.CreditCard
             )
+            for row in results
+        ]
 
-        # Populate WalletSchema with cards
         wallets.append(
             WalletSchema(
                 id=wallet.id,
@@ -92,7 +98,7 @@ def read_user_wallets(db: Session, user: User) -> List[WalletSchema]:
 
     return wallets
 
-def ingest_user_wallet(user: User, db: Session, wallet: WalletsIngestRequest) -> WalletSchema:
+def ingest_user_wallet(user: User, db: Session, wallet: WalletsIngestRequest):
     # Validate and fetch each credit card by name and issuer
     valid_cards = []
     for card in wallet.cards:
@@ -120,28 +126,6 @@ def ingest_user_wallet(user: User, db: Session, wallet: WalletsIngestRequest) ->
     # Commit the final wallet and card association
     db.commit()
     db.refresh(new_wallet)
-
-    # Convert the new_wallet to WalletSchema for response with CardInWalletSchema details
-    card_in_wallet_schemas = [
-        CardInWalletSchema(
-            is_held=False,  # Or set based on your logic
-            credit_card_id=db_card.id,
-            wallet_id=new_wallet.id,
-            card=db_card  # Populate with the full card details
-        )
-        for db_card in valid_cards
-    ]
-
-    # Prepare the response as WalletSchema with CardInWalletSchema cards
-    wallet_schema = WalletSchema(
-        id=new_wallet.id,
-        name=new_wallet.name,
-        last_edited=new_wallet.last_edited,
-        is_custom=new_wallet.is_custom,
-        cards=card_in_wallet_schemas  # Now this list contains CardInWalletSchema instances
-    )
-
-    return wallet_schema
 
 def edit_wallet(request: WalletUpdateRequest, db: Session, current_user):
     # Find the wallet by ID and ensure it belongs to the current user

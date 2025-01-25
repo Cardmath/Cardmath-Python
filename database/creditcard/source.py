@@ -1,8 +1,7 @@
 from database.sql_alchemy_db import Base
 from enum import StrEnum
-from sqlalchemy import Column, ForeignKeyConstraint, event, DDL
+from sqlalchemy import Column, ForeignKeyConstraint
 from sqlalchemy.dialects.postgresql import TEXT, ENUM, DATE, ARRAY, INTEGER
-from sqlalchemy.inspection import inspect
 
 class CreditCardSource(Base):
     __tablename__ = "credit_cards_source"

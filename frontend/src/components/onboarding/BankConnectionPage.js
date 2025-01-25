@@ -1,17 +1,36 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from 'primereact/button';
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
-import './LoadingQuestions.css';
+import { InputTextarea } from 'primereact/inputtextarea';
 import { InputText } from 'primereact/inputtext';
+import './LoadingQuestions.css';
 
-const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, onSelect, handleEnrollment, solution, dateRange, contactInfo, accounts, preferredAccount, setPreferredAccount}) => {
+const BankConnectionForm = ({ 
+  handlePrimaryEmail, 
+  onSelect, 
+  handleEnrollment,
+  handleBioSubmit, 
+  solution, 
+  dateRange, 
+  contactInfo, 
+  accounts, 
+  preferredAccount, 
+  setPreferredAccount,
+  setUserBio // New prop for setting user bio
+}) => {
   const [tellerConnectReady, setTellerConnectReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isEmailTaken, setIsEmailTaken] = useState(false);
+  const [isEmailProcessed, setIsEmailProcessed] = useState(false);
   const [primaryEmail, setPrimaryEmail] = useState("");
   const [formsComplete, setFormsComplete] = useState(false);
+  const [showBioInput, setShowBioInput] = useState(false);
+  const [userBioText, setUserBioText] = useState('');
+  const [charCount, setCharCount] = useState(0);
+  const CHAR_MIN = 100;
   const [formData, setFormData] = useState({
-    primaryEmail: "", 
-    paymentMethods: "", // Either Google Pay or Apple Pay
+    primaryEmail: "",
+    paymentMethods: "",
     creditKnowledge: ""
   });
   const tellerConnectRef = useRef(null);
@@ -24,6 +43,20 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, onSelect, hand
       accept: () => setIsProcessing(false)
     });
   };
+
+  const submitPrimaryEmail = (primaryEmail) => {  
+    handlePrimaryEmail(primaryEmail)
+      .then((response) => {
+        if (response.ok) {
+          console.log('Primary email handled successfully');
+          setIsEmailProcessed(true)
+        } else {
+          console.error('Email is taken');
+          setIsEmailTaken(true);  
+        }
+      });
+  };
+  
 
   const openTellerConnect = () => {
     if (tellerConnectRef.current) tellerConnectRef.current.open();
@@ -40,10 +73,10 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, onSelect, hand
   };
 
   useEffect(() => {
-    if (formData.paymentMethods.length > 0) {
-      setFormsComplete(true)
+    if (formData.paymentMethods.length > 0 && formData.creditKnowledge?.length > 0) {
+      setFormsComplete(true);
     }
-  }, [formData])
+  }, [formData]);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -57,15 +90,7 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, onSelect, hand
           products: ['transactions'],
           onInit: () => setTellerConnectReady(true),
           onSuccess: handleSuccess,
-          onExit: () => {
-            confirmDialog({
-              header: 'Connection Cancelled',
-              message: 'You have closed the bank connection window. Would you like to try again?',
-              icon: 'pi pi-exclamation-triangle',
-              accept: () => openTellerConnect(),
-              reject: () => null
-            });
-          }
+          onExit: () => {}
         });
         tellerConnectRef.current = tellerConnect;
       }
@@ -79,6 +104,69 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, onSelect, hand
       }
     };
   }, []);
+
+  const handleGenerateMock = () => {
+    setShowBioInput(true);
+  };
+
+  if (showBioInput) {
+    return (
+      <div className="flex flex-column gap-4">
+        <div className="question-animate">
+          <p className="text-lg mb-4">
+            Please describe your typical monthly spending patterns and transactions
+          </p>
+          <div className="flex flex-column gap-2">
+            <InputTextarea
+              value={userBioText}
+              onChange={(e) => {
+                setUserBioText(e.target.value);
+                setCharCount(e.target.value.length);
+              }}
+              rows={5}
+              className={`w-full ${charCount < CHAR_MIN ? 'p-invalid' : ''}`}
+              placeholder="Enter your transaction details here (minimum 100 characters)..."
+            />
+            <div className="flex justify-content-between mt-2 text-sm">
+              <span className={charCount < CHAR_MIN ? 'text-red-500' : ''}>
+                {charCount} / {CHAR_MIN} characters
+              </span>
+              {charCount < CHAR_MIN && (
+                <span>
+                  Please enter at least {CHAR_MIN} characters
+                </span>
+              )}
+            </div>
+            <div className="flex gap-2 mt-2">
+              <Button
+                label="Cancel"
+                icon="pi pi-times"
+                onClick={() => {
+                  setShowBioInput(false);
+                  setUserBioText('');
+                  setCharCount(0);
+                }}
+                className="w-6"
+                severity="secondary"
+              />
+              <Button
+                label="Submit"
+                icon="pi pi-check"
+                onClick={() => {
+                  handleBioSubmit(userBioText);
+                  setShowBioInput(false);
+                  setIsProcessing(true);
+                }}
+                className="w-6"
+                disabled={userBioText.trim().length < CHAR_MIN}
+              />
+            </div>
+          </div>
+        </div>
+        <ConfirmDialog />
+      </div>
+    );
+  }
 
   if (!isProcessing) {
     return (
@@ -94,22 +182,24 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, onSelect, hand
           disabled={!tellerConnectReady}
           className="w-full"
         />
+        <Button 
+          label="Generate mock transactions"
+          icon="pi pi-lightbulb"
+          onClick={handleGenerateMock}
+          className="w-full"
+        />
         <ConfirmDialog />
       </div>
     );
-    }
+  }
   {/* Only showing the relevant solutions display section for brevity */}
   if (solution && dateRange && formsComplete) {
     return (
       <div className="flex flex-column gap-4">
         <div className="continue-animate">
           <div className="text-2xl font-medium mb-3 text-white">
-            Here's your optimal card allocation
+            Here's your optimal card allocation from {dateRange.start_month} to {dateRange.start_month}
           </div>
-          <div className="text-base mb-4 text-white-alpha-70">
-            from {dateRange.start_month} to {dateRange.start_month}
-          </div>
-          
           <div className="bg-black-alpha-70 p-4 border-round mb-3">
             <div className="flex align-items-center gap-3 mb-3">
               <i className="pi pi-dollar text-primary text-2xl"></i>
@@ -157,16 +247,22 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, onSelect, hand
   return (
     <div className="flex flex-column gap-4">
       <div className="question-animate">
-        <div className="flex align-items-center gap-3 mb-4">
-          <i className="pi pi-sync pi-spin text-xl text-blue-500"></i>
-          <div>
-            <div className="font-medium">Analyzing your transactions</div>
-            <div className="text-sm text-gray-300">Processing your spending patterns</div>
-          </div>
+          <div className="flex align-items-center gap-3 mb-4">
+            {!solution ? (
+              <i className="pi pi-sync pi-spin text-xl text-blue-500" />
+            ) : (
+              <i className="pi pi-check text-xl " />
+            )}
+            <span className="ml-2">
+              {solution ? 'Analysis Complete!' : 'Analyzing your transactions...'}
+            </span>
         </div>
 
-        {!emailProcessed && (
+        {!isEmailProcessed && (
           <div className="mb-4">
+            <p className="text-lg">
+              <span className="underline">A detailed breakdown of your transactions we've analyzed will be available at the bottom of your dashboard</span>.
+            </p>
             <p className="text-lg mb-2">
               Please select a primary email to associate with your Cardmath account
             </p>
@@ -185,19 +281,29 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, onSelect, hand
               </small>
               <Button
                 label="Submit Chosen Email"
-                onClick={() => handlePrimaryEmail(primaryEmail)}
+                onClick={() => submitPrimaryEmail(primaryEmail)}
                 className='mt-3'
               />
+              {isEmailTaken && 
+              <small className="text-red-800">
+                This email is taken.
+              </small>}
             </div>
           </div>
         )}
 
-        {emailProcessed && (!preferredAccount.confirmed) && (
+        {isEmailProcessed && (!preferredAccount.confirmed) && (
           <div className="mb-4">
             <p className="text-lg mb-2">
               Please select a primary payment account
             </p>
             <div className="flex flex-column gap-2">
+              <Button
+                key={-1}
+                label={'Pay with Credit Card'}
+                className={`p-button ${preferredAccount.preferred === -1 ? 'selected' : ''}`}
+                onClick={() => setPreferredAccount(prev => ({...prev, preferred: -1}))}
+              />
               {accounts && 
                 Object.entries(accounts).map(([id, name]) => (
                   <Button
@@ -209,7 +315,7 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, onSelect, hand
                 ))
               }
               <Button
-                label="Submit Preferred Payment Account"
+                label="Submit Preferred Payment Method"
                 onClick={() => setPreferredAccount(prev => ({...prev, confirmed: true}))}
                 className="mt-3"
                 disabled={!preferredAccount.preferred}
@@ -218,7 +324,7 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, onSelect, hand
           </div>
         )}
 
-        {emailProcessed && preferredAccount.confirmed && !formData.paymentMethods.length && (
+        {isEmailProcessed && preferredAccount.confirmed && !formData.paymentMethods.length && (
           <div className="mb-4">
             <p className="text-lg mb-2">While we analyze your transactions, do you use any of these?</p>
             <div className="flex flex-column gap-2">
@@ -266,8 +372,7 @@ const BankConnectionForm = ({ handlePrimaryEmail, emailProcessed, onSelect, hand
 };
 
 const BankConnectionPage = {
-  title: "Let's connect your bank account",
-  content: "This helps us analyze your spending and recommend the best cards",
+  title: "Let's analyze your transactions!",
   primaryColor: 'var(--onb-green)',
   secondaryColor: 'var(--onb-cyan)',
   additionalContent: BankConnectionForm

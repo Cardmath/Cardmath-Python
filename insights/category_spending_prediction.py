@@ -26,7 +26,7 @@ async def get_average_monthly_purchases_three_months(user: Union[User, Onboardin
         accounts: List[Account] = teller_client.get_list_enrollments_accounts(enrollments=user.enrollments, db=db)
     elif isinstance(user, Onboarding):
         accounts: List[Account] = teller_client.get_enrollment_accounts(enrollment=user.enrollment, db=db)
-    else :
+    else:
         raise Exception(f"User is not of type User or Onboarding. Type: {type(user)}")
 
     if len(accounts) == 0:

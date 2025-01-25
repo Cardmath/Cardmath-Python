@@ -64,7 +64,7 @@ const AnimatedHero = () => {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center', 
-      width: '50%',
+      width: window.innerWidth < 768 ? '100%' : '50%',
       height: '400px',    
       zIndex: 3
     },    
@@ -89,7 +89,7 @@ const AnimatedHero = () => {
       textAlign: 'center',
       marginLeft: 'auto',
       marginRight: 'auto',
-      transform: `translate(0%, ${showBackground ? '-100px' : '0'})`,
+      transform: `translate(0%, ${window.innerWidth < 768 ? '-3rem' : '-7rem'})`,
       opacity: showBackground ? 1 : 0,
       transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
       transitionDelay: '0.3s',
@@ -121,12 +121,11 @@ const AnimatedHero = () => {
       transition: 'opacity 0.5s ease-out',
     },
     logo: {
-      fontSize: '85px',
+      fontSize: window.innerWidth < 768 ? '40 px' : '85px',
       fontFamily: 'DM Sans',
       fontWeight: 700,
       display: 'inline-block',
-      transform: showBackground ? 'translateY(-190px) scale(1.8)' : 'translateY(0) scale(1)',
-      transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      transform: showBackground ? `translateY(-${window.innerWidth < 768 ? '5rem' : '10rem'}) scale(1.8)` : 'translateY(0) scale(1)',      transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
       animation: showBackground ? 'aura 15s linear infinite' : 'none',
       backgroundImage: showBackground ? `
         radial-gradient(transparent 0, transparent 5%),
@@ -215,7 +214,7 @@ const AnimatedHero = () => {
       <div style={styles.overlay}/>
       <div style={styles.container}>
             <span style={{...styles.textLine, ...styles.firstMessage}}>
-              You'll probably exceed <span style={styles.amount}>${count.toLocaleString()}</span> spend with credit cards in your lifetime.
+              You'll probably spend more than <span style={styles.amount}>${count.toLocaleString()}</span> with credit cards in your lifetime.
             </span>
             <span style={{...styles.textLine, ...styles.secondMessage}}>
               Spending with the right cards could save you <span style={styles.amount}>${savingsCount.toLocaleString()}</span> or more.
@@ -233,7 +232,7 @@ const AnimatedHero = () => {
               </div>
             </span>
             <div className='text-500' style={{fontFamily: 'Inter', opacity: showBackground ? '90%' : '0%', position: 'absolute', top: '20vh', fontFamily: 'Source Sans Pro, sans-serif'}}> 
-              <p className='text-xl flex flex-row text-italic'> Our founders previously worked at: </p>
+              <p className='xl:text-xl sm:text-lg flex flex-row text-italic'> Our founders previously worked at: </p>
               <div className='text-4xl pi flex flex-row justify-content-center gap-5'>
                 <span className='pi-amazon'/>
                 <span className='pi-google'/>

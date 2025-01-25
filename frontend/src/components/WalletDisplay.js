@@ -145,7 +145,7 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
         const { card, is_held } = cardInWallet;
         return (
             <div className="flex justify-content-center">
-                <div className="w-full text-center shadow-1 border-round surface-card overflow-hidden p-3">
+                <div className="w-full text-center shadow-1 border-round bg-gray-800 overflow-hidden p-3">
                     <div 
                         className="text-xl font-bold mb-1 overflow-hidden text-overflow-ellipsis"
                         style={{
@@ -172,12 +172,12 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
     }
 
     return (
-        <div className="flex flex-wrap gap-4 justify-content-start p-4">
+        <div className="flex flex-wrap gap-4 justify-content-start p-4 bg-gray-800">
             <ConfirmDialog />
 
             {/* Create New Wallet Button */}
             <div 
-                className="flex flex-column align-items-center justify-content-center p-5 w-3 shadow-3 cursor-pointer surface-200 border-round" 
+                className="flex flex-column align-items-center justify-content-center p-5 w-3 shadow-3 cursor-pointer bg-gray-500 border-round" 
                 onClick={() => openDialog()}
             >
                 <i className="pi pi-plus text-4xl text-blue-500 mb-2"></i>
@@ -257,7 +257,7 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
                     </div>
                 }
             >
-                <span className="p-float-label mb-3">
+                <span className="p-float-label my-3">
                     <InputText
                         id="walletName"
                         value={walletName}
@@ -267,6 +267,12 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
                 </span>
                 
                 <PickList
+                    filter
+                    filterBy="name"
+                    sourceHeader="All Credit Cards"
+                    targetHeader="Chosen Credit Cards for New Wallet"
+                    sourceFilterPlaceholder="Search by name"
+                    targetFilterPlaceholder="Search by name"
                     source={availableCards || []}
                     target={newWalletCards || []}
                     onChange={onChangePickList}
@@ -276,8 +282,6 @@ const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptim
                             <small>{card.issuer}</small>
                         </div>
                     )}
-                    sourceHeader="Available Cards"
-                    targetHeader="Selected Cards"
                     showSourceControls
                     showTargetControls
                 />

@@ -17,7 +17,7 @@ const CreditCardItemTemplate = ({ cardData, sizingCss = "h-4 w-4" }) => {
     // Define status messages and colors
     const statusStyles = {
         "Keep this card": "text-green-600",
-        "Cancel this card": "text-red-600",
+        "Leave at home": "text-red-600",
         "Add this card": "text-blue-600",
     };
 

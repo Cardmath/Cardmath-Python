@@ -4,12 +4,15 @@ from insights.optimal_cards.r_matrix import compute_r_matrix
 from insights.optimal_cards.solution_extraction import extract_solution
 from insights.schemas import OptimalCardsAllocationRequest, OptimalCardsAllocationResponse, RMatrixDetails
 from insights.utils import hamming_distance
+from insights.heavyhitters import get_mock_heavy_hitters_response, only_has_mock_txns
 from sqlalchemy.orm import Session
 from typing import Union
 
-
 async def optimize_credit_card_selection_milp(db: Session, user: Union[User, Onboarding], request: OptimalCardsAllocationRequest) -> OptimalCardsAllocationResponse:
-    # Step 1: Compute the reward matrix
+
+    if isinstance(user, User) and only_has_mock_txns(user=user):
+        request.heavy_hitters_response_override = get_mock_heavy_hitters_response(db=db, user_id=user.id)
+
     rmatrix: RMatrixDetails = await compute_r_matrix(db=db, user=user, request=request)
     
     if not rmatrix:

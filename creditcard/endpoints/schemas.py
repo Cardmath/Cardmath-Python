@@ -37,7 +37,9 @@ class CreditCardsDatabaseRequest(BaseModel):
 
 class CardInWalletSchema(BaseModel):
     is_held : bool
-    credit_card_id: int
+    ccname: str
+    ccissuer: str
+    ccnetwork: str
     wallet_id: Optional[int]
     card : CreditCardSchema
 

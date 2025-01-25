@@ -1,7 +1,6 @@
 from auth.onboarding import create_onboarding_token, OnboardingSavingsRequest, get_onboarding_recommendation, ingest_primary_email, IngestOnboardingPrimaryEmailRequest, get_current_onboarding, get_onboarding_user_token
-from auth.recovery import request_password_recovery, PasswordResetForm, reset_password, PasswordResetRequest, create_email_verification_token, send_verification_email, verify_email
-from auth.schemas import Token
-from auth.schemas import UserCreate
+from auth.recovery import request_password_recovery, PasswordResetForm, reset_password, PasswordResetRequest, create_email_verification_token, send_verification_email_link, handle_verification_link_clicked
+from auth.schemas import Token, UserCreate, UserOnboarding
 from auth.secrets import load_essential_secrets
 from chat.endpoint import chat 
 from chat.schemas import ChatRequest
@@ -34,8 +33,10 @@ from teller.schemas import AccessTokenSchema, PreferencesSchema
 from typing import Annotated
 import auth.utils as auth_utils
 import database.auth.crud as auth_crud
+import database.creditcard
 import teller.endpoints as teller_endpoints
 
+import stripe
 import logging
 import os
 
@@ -44,6 +45,7 @@ async def lifespan(app: FastAPI):
     CacheContext.initialize(cache_ttl_seconds=3600)
     load_dotenv(override=True)
     load_essential_secrets()
+    stripe.api_key = os.getenv('STRIPE_API_KEY')
     Base.metadata.create_all(bind=sync_engine)
     yield
     CacheContext.clear()
@@ -105,7 +107,7 @@ async def register_for_access_token(
     BASE_URL = "cardmath.ai" if os.getenv("ENVIRONMENT", "prod") == "prod" else "localhost:3000"
     verification_link = f"https://{BASE_URL}/registration-steps?token={token}"
     
-    send_verification_email(user.email, verification_link)
+    send_verification_email_link(user.email, verification_link)
     
     access_token_expires = timedelta(minutes=auth_utils.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth_utils.create_access_token(
@@ -118,11 +120,11 @@ async def retry_email_verification_endpoint(user: User = Depends(auth_utils.get_
     token = create_email_verification_token(user.email)
     BASE_URL = "cardmath.ai" if os.getenv("ENVIRONMENT", "prod") == "prod" else "localhost:3000"
     verification_link = f"https://{BASE_URL}/registration-steps?token={token}"
-    return await send_verification_email(user.email, verification_link)
+    return await send_verification_email_link(user.email, verification_link)
 
 @app.get("/verify-email")
 async def verify_email_endpoint(token: str, db: Session = Depends(get_sync_db)):
-    return await verify_email(token=token, db=db)
+    return await handle_verification_link_clicked(token=token, db=db)
 
 @app.post("/process_new_enrollment")
 def process_new_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
@@ -133,7 +135,8 @@ def process_new_enrollment(current_user: Annotated[User, Depends(auth_utils.get_
 def receive_teller_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                  access_token: AccessTokenSchema,
                  db: Session = Depends(get_sync_db)):
-    return teller_endpoints.receive_teller_enrollment(db=db, access_token=access_token, user=current_user) 
+    teller_endpoints.receive_teller_enrollment(db=db, access_token=access_token, user=current_user) 
+    return teller_endpoints.process_new_enrollment(user=current_user, db=db) 
 
 @app.post("/save_user_preferences")
 def ingest_user_preferences(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
@@ -177,7 +180,7 @@ async def read_user_wallets_endpoint(current_user: Annotated[User, Depends(auth_
 
 @app.post("/ingest_user_wallet")
 async def ingest_user_wallet_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)], 
-                   wallet: WalletsIngestRequest, db: Session = Depends(get_sync_db)) -> WalletSchema:
+                   wallet: WalletsIngestRequest, db: Session = Depends(get_sync_db)) -> None:
     return teller_endpoints.ingest_user_wallet(wallet=wallet, user=current_user, db=db)
 
 @app.post("/delete_user_wallet")
@@ -211,7 +214,7 @@ async def stripe_webhook_endpoint(request: Request , db: Session = Depends(get_s
 
 @app.post("/password-recovery-email")
 async def request_password_recovery_endpoint(request: PasswordResetRequest, db: Session = Depends(get_sync_db)):
-    return await request_password_recovery(email=request.email, db=db)
+    return request_password_recovery(email=request.email, db=db)
 
 @app.post("/reset-password")
 async def reset_password_endpoint(form_data: PasswordResetForm, db: Session = Depends(get_sync_db)):
@@ -222,8 +225,8 @@ async def delete_user_data_endpoint(current_user: Annotated[User, Depends(auth_u
     return auth_crud.delete_user_data(user=current_user, db=db)
 
 @app.post("/process-onboarding-enrollment")
-async def process_onboarding_complete_endpoint(teller_connect_response: AccessTokenSchema, answers: dict, db: Session = Depends(get_sync_db)):
-    return await create_onboarding_token(db=db, teller_connect_response=teller_connect_response, answers=answers) 
+def process_onboarding_complete_endpoint(answers: UserOnboarding, db: Session = Depends(get_sync_db), teller_connect_response: Optional[AccessTokenSchema] = None):
+    return create_onboarding_token(db=db, teller_connect_response=teller_connect_response, answers=answers) 
 
 @app.post("/compute-onboarding-savings")
 async def compute_onboarding_savings_endpoint( request: OnboardingSavingsRequest, onboarding: Annotated[Onboarding, Depends(get_current_onboarding)], db: Session = Depends(get_sync_db)):
@@ -244,6 +247,10 @@ def validate_zelle_payment_endpoint(request: ZellePaymentVerficationRequest, onb
 @app.post("/get-onboarding-user-token")
 def get_onboarding_user_token_endpoint(onboarding: Annotated[Onboarding, Depends(get_current_onboarding)]):
     return get_onboarding_user_token(onboarding=onboarding)
+
+@app.post("/get-onboarding-tts")
+def get_onboarding_tts_endpoints():
+    pass
 
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest) -> StreamingResponse:

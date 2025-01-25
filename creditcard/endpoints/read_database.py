@@ -23,8 +23,17 @@ async def read_credit_cards_database(
     if request.max_num is None:
         request.max_num = 1000
 
-    query = db.query(CreditCard)
-
+    query = db.query(CreditCard).filter(
+        CreditCard.reward_category_map.isnot(None),
+        CreditCard.primary_reward_unit.isnot(None),
+        CreditCard.sign_on_bonus.isnot(None),
+        CreditCard.annual_fee.isnot(None),
+        CreditCard.statement_credit.isnot(None),
+        CreditCard.benefits.isnot(None),
+        CreditCard.apr.isnot(None),
+        CreditCard.credit_needed.isnot(None),
+        CreditCard.keywords.isnot(None)
+    )
     if request.use_preferences and current_user:
         preferences: PreferencesSchema = PreferencesSchema()
         if isinstance(current_user, User): 

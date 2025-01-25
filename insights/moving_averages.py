@@ -54,7 +54,7 @@ async def compute_categories_moving_averages(
     df = df.sort_index()
 
     # Step 5: Define window size for rolling average
-    window_size = 30
+    window_size = 4
     rolling_window = f'{window_size}D'  # Use a time-based offset for rolling
 
     # Step 6: Create an empty DataFrame to hold the results with consistent date range

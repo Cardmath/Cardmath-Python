@@ -19,7 +19,7 @@ Nice to meet you, Johannes! We just have three quick questions.
   - **Do you currently carry a balance on any cards?**
     - Yes → **Balance Buster**
     - No → **Balance Buster**
-- D) Luxury Travel & Perks
+- D) Looking for Luxury Travel & Perks
   - **What’s your primary goal with a credit card?**
     - Access premium perks (lounges, concierge, etc.) → **Luxury Seeker**
     - Maximize points for travel → **Travel Hacker**

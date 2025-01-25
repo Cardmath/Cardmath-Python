@@ -1,31 +1,81 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fetchWithAuth } from '../pages/AuthPage';
 import { getBackendUrl } from '../utils/urlResolver';
 import NameInputPage from '../components/onboarding/NameInputPage';
-import PurposePage from '../components/onboarding/PurposeSelectionPage';
-import WalletSizePage from '../components/onboarding/WalletSizePage';
+import PurposePage from '../components/onboarding/PurposePage';
+import PurposeFollowUpPage from '../components/onboarding/PurposeFollowUpPage';
 import IncomePage from '../components/onboarding/IncomePage';
 import CreditScorePage from '../components/onboarding/CreditScorePage';
 import BankConnectionPage from '../components/onboarding/BankConnectionPage';
 import PaymentPage from '../components/onboarding/PaymentPage';
 import "../components/onboarding/onboarding.css";
+import WalletSizePage from '../components/onboarding/WalletSizePage';
+
+const MobileWarning = () => {
+  const navigate = useNavigate();
+  const [countdown, setCountdown] = useState(5);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          navigate('/');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center bg-gray-800">
+      <div className="max-w-md space-y-4">
+        <h1 className="text-2xl font-bold text-white">Mobile Experience Coming Soon</h1>
+        <p className="text-gray-300">
+          Cardmath is not yet optimized for mobile devices. Please check back in a few weeks. 
+          We apologize for any inconvenience caused.
+        </p>
+        <p className="text-sm text-gray-500">
+          Redirecting in {countdown} seconds...
+        </p>
+      </div>
+    </div>
+  );
+};
 
 const OnboardingFlow = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
-    purpose: '',
-    walletSize: '',
+    archetype: '',
+    wallet_size: -1,
     income: '',
-    creditScore: ''
+    credit_score: '',
+    user_bio: ''
   });
+  const [isMobile, setIsMobile] = useState(false);
   const [contactInfo, setContactInfo] = useState(null);
   const [accounts, setAccounts] = useState(null);
   const [preferredAccount, setPreferredAccount] = useState({preferred: null, confirmed: false}); 
-  const [emailProcessed, setEmailProcessed] = useState(false);
   const [solution, setSolution] = useState(null);
   const [dateRange, setDateRange] = useState(null);
   const [computationLoading, setComputationLoading] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    handleTransition(0);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     handleTransition(0);
@@ -45,7 +95,33 @@ const OnboardingFlow = () => {
     setActiveIndex(nextIndex);
   };
 
-  const computeOptimalAllocation = async () => {
+  const handleCheckout = async (product) => {
+    try {
+      const response = await fetchWithAuth(
+        `${getBackendUrl()}/create_checkout_session`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product })
+        }
+      );
+  
+      if (!response.ok) {
+        console.error('Checkout session creation failed');
+        window.location.reload();
+        return;
+      }
+  
+      const data = await response.json();
+      window.location.href = data.url;
+      
+    } catch (error) {
+      console.error('Checkout error:', error);
+      window.location.href = '/dashboard';
+    }
+  };
+
+  const computeOptimalAllocation = async (use_mock) => {
     setComputationLoading(true);
     try {
       const response = await fetchWithAuth(
@@ -56,7 +132,8 @@ const OnboardingFlow = () => {
           body: JSON.stringify({
             answers: {
               num_cards: 4,
-              credit_score: 3
+              credit_score: 3,
+              use_mock: use_mock,
             },
           })
         }
@@ -78,7 +155,38 @@ const OnboardingFlow = () => {
     }
   };
 
-  const handleEnrollment = async (enrollment) => {
+  const handleBioSubmit = async (bio) => {
+    const response = await fetchWithAuth(
+      `${getBackendUrl()}/process-onboarding-enrollment`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teller_connect_response: null,
+          answers: {
+            ...formData,
+            use_mock: true,
+            wallet_size: parseInt(formData.wallet_size, 10), // Ensure integer type
+            user_bio: bio
+          },  
+        }),
+      }
+    );
+    if (!response.ok) throw new Error('Failed to process enrollment');
+    
+    const data = await response.json();
+    
+    // onboarding token necessary to authenticate the session
+    if (!data.token) {
+      throw new Error('No token found in response');
+    }
+    localStorage.setItem('cardmath_access_token', data.token);
+    const solution = await computeOptimalAllocation(true);
+    setSolution(solution.solutions[0]);
+    setDateRange(solution.timeframe);
+  }
+
+  const handleTellerEnrollment = async (enrollment) => {
     try {
       console.log('Processing enrollment:', enrollment);
       const response = await fetchWithAuth(
@@ -97,24 +205,21 @@ const OnboardingFlow = () => {
       
       const data = await response.json();
       
-      // onboarding token necessary to authenticate the session
       if (!data.token) {
         throw new Error('No token found in response');
       }
       localStorage.setItem('cardmath_access_token', data.token);
 
-      // to give the user primary email options
       if (data.contact) {
         setContactInfo(data.contact);
       }
 
-      // To give the user payment account options
       if (data.accounts) {
         setAccounts(data.accounts);
       }
 
       // Compute the recommendation
-      const solution = await computeOptimalAllocation(data.token);
+      const solution = await computeOptimalAllocation(false);
       setSolution(solution.solutions[0]);
       setDateRange(solution.timeframe);
     } catch (error) {
@@ -124,15 +229,18 @@ const OnboardingFlow = () => {
   };
 
   const handleFormSubmit = (field, value, nextIndex) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field && value) {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
     if (nextIndex !== undefined) {
       handleTransition(nextIndex);
     }
   };
 
   const handlePrimaryEmail = async (primary_email) => {
-    const response = await fetchWithAuth(
-    `${getBackendUrl()}/ingest-onboarding-primary-email`,
+    
+      const response = await fetchWithAuth(
+        `${getBackendUrl()}/ingest-onboarding-primary-email`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -142,9 +250,7 @@ const OnboardingFlow = () => {
           }),
         }
       )
-    if (response.ok) {
-      setEmailProcessed(true)
-    }
+      return response
   }
 
   const pages = [
@@ -156,36 +262,43 @@ const OnboardingFlow = () => {
     },
     {
       ...PurposePage,
-      title: `Nice to meet you, ${formData.name}! What can we help you with?`,
       additionalContent: <PurposePage.additionalContent 
         onSelect={(purpose) => handleFormSubmit('purpose', purpose, 2)}
       />
     },
     {
-      ...WalletSizePage,
-      additionalContent: <WalletSizePage.additionalContent 
-        onSelect={(size) => handleFormSubmit('walletSize', size, 3)}
+      ...PurposeFollowUpPage,
+      title: PurposeFollowUpPage.title({ purpose: formData.purpose }),
+      additionalContent: <PurposeFollowUpPage.additionalContent 
+        purpose={formData.purpose}
+        onSelect={(archetype) => handleFormSubmit('archetype', archetype, 3)}
       />
     },
     {
-      ...IncomePage,
-      additionalContent: <IncomePage.additionalContent 
-        onSelect={(income) => handleFormSubmit('income', income, 4)}
+      ...WalletSizePage,
+      additionalContent: <WalletSizePage.additionalContent 
+        onSelect={(size) => handleFormSubmit('wallet_size', size, 4)}
       />
     },
     {
       ...CreditScorePage,
       additionalContent: <CreditScorePage.additionalContent 
-        onSelect={(score) => handleFormSubmit('creditScore', score, 5)}
+        onSelect={(score) => handleFormSubmit('credit_score', score, 5)}
+      />
+    },
+    {
+      ...IncomePage,
+      additionalContent: <IncomePage.additionalContent 
+        onSelect={(income) => handleFormSubmit('income', income, 6)}
       />
     },
     {
       ...BankConnectionPage,
       additionalContent: <BankConnectionPage.additionalContent 
-        onSelect={(score) => handleFormSubmit('contactInfo', contactInfo, 6)}
-        handleEnrollment={handleEnrollment}
+        onSelect={(contactInfo) => handleFormSubmit('contactInfo', contactInfo, 7)}
+        handleEnrollment={handleTellerEnrollment}
+        handleBioSubmit={handleBioSubmit}
         handlePrimaryEmail={handlePrimaryEmail}
-        emailProcessed={emailProcessed}
         solution={solution}
         dateRange={dateRange}
         contactInfo={contactInfo}
@@ -197,11 +310,15 @@ const OnboardingFlow = () => {
     {
       ...PaymentPage,
       additionalContent: <PaymentPage.additionalContent 
-      onPaymentComplete={(score) => handleFormSubmit('creditScore', score, 5)}
-      preferredAccount={preferredAccount}
+        preferredAccount={preferredAccount}
+        handleCheckout={handleCheckout}
       />
     }
   ];
+
+  if (isMobile) {
+    return <MobileWarning />;
+  }
 
   return (
     <div className="onboarding-container">

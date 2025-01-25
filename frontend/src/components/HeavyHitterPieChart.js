@@ -1,23 +1,19 @@
 import React, { useEffect, useRef } from 'react';
 import { Chart } from 'chart.js';
 
-const HeavyHitterPieChart = ({ heavyHitters, dateRange }) => {
-  const chartRef = useRef(null); // Store chart instance
-  const canvasRef = useRef(null); // Store canvas DOM element
+const HeavyHitterPieChart = ({ total, heavyHitters, dateRange }) => {
+  const chartRef = useRef(null);
+  const canvasRef = useRef(null);
 
   useEffect(() => {
-    // Destroy existing chart if it exists to avoid the "canvas already in use" error
     if (chartRef.current) {
       chartRef.current.destroy();
-      chartRef.current = null; // Set to null to fully clear
+      chartRef.current = null;
     }
 
     const ctx = canvasRef.current.getContext('2d');
 
-    // If no data is available, don't attempt to create the chart
-    if (!heavyHitters || heavyHitters.length === 0) {
-      return;
-    }
+    if (!heavyHitters || heavyHitters.length === 0) return;
 
     const filteredHeavyHitters = heavyHitters.filter(element => element.amount > 0);
 
@@ -31,7 +27,6 @@ const HeavyHitterPieChart = ({ heavyHitters, dateRange }) => {
       '#8BC34A'
     ];
 
-    // Create new chart instance
     chartRef.current = new Chart(ctx, {
       type: 'pie',
       data: {
@@ -45,39 +40,63 @@ const HeavyHitterPieChart = ({ heavyHitters, dateRange }) => {
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
         plugins: {
           legend: {
             position: 'top',
+            labels: {
+              color: '#FFFFFF',
+              font: {
+                size: 12
+              }
+            }
           },
           tooltip: {
             callbacks: {
               label: (context) => {
                 const amount = context.raw || 0;
-                return `${context.label}: ${amount}`;
+                return `${context.label}: $${amount.toLocaleString()}`;
               }
             }
           }
         },
         title: {
           display: true,
-          text: 'Heavy Hitters by Category'
-        },
+          text: 'Heavy Hitters by Category',
+          color: '#FFFFFF',
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        }
       }
     });
 
-    // Cleanup function to destroy the chart when component unmounts or data changes
     return () => {
       if (chartRef.current) {
-        chartRef.current.destroy(); // Properly destroy chart
-        chartRef.current = null; // Set to null to avoid lingering references
+        chartRef.current.destroy();
+        chartRef.current = null;
       }
     };
-  }, [heavyHitters, dateRange]); // Effect depends on heavyHitters and dateRange data
+  }, [heavyHitters, dateRange]);
+
+  const startDate = dateRange.start_month;
+  const endDate = dateRange.end_month;
 
   return (
-    <div>
-      <canvas className="min-h-30rem" ref={canvasRef}></canvas> {/* Canvas is rendered */}
+    <div className="bg-gray-800">
+      <div className="h-[30rem]">
+        <canvas ref={canvasRef}></canvas>
+      </div>
+      <div className="text-center mt-4 text-white">
+        <p className="text-lg font-semibold">
+          Total Credit Card Spending : ${total.toLocaleString()}
+        </p>
+        <p className="text-sm text-gray-400">
+          {startDate} - {endDate}
+        </p>
+      </div>
     </div>
   );
 };

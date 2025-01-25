@@ -1,6 +1,4 @@
-from database.creditcard.creditcard import CreditCard
-from creditcard.schemas import CreditCardSchema
-from database.creditcard.source import CreditCardSource
+from database.creditcard import CreditCard
 from sqlalchemy.orm import Session
 from typing import List
 

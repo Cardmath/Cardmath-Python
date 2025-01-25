@@ -51,12 +51,12 @@ const SettingsPage = () => {
     };
 
     return (
-        <div className="p-4 gap-4 surface-ground">
+        <div className="p-4 gap-4 ">
             <Toast ref={toast} />
             <ConfirmDialog
                 visible={confirmVisible}
                 onHide={() => setConfirmVisible(false)}
-                message="Are you sure you want to delete your account and all saved data? You can restore your data at any time in the future by simply connecting your bank accounts."
+                message="Are you sure you want to delete your account and all saved data?."
                 header="Confirmation"
                 icon="pi pi-exclamation-triangle"
                 accept={handleDelete}
@@ -64,9 +64,6 @@ const SettingsPage = () => {
             />
             {!showTellerConnect && (
                 <div className="grid">
-                    <div className="col-12 flex justify-content-center mb-4">
-                        <Button label="Upgrade your subscription plan" className="p-button-lg" />
-                    </div>
                     <div className="col-12 flex justify-content-center mb-4">
                         <Button
                             label="Connect more bank accounts"

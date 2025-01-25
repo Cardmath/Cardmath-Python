@@ -18,9 +18,13 @@ import numpy as np
 
 
 async def compute_r_matrix(db: Session, user: Union[User, Onboarding], request: OptimalCardsAllocationRequest) -> RMatrixDetails:
-    heavy_hitters_response: HeavyHittersResponse = await read_heavy_hitters(
-        db=db, user=user, request=HeavyHittersRequest(account_ids="all", timeframe=request.timeframe)
-    )
+    heavy_hitters_response = None
+    if request.heavy_hitters_response_override:
+        heavy_hitters_response = request.heavy_hitters_response_override
+    else: 
+        heavy_hitters_response: HeavyHittersResponse = await read_heavy_hitters(
+            db=db, user=user, request=HeavyHittersRequest(account_ids="all", timeframe=request.timeframe)
+        )
 
     if not heavy_hitters_response:
         return 
@@ -38,6 +42,7 @@ async def compute_r_matrix(db: Session, user: Union[User, Onboarding], request: 
                 raise HTTPException(status_code=400, detail=f"Credit card {cc.card.name} by {cc.card.issuer} not found.")
             card_schema = CreditCardSchema.model_validate(card_db)
             ccs_used.append(card_schema)
+            print(f"Appended card schema {card_schema }")
             
             if cc.is_new:
                 is_new_flags.append(idx)

@@ -12,14 +12,14 @@ const PreferencesDisplay = ({ preferences }) => {
   } = preferences;
 
   return (
-    <div className="bg-gray-200 p-2">
+    <div className="bg-gray-800 p-2">
       <div className="text-2xl font-bold">Current Preferences</div>
 
       {/* Credit Profile */}
       <div className="flex flex-column">
         <Tooltip target=".credit-profile" position="bottom" />
         <div
-          className="credit-profile font-bold p-2 bg-blue-100 border-round"
+          className="credit-profile font-bold p-2 bg-gray-600 border-round"
           data-pr-tooltip="Your credit profile informs the types of cards recommended."
         >
           Credit Profile
@@ -40,7 +40,7 @@ const PreferencesDisplay = ({ preferences }) => {
         <div className="flex flex-column">
           <Tooltip target=".banks-preferences" position="bottom" />
           <div
-            className="banks-preferences font-bold p-2 bg-blue-100 border-round"
+            className="banks-preferences font-bold p-2 bg-gray-600 border-round"
             data-pr-tooltip="These are your bank preferences used in recommendations."
           >
             Banks Preferences
@@ -92,7 +92,7 @@ const PreferencesDisplay = ({ preferences }) => {
         <div className="flex flex-column">
           <Tooltip target=".rewards-preferences" position="bottom" />
           <div
-            className="rewards-preferences font-bold p-2 bg-blue-100 border-round"
+            className="rewards-preferences font-bold p-2 bg-gray-600 border-round"
             data-pr-tooltip="Specifies your preferences for rewards programs."
           >
             Rewards Programs Preferences
@@ -136,7 +136,7 @@ const PreferencesDisplay = ({ preferences }) => {
         <div className="flex flex-column">
           <Tooltip target=".rewards-preferences" position="bottom" />
           <div
-            className="rewards-preferences font-bold p-2 bg-blue-100 border-round"
+            className="rewards-preferences font-bold p-2 bg-gray-600 border-round"
             data-pr-tooltip="Specifies your preferences for rewards programs."
           >
             Rewards Programs Preferences
@@ -149,7 +149,7 @@ const PreferencesDisplay = ({ preferences }) => {
       <div className="flex flex-column">
         <Tooltip target=".consumer-preferences" position="bottom" />
         <div
-          className="consumer-preferences font-bold p-2 bg-blue-100 border-round"
+          className="consumer-preferences font-bold p-2 bg-gray-600 border-round"
           data-pr-tooltip="Your consumer-specific card preferences."
         >
           Consumer Preferences
@@ -161,7 +161,7 @@ const PreferencesDisplay = ({ preferences }) => {
       <div className="flex flex-column">
         <Tooltip target=".business-preferences" position="bottom" />
         <div
-          className="business-preferences font-bold p-2 bg-blue-100 border-round"
+          className="business-preferences font-bold p-2 bg-gray-600 border-round"
           data-pr-tooltip="Business-specific preferences that guide recommendations."
         >
           Business Preferences

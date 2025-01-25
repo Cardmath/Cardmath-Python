@@ -1,11 +1,11 @@
 from creditcard.endpoints.schemas import CardLookupSchema, CreditCardRecommendationSchema
 from creditcard.schemas import CreditCardSchema, RewardCategoryRelation
+from database.teller.transactions import MockHeavyHitter
 from datetime import date
 from pydantic import BaseModel
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 from typing import List, Union, Optional, Tuple, Dict
 import creditcard.enums as enums
-from teller.schemas import TransactionSchema
 import numpy as np
 
 import creditcard.enums as enums
@@ -54,7 +54,7 @@ VENDOR_CONST = "VENDOR"
 CATEGORY_CONST = "CATEGORY"
 class HeavyHitterSchema(BaseModel):
     type: str # VENDOR or CATEGORY
-    name: Optional[enums.Vendors] = None
+    name: Optional[Union[enums.Vendors, enums.PurchaseCategory]] = None
     category: str
     percent: str 
     amount: float
@@ -62,7 +62,7 @@ class HeavyHitterSchema(BaseModel):
     @field_validator("type")
     @classmethod
     def type_is_vendor_or_category(cls, v):
-        if v is not None and v is not VENDOR_CONST and v is not CATEGORY_CONST:
+        if v is not None and v != VENDOR_CONST and v != CATEGORY_CONST:
             raise ValueError('must be either a vendor or a category')
         return v
     
@@ -85,10 +85,19 @@ class HeavyHitterSchema(BaseModel):
             v = enums.PurchaseCategory.UNKNOWN
         return v
     
+    def to_db(self) -> MockHeavyHitter:
+        return MockHeavyHitter(
+            type=self.type,
+            name=self.name,
+            category=self.category,
+            percent=self.percent,
+            amount=self.amount
+        )
+    
 class CategorizationProgressSummary(BaseModel):
-    categorized_cc_eligible_count: int
-    uncategorized_cc_eligible_count: int
-    non_cc_eligible_count: int
+    categorized_cc_eligible_count: int = 0
+    uncategorized_cc_eligible_count: int = 0
+    non_cc_eligible_count: int = 0
 
 class HeavyHittersResponse(BaseModel):
     total: Optional[int] = None
@@ -161,6 +170,8 @@ class OptimalCardsAllocationRequest(BaseModel):
     num_solutions: int = 5
 
     wallet_override: Optional[OptimalCardsAllocationRequestWalletOverride] = None
+    heavy_hitters_response_override: Optional[HeavyHittersResponse] = None 
+    use_mock: bool = False
 
     to_use: Optional[int] = 4
     to_add: Optional[int] = 0

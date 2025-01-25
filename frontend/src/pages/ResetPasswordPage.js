@@ -67,8 +67,8 @@ const ResetPassword = () => {
     return (
         <div className="reset-password-container flex flex-column justify-content-center align-items-center">
             <Alert visible={alert.visible} message={alert.message} type={alert.type} heading={alert.heading} setVisible={(visible) => setAlert({ ...alert, visible })} />
-            <div>
-                <h2>Reset Your Password</h2>
+            <div >
+                <h2 className='col-12 text-center text-white'>Set Your Cardmath Password</h2>
                 <label htmlFor="newPassword" className="block text-900 font-medium mb-2">New Password</label>
                 <Password
                     id="newPassword"

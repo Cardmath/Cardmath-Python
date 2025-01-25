@@ -6,10 +6,12 @@ const IncomeSelectionForm = ({ onSelect }) => {
   const [showSuccess, setShowSuccess] = useState(false);
 
   const options = [
-    { label: "Less than $50,000", value: "under_50k" },
-    { label: "$50,000 - $75,000", value: "50k_75k" },
-    { label: "$75,000 - $100,000", value: "75k_100k" },
-    { label: "$100,000+", value: "over_100k" }
+    { label: "Under $25,000", value: "under_25k" },
+    { label: "$25,000 - $49,999", value: "25k_to_50k" },
+    { label: "$50,000 - $74,999", value: "50k_to_75k" },
+    { label: "$75,000 - $99,999", value: "75k_to_100k" },
+    { label: "$100,000 - $149,999", value: "100k_to_150k" },
+    { label: "$150,000 or more", value: "over_150k" }
   ];
 
   const handleSelect = (option) => {

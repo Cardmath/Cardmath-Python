@@ -17,7 +17,7 @@ import SpendingPlanTable from './SpendingPlanTable';
 import SignOnBonusTable from './SignOnBonusTable';
 import PreferencesDisplay from './PreferencesDisplay';
 
-const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
+const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWallets }) => {
   const [solutions, setSolutions] = useState([]);
   const [solutionIndex, setSolutionIndex] = useState(0);
 
@@ -122,7 +122,6 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
         }
 
         data = data.solutions[0];
-        console.log(data)
         setNetRewardsCurrent(data.net_rewards_usd);
         setTotalRegularRewardsCurrent(data.total_regular_rewards_usd);
         setTotalAnnualFeesCurrent(data.total_annual_fees_usd);
@@ -169,7 +168,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
         body: JSON.stringify(body)
       });
       const data = await response.json();
-      setSolutions(data);
+      setSolutions(data || []);
     } catch (error) {
       console.error('Error fetching savings data:', error);
     }
@@ -185,10 +184,11 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
     let data = solutions.solutions[solutionIndex % solutions.solutions.length];
     let timeframe = solutions.timeframe;
 
+    console.log("solutionData", data)
+
     setCardsHeld(data.cards_used);
     setRecommendedCards(data.cards_added);
-    setCardsDrop(data.cards_dropped);
-    
+    setCardsDrop(data.cards_dropped);  
 
     setTimeframe(timeframe);
     setSummary(data.summary);
@@ -212,7 +212,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
   }, [selectedWalletState]);
 
   return (
-    <Card className="w-full h-full justify-content-center align-items-stretch flex-wrap border-round shadow-2 mt-2">
+    <Card className="w-full h-full justify-content-center align-items-stretch flex-wrap border-round shadow-2 mt-2 bg-gray-900 text-white">
       {/* Display net rewards difference */}
       <div className="flex gap-2 justify-content-center">
         <Tooltip className='w-3' target=".potential-increase" position="bottom"/>
@@ -319,10 +319,10 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
       <div className="flex pt-4 gap-2 h-full justify-content-center">
         <div className="col-3">
 
-          <img src="/logos/png/Black logo - no background.png" alt="Optimal Savings" className="w-full" />
+          <img src="/logos/png/Color logo - no background.png" alt="Optimal Savings" className="w-full" />
 
           {/* Wallet selector */}
-          <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
+          <div className='bg-gray-800 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
             <p className='font-italic'>
               Use a different wallet to change the cards that appear in 'Your Held Cards'. The custom wallet option is great for experimenting with different combinations of cards.
             </p>
@@ -340,7 +340,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
           </div>
 
           {/* Individual Card Sign-On Bonus Toggles */}
-          <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
+          <div className='bg-gray-800 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
             <p className='font-italic'>
               Toggle sign-on bonus for each card to decide if it should be included in the calculation.
             </p>
@@ -357,7 +357,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
             ))}
           </div>
 
-          <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
+          <div className='bg-gray-800 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
             <p className='font-italic'>
               Include sign-on bonuses to highlight cards with high short-term value. Disabling this will give a clearer picture of long-term rewards, helping you choose a card that's more beneficial over time.
             </p>
@@ -366,7 +366,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
           </div>
   
           {/* Existing controls */}
-          <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
+          <div className='bg-gray-800 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
             <p className='font-italic'>
               Select your desired total wallet size and the number of new cards you're considering. Based on these inputs, we'll recommend new cards while factoring in the possibility of canceling some of your current cards to optimize your rewards and benefits.
             </p>
@@ -375,12 +375,9 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
 
             <div id="toAddInput" className="p-float-label mt-2">Number of Desired New Cards</div>
             <InputNumber aria-labelledby='toAddInput' showButtons inputId="integeronly" className="w-full" value={toAdd} onChange={e => setToAdd(e.value)} min={0} max={5} />
-            <p className='font-italic'>
-              Since you have <span className='font-bold'>{cardsHeld.length}</span> credit cards in this wallet, and you want to add up to <span className='font-bold'>{toAdd}</span> new credit cards from the recommendation algorithm, we'll recommend you to cancel up to <span className='font-bold'>{Math.max(cardsHeld.length, cardsHeld.length - toAdd)}</span> of your <span className='font-bold'>{cardsHeld.length}</span> cards. Cancelling up to  <span className='font-bold'>{Math.max(cardsHeld.length, cardsHeld.length - toAdd)}</span> of your cards will make room for up to <span className='font-bold'>{toAdd}</span> new ones so that you have a final wallet of <span className='font-bold'>{toUse}</span> credit cards. 
-            </p>
           </div>
 
-          <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
+          <div className='bg-gray-800 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
             <p className='font-italic'>
               Select the date range to over which to calculate the optimal credit card wallet. You might do this when old transactions are not representative of your current spending habits. If no date range is selected, we'll use the last 48 months of your entire available history.
             </p>
@@ -397,7 +394,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
           }} className='w-full mt-5' label="Compute" loading={computationLoading} />
 
 
-          <div className='bg-gray-200 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
+          <div className='bg-gray-800 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
             <p className='font-italic'>
               Your preferences inform which credit cards we input to our recommendation algorithm. If you haven't set your preferences yet, you can do so by clicking the button below.
             </p>
@@ -414,9 +411,11 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets }) => {
             {/* Your Cards Carousel */}
             <div className="col-6">
               <div className="text-3xl pb-2 text-center">Your Held Cards</div>
-              {cardsHeld.length === 0 ? (
-                <Card title="No Credit Cards detected" className="w-9 py-3 bg-pink-200 border-3 shadow-2 surface-border border-round">
-                  <p className="m-0">We couldn't detect any credit cards associated with this wallet.</p>
+              {cardsHeld.length === 0 && cardsDrop.length === 0 ? (
+                <Card onClick={() => redirectToWallets()} title="No Wallet Detected. Click Here to Create a new Wallet." className="w-10 cursor-pointer py-3 mx-7 bg-pink-200 border-3 shadow-2 surface-border border-round">
+                  <p className="m-0"> The wallet feature allows users to experiment with different credit card combinations. 
+                    For example if you chose to register with mock transactions only, you can use this feature to create a wallet that reflects the cards you personally own.  
+                  </p>
                 </Card>
               ) : (
                 <Carousel

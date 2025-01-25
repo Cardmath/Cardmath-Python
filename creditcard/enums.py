@@ -1,5 +1,7 @@
 from enum import Enum
 from typing import List
+from sqlalchemy import or_
+
 
 import re
 
@@ -102,6 +104,13 @@ class Benefit(str, Enum):
     TRAVEL_ASSISTANCE_SERVICES = "travel assistance services"
     TRAVEL_INSURANCE = "travel insurance"
     
+class IncomeRange(str, Enum):
+    UNDER_25K = "under_25k"     # Under $25,000
+    K25_TO_50K = "25k_to_50k"   # $25,000 - $49,999
+    K50_TO_75K = "50k_to_75k"   # $50,000 - $74,999
+    K75_TO_100K = "75k_to_100k" # $75,000 - $99,999
+    K100_TO_150K = "100k_to_150k" # $100,000 - $149,999
+    OVER_150K = "over_150k"     # $150,000 or more
     
 class CreditNeeded(str, Enum):
     EXCELLENT = "Excellent" # 720-850
@@ -284,8 +293,110 @@ class CreditCardKeyword(str, Enum):
 
 class CardAction(str, Enum):
     keep = "Keep this card"
-    cancel = "Cancel this card"
+    cancel = "Leave at home"
     add = "Add this card"
+
+class Archetype(str, Enum):
+    STUDENT_STARTER = "Student Starter"
+    EVERYDAY_ESSENTIALIST = "Everyday Essentialist"
+    BEGINNER_POINTS_TRAVELER = "Beginner Points Traveler"
+    POINTS_TRAVELER = "Points Traveler"
+    CASHBACK_CONNOISSEUR = "Cashback Connoisseur"
+    HYBRID_USER = "Hybrid User"
+    BALANCE_BUSTER = "Balance Buster"
+    LUXURY_SEEKER = "Luxury Seeker"
+    TRAVEL_HACKER = "Travel Hacker"
+    BUSINESS_BOSS = "Business Boss"
+
+    def filter_query(self, query, credit_card_model):
+        """
+        Applies a SQLAlchemy filter to 'query' based on the archetype.
+        Adjust or expand as needed to match your actual business logic.
+        """
+        if self == Archetype.STUDENT_STARTER:
+            # Looking for 'Student' or 'Secured' + No Annual Fee
+            return query.filter(
+                or_(
+                    credit_card_model.keywords.contains([CreditCardKeyword.student.value]),
+                    credit_card_model.keywords.contains([CreditCardKeyword.secured.value])
+                ),
+                credit_card_model.keywords.contains([CreditCardKeyword.no_annual_fee.value])
+            )
+
+        elif self == Archetype.EVERYDAY_ESSENTIALIST:
+            # Typically a no-frills, cashback-oriented card
+            return query.filter(
+                credit_card_model.keywords.contains([CreditCardKeyword.cashback.value])
+            )
+
+        elif self == Archetype.BEGINNER_POINTS_TRAVELER:
+            # Travel-focused, but still beginner-friendly (no/low annual fee, no FTF)
+            return query.filter(
+                credit_card_model.keywords.contains([CreditCardKeyword.travel.value]),
+                credit_card_model.benefits.contains([Benefit.NO_FOREIGN_TRANSACTION_FEES.value])
+            )
+
+        elif self == Archetype.POINTS_TRAVELER:
+            # Earn travel rewards, more advanced than beginner
+            return query.filter(
+                credit_card_model.keywords.contains([CreditCardKeyword.travel.value]),
+                credit_card_model.keywords.contains([CreditCardKeyword.rewards_focused.value])
+            )
+
+        elif self == Archetype.CASHBACK_CONNOISSEUR:
+            # Straight-up cashback focus
+            return query.filter(
+                credit_card_model.keywords.contains([CreditCardKeyword.cashback.value])
+            )
+
+        elif self == Archetype.HYBRID_USER:
+            # Likes both travel rewards and cashback (a balanced approach)
+            return query.filter(
+                or_(
+                    credit_card_model.keywords.contains([CreditCardKeyword.travel.value]),
+                    credit_card_model.keywords.contains([CreditCardKeyword.cashback.value])
+                )
+            )
+
+        elif self == Archetype.BALANCE_BUSTER:
+            # Paying down debt; a good balance-transfer or low-APR card
+            return query.filter(
+                or_(
+                    credit_card_model.keywords.contains([CreditCardKeyword.balance_transfer.value]),
+                    credit_card_model.keywords.contains([CreditCardKeyword.low_apr.value])
+                )
+            )
+
+        elif self == Archetype.LUXURY_SEEKER:
+            # Premium perks, e.g. lounge access
+            return query.filter(
+                credit_card_model.keywords.contains([CreditCardKeyword.luxury.value]),
+                credit_card_model.benefits.contains([Benefit.AIRPORT_LOUNGE_ACCESS.value])
+            )
+
+        elif self == Archetype.TRAVEL_HACKER:
+            # Max travel perks: airline/hotel + no foreign fees + maybe Global Entry
+            return query.filter(
+                credit_card_model.keywords.contains([CreditCardKeyword.travel.value]),
+                or_(
+                    credit_card_model.keywords.contains([CreditCardKeyword.airline.value]),
+                    credit_card_model.keywords.contains([CreditCardKeyword.hotel.value])
+                ),
+                credit_card_model.benefits.contains([Benefit.GLOBAL_ENTRY_TSA_PRECHECK_CREDIT.value])
+            )
+
+        elif self == Archetype.BUSINESS_BOSS:
+            # Business (or small business) focus
+            return query.filter(
+                or_(
+                    credit_card_model.keywords.contains([CreditCardKeyword.business.value]),
+                    credit_card_model.keywords.contains([CreditCardKeyword.small_business.value])
+                )
+            )
+
+        # Fallback if none match
+        return query
+
 
 class CardKey(str, Enum):
     WELLSFARGO_NOT_FOUND = "wellsfargo-not-found"

@@ -1,6 +1,32 @@
 from database.sql_alchemy_db import Base
-from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Index
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Index, CheckConstraint
 from sqlalchemy.orm import relationship
+
+class MockHeavyHitter(Base):
+    __tablename__ = 'mock_heavy_hitters'
+
+    id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
+    onboarding_id = Column(Integer, ForeignKey('onboarding.id', ondelete='CASCADE'), nullable=True)
+    
+    # Store "VENDOR" or "CATEGORY" using our enum
+    type = Column(String, nullable=False)
+    
+    name = Column(String, nullable=True)
+    category = Column(String, nullable=False)
+    percent = Column(String, nullable=False)
+    amount = Column(Float, nullable=False)
+
+    __table_args__ = (
+        CheckConstraint(
+            '(user_id IS NOT NULL OR onboarding_id IS NOT NULL)',
+            name='enrollment_owner_check'
+        ),
+    )
+
+    user = relationship('User', backref='mock_heavyhitters', uselist=False)
+    onboarding = relationship('Onboarding', backref='mock_heavyhitters', uselist=False)
+
 
 class Transaction(Base):
     __tablename__ = 'transactions'

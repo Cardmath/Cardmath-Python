@@ -12,7 +12,7 @@ const LandingPageComponent = () => {
         <div> 
             <Navbar/>
             <AnimatedHero/>
-            <div className="grid gap-2" style={{marginLeft: 'auto', marginRight: 'auto', maxWidth: '1100px'}}>
+            <div style={{marginLeft: 'auto', marginRight: 'auto', maxWidth: '1100px'}}>
                 <FadeInSection>
                     <GetStartedCallToAction/>
                 </FadeInSection>

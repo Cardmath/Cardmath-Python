@@ -1,6 +1,6 @@
-from auth.schemas import UserCreate
 from database.auth.user import User, UserInDB, Enrollment, Account, Wallet, Subscription, wallet_card_association, Onboarding
-from database.creditcard.creditcard import CreditCard
+from database.creditcard import CreditCard
+from creditcard.enums import Archetype
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from sqlalchemy import insert
@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 def get_user(db: Session, user_id: int) -> Optional[User]:
     return db.query(User).filter(User.id == user_id).first()
 
-def get_user_by_email(db: Session, email: str) -> Optional[UserInDB]:
-    return db.query(UserInDB).filter(UserInDB.email == email).first()
+def get_user_by_email(db: Session, email: str) -> Optional[User]:
+    return db.query(User).filter(User.email == email).first()
 
 def get_users(db: Session, skip: int = 0, limit: int = 10) -> List[User]:
     return db.query(User).offset(skip).limit(limit).all()
@@ -28,7 +28,6 @@ def get_account_by_id(db: Session, account_id: str) -> Optional[Account]:
     return db.query(Account).filter(Account.id == account_id).first()
 
 def create_user(db: Session, onboarding: Onboarding, first_name: str, primary_email: str):
-    # create a new subscription
     subscription = Subscription(
         status='unverified',
         start_date=None,
@@ -37,8 +36,9 @@ def create_user(db: Session, onboarding: Onboarding, first_name: str, primary_em
     db.add(subscription)
     db.commit()
     db.refresh(subscription)
+
     db_user = UserInDB(
-        subscription_id = subscription.id,
+        subscription_id=subscription.id,
         email=primary_email,
         teller_ids=[onboarding.teller_id],
         first_name=first_name,
@@ -47,8 +47,17 @@ def create_user(db: Session, onboarding: Onboarding, first_name: str, primary_em
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    onboarding.enrollment.user_id = db_user.id
+
+    if onboarding.enrollment:
+        onboarding.enrollment.user_id = db_user.id
+    if onboarding.mock_heavyhitters:
+        # Update all mock heavyhitters associated with this onboarding
+        for heavyhitter in onboarding.mock_heavyhitters:
+            heavyhitter.user_id = db_user.id
+            heavyhitter.onboarding_id = None
+    
     onboarding.user_id = db_user.id
+    db.add(onboarding)
     db.commit()
     db.refresh(onboarding)
     return db_user
@@ -71,7 +80,7 @@ def update_user_password(db: Session, email: str, new_password: str) -> None:
     db.commit()
     db.refresh(user)
 
-async def update_user_enrollment(db: Session, enrollment_schema: AccessTokenSchema, user_id: int) -> Optional[Enrollment]:
+def update_user_enrollment(db: Session, enrollment_schema: AccessTokenSchema, user_id: int) -> Optional[Enrollment]:
     user = get_user(db=db, user_id=user_id)
     if not user:
         logger.error(f"User not found with ID: {user_id}")
@@ -91,7 +100,7 @@ async def update_user_enrollment(db: Session, enrollment_schema: AccessTokenSche
     
     return db_enrollment
 
-async def update_user_with_credit_cards(db: Session, credit_cards: List[CreditCard], user_id: int, is_held: bool = True) -> Optional[User]:
+def update_user_with_credit_cards(db: Session, credit_cards: List[CreditCard], user_id: int, is_held: bool = True) -> Optional[User]:
     user = get_user(db, user_id)
     if not user:
         logger.error(f"User not found with ID: {user_id}")

@@ -1,6 +1,16 @@
 from database.sql_alchemy_db import Base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, ForeignKeyConstraint, JSON, Table, Date, CheckConstraint, ARRAY, Enum
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, ForeignKeyConstraint, JSON, Table, Date, CheckConstraint, ARRAY, FLOAT
+from sqlalchemy.dialects.postgresql import ENUM, ARRAY, TIMESTAMP
 from sqlalchemy.orm import relationship
+from creditcard.enums import Archetype, Vendors, PurchaseCategory
+
+archetype_enum = ENUM(
+    Archetype,
+    name='archetypes_enum',
+    metadata=Base.metadata,
+    values_callable=lambda enum: [e.value for e in enum],
+    create_type=True,
+)
 
 user_credit_card_association = Table(
     'user_credit_card_association',
@@ -41,10 +51,11 @@ class Onboarding(Base):
 
     emails = Column(JSON(String), nullable=False)
     phone_numbers = Column(JSON(String), nullable=False)
+    archetype = Column(archetype_enum, nullable=False)
 
     user = relationship("User", back_populates="onboarding", uselist=False, lazy='joined')
     enrollment = relationship("Enrollment", uselist=False, back_populates="onboarding", lazy='joined')
-
+    
 class User(Base):
     __tablename__ = 'users'
     
@@ -83,7 +94,7 @@ class Enrollment(Base):
     access_token = Column(String, nullable=False)
     institution_name = Column(String, nullable=False)
     signatures = Column(JSON, nullable=False)
-    last_updated = Column(Date, nullable=False)
+    last_updated = Column(TIMESTAMP, nullable=False)
     
     user = relationship("User", back_populates="enrollments", foreign_keys=[user_id])
     onboarding = relationship("Onboarding", uselist=False, foreign_keys=[onboarding_id])

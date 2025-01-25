@@ -20,6 +20,7 @@ logger.setLevel(logging.INFO)
 class Product(str, Enum):
     annual = 'annual'
     monthly = 'monthly'
+    beta = 'beta'
 
 class CheckoutSessionRequest(BaseModel):    
     product: Product
@@ -30,13 +31,11 @@ class CheckoutSessionIDRequest(BaseModel):
 class CheckoutSessionResponse(BaseModel):
     url: str
 
-load_dotenv()
-stripe.api_key = os.getenv('STRIPE_API_KEY', "your_stripe_api_key")
-
 # TEST MODE PRODUCT IDs
 PRODUCTS = {
     Product.annual: 'prod_RCpGRQtRhol743',
     Product.monthly: 'prod_RCpGPTdB4yqw8w',
+    Product.beta: 'prod_Re9Y6zUeeTjeC7'
 }
 
 def create_checkout_session(db: Session, current_user: User, request: CheckoutSessionRequest) -> CheckoutSessionResponse:
@@ -55,10 +54,11 @@ def create_checkout_session(db: Session, current_user: User, request: CheckoutSe
             'price': price_id,
             'quantity': 1,
         }],
-        mode='subscription',
-        success_url=f'https://cardmath.ai/registration-steps?session_id={{CHECKOUT_SESSION_ID}}',
-        cancel_url='https://cardmath.ai/registration-steps?payment_status=cancelled',
-        customer_email=current_user.email  # Ensure you are using the email attribute
+        mode='payment',
+        success_url=f'http://localhost:3000/dashboard',
+        cancel_url='http://localhost:3000/',
+        customer_email=current_user.email,  # Ensure you are using the email attribute
+        allow_promotion_codes=True
     )
 
     return CheckoutSessionResponse(url=session.url)

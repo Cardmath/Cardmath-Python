@@ -14,7 +14,7 @@ export default function SignOnBonusTable({ useSignOnBonus, summary, recommendedC
     );
 
     return (
-        <div className="col-12 mt-4 shadow-2 border-round bg-gray-200">
+        <div className="col-12 mt-4 shadow-2 border-round bg-gray-800">
             <div className="text-3xl pb-2 text-center">Sign-On Bonus Rewards</div>
             
             {useSignOnBonus ? (
