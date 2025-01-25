@@ -211,6 +211,7 @@ class OptimalCardsAllocationSolution(BaseModel):
     total_annual_fees_usd: float
     net_rewards_usd: float
 
+    justification: Optional[str] = None 
     total_reward_allocation: List[int]
     summary: Optional[List[CardsUseSummary]] = None
     spending_plan: Optional[List[SpendingPlanItem]] = None

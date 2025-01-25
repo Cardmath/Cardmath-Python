@@ -61,9 +61,14 @@ const PurposeFollowUpForm = ({ purpose, onSelect }) => {
   if (showSuccess && selectedOption) {
     return (
       <div className="transition-all duration-500 ease-in-out">
-        <p className="text-lg mb-6">
-          Great choice! We'll help you find the perfect cards for your goals.
-        </p>
+        <div className="archetype-display mb-4 text-center">
+          <h3 className="text-xl font-semibold">
+            Your Archetype:
+          </h3>
+          <h3 className="text-3xl font-semibold">
+            {selectedOption.value}
+          </h3>
+        </div>
         <Button 
           label="Continue" 
           className="w-full"
@@ -72,7 +77,6 @@ const PurposeFollowUpForm = ({ purpose, onSelect }) => {
       </div>
     );
   }
-
   return (
     <div>
       {content.options.map((option) => (
@@ -102,7 +106,7 @@ const PurposeFollowUpPage = {
     const content = getFollowUpContent(purpose);
     return content?.question || "Let's learn more about your goals";
   },
-  content: "This helps us tailor our recommendations to your needs.",
+  content: "Based on your last two answers, we deduce a credit card user archetype for you.",
   primaryColor: 'var(--onb-purple)',
   secondaryColor: 'var(--onb-blue)',
   additionalContent: PurposeFollowUpForm

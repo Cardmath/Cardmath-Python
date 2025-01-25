@@ -131,6 +131,15 @@ def process_new_enrollment(current_user: Annotated[User, Depends(auth_utils.get_
                            db: Session = Depends(get_sync_db)):
     return teller_endpoints.process_new_enrollment(current_user, db)
 
+@app.post("/ingest-user-changed-archetype")
+def ingest_user_changed_archetype_endpoint(request: dict, current_user: Annotated[User, Depends(auth_utils.get_current_user)],
+                        db: Session = Depends(get_sync_db)):
+    current_user.onboarding.archetype = Archetype(request.archetype)
+    
+@app.post("/read-user-archetype")
+def read_user_archetype_endpoint(current_user: Annotated[User, Depends(auth_utils.get_current_user)]):
+    return current_user.onboarding.archetype
+
 @app.post("/receive_teller_enrollment")
 def receive_teller_enrollment(current_user: Annotated[User, Depends(auth_utils.get_current_user)],
                  access_token: AccessTokenSchema,
@@ -287,3 +296,7 @@ def get_industries():
 @app.get("/api/business_sizes")
 def get_business_sizes():
     return [size.value for size in BusinessSize]
+
+@app.get("/api/archetypes")
+def get_archetypes():
+    return [archetype.value for archetype in Archetype]

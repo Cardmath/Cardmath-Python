@@ -1,5 +1,5 @@
 from creditcard.endpoints.schemas import CreditCardsDatabaseRequest, CreditCardsFilter
-from creditcard.enums import CreditNeeded, CreditCardKeyword
+from creditcard.enums import CreditNeeded, CreditCardKeyword, Archetype
 from creditcard.schemas import CreditCardSchema
 from database.auth.user import User
 from database.creditcard.creditcard import CreditCard
@@ -81,20 +81,14 @@ async def read_credit_cards_database(
             if avoid_rewards_programs:
                 query = query.filter(~CreditCard.primary_reward_unit.in_(avoid_rewards_programs))
 
-            wanted_keywords = request.card_details.keywords if isinstance(request.card_details, CreditCardsFilter) and request.card_details.keywords else []
+            archetype: Archetype = Archetype.HYBRID_USER
+            if isinstance(current_user, User):
+                archetype = current_user.onboarding.archetype
+            else:
+                archetype = current_user.archetype
 
-            business_keywords = [
-                CreditCardKeyword.business.value,
-                CreditCardKeyword.small_business.value
-            ]
-            
-            if set(business_keywords).isdisjoint(wanted_keywords):
-                logging.info("Including rows that do NOT match business keywords")
-                query = query.filter(
-                    ~(cast(CreditCard.keywords, JSONB).has_any(array(business_keywords)))
-                )
-            else :
-                logging.info("Including business keywords")
+            query = archetype.filter_query(query=query, credit_card_model=CreditCard)
+
 
     credit_cards = query.limit(request.max_num).all()
     return CreditCardsDatabaseResponse(credit_card=[CreditCardSchema.model_validate(cc) for cc in credit_cards])

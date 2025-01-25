@@ -20,6 +20,9 @@ import PreferencesDisplay from './PreferencesDisplay';
 const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWallets }) => {
   const [solutions, setSolutions] = useState([]);
   const [solutionIndex, setSolutionIndex] = useState(0);
+  const [archetype, setArchetype] = useState(null);
+  const [archetypes, setArchetypes] = useState([]);
+
 
   const [preferences, setPreferences] = useState(null);
   const [computationLoading, setComputationLoading] = useState(false);
@@ -80,6 +83,37 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
     }
   };
 
+  const parseAndRenderText = (text) => {
+    // Split by line breaks or other delimiters if necessary
+    const paragraphs = text.split("\n").filter((line) => line.trim() !== "");
+  
+    return paragraphs.map((paragraph, index) => {
+      const parts = paragraph.split(/\*\*(.*?)\*\*/g); // Regex to split by **...**
+  
+      return (
+        <p key={index}>
+          {parts.map((part, i) =>
+            i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+          )}
+        </p>
+      );
+    });
+  };
+  
+
+  useEffect(() => {
+    fetch(`${getBackendUrl()}/api/archetypes`)
+        .then(response => response.json())
+        .then(data => setArchetypes(data.map(item => ({ label: item, value: item }))))
+        .catch(error => console.error("Error fetching archetypes:", error));
+        
+    fetchWithAuth(`${getBackendUrl()}/read-user-archetype`, {
+        method: "POST"
+    })
+        .then(response => response.json())
+        .then(data => setArchetype(data))
+        .catch(error => console.error("Error fetching user archetype:", error));
+  }, []);
   // Fetch current cards optimal allocation
   const fetchCurrentCardsOptimalAllocation = async () => {
       try {
@@ -321,6 +355,34 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
 
           <img src="/logos/png/Color logo - no background.png" alt="Optimal Savings" className="w-full" />
 
+      {/* Archetype selector */}
+          <div className='bg-gray-800 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
+            <p className='font-italic'>
+              Select your credit card usage profile to get personalized recommendations.
+            </p>
+            <div className='flex justify-content-center'> 
+              <Dropdown 
+                value={archetype} 
+                options={archetypes} 
+                onChange={(e) => {
+                  setArchetype(e.value);
+                  fetchWithAuth(`${getBackendUrl()}/ingest-user-changed-archetype`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ archetype: e.value })
+                  })
+                  .then(res => res.json())
+                  .catch(err => console.error("Error updating archetype:", err));
+                }} 
+                optionLabel="label"
+                placeholder={archetype || "Select Profile"}
+                className="w-6 flex"
+              />
+            </div>
+          </div>
+
           {/* Wallet selector */}
           <div className='bg-gray-800 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
             <p className='font-italic'>
@@ -340,11 +402,11 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
           </div>
 
           {/* Individual Card Sign-On Bonus Toggles */}
-          <div className='bg-gray-800 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
+          {selectedWalletState && (<div className='bg-gray-800 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
             <p className='font-italic'>
               Toggle sign-on bonus for each card to decide if it should be included in the calculation.
             </p>
-            {selectedWalletState && selectedWalletState.cards.map((cc, index) => (
+            {selectedWalletState.cards.map((cc, index) => (
               <div key={index} className="flex p-2 align-items-center border-round border-dotted border-blue-200 my-2">
                 <div className="mr-2">{cc.card.name} (Issuer: {cc.card.issuer})
                 <InputSwitch
@@ -355,7 +417,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
                 </div>
               </div>
             ))}
-          </div>
+          </div>)}
 
           <div className='bg-gray-800 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
             <p className='font-italic'>
@@ -394,12 +456,12 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
           }} className='w-full mt-5' label="Compute" loading={computationLoading} />
 
 
-          <div className='bg-gray-800 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
+          {/* <div className='bg-gray-800 mt-3 pt-1 pb-2 px-2 border-round shadow-2'>
             <p className='font-italic'>
               Your preferences inform which credit cards we input to our recommendation algorithm. If you haven't set your preferences yet, you can do so by clicking the button below.
             </p>
             {preferences && <PreferencesDisplay preferences={preferences} />}
-          </div>
+          </div> */}
 
           
         </div>
@@ -450,6 +512,29 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
               )}
             </div>
           </div>
+
+          <div className="flex pt-4 gap-2 justify-content-center">
+            <Tooltip
+              className="w-3"
+              target=".allocation-justification"
+              position="bottom"
+            />
+            <div
+              className="allocation-justification col-10 border-round shadow-3"
+              data-pr-tooltip="Detailed explanation of why this card allocation is optimal for your spending patterns"
+            >
+              <div className="grid align-items-center justify-content-center py-2">
+                Recommendation Justification:
+              </div>
+              <div className="text-xl p-4">
+                {solutions.solutions?.[solutionIndex]?.justification
+                  ? parseAndRenderText(solutions.solutions[solutionIndex].justification)
+                  : "No justification available"}
+              </div>
+            </div>
+          </div>
+
+
 
           {/* Replaced Sign-On Bonus Table */}
           <SignOnBonusTable summary={summary} heldCards={cardsHeld} cardBonusToggles={cardBonusToggles} recommendedCards={recommendedCards} useSignOnBonus={useSignOnBonus}/>

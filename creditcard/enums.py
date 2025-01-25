@@ -313,6 +313,13 @@ class Archetype(str, Enum):
         Applies a SQLAlchemy filter to 'query' based on the archetype.
         Adjust or expand as needed to match your actual business logic.
         """
+
+        if self != Archetype.BUSINESS_BOSS:
+            query = query.filter(
+                ~credit_card_model.keywords.contains([CreditCardKeyword.business.value]),
+                ~credit_card_model.keywords.contains([CreditCardKeyword.small_business.value])
+            )
+            
         if self == Archetype.STUDENT_STARTER:
             # Looking for 'Student' or 'Secured' + No Annual Fee
             return query.filter(

@@ -4,6 +4,7 @@ from insights.optimal_cards.r_matrix import compute_r_matrix
 from insights.optimal_cards.solution_extraction import extract_solution
 from insights.schemas import OptimalCardsAllocationRequest, OptimalCardsAllocationResponse, RMatrixDetails
 from insights.utils import hamming_distance
+from insights.optimal_cards.justify import generate_justification_from_solution
 from insights.heavyhitters import get_mock_heavy_hitters_response, only_has_mock_txns
 from sqlalchemy.orm import Session
 from typing import Union
@@ -42,7 +43,9 @@ async def optimize_credit_card_selection_milp(db: Session, user: Union[User, Onb
         
         if len(solutions) >= request.num_solutions:
             break
-        
+
+    justification = generate_justification_from_solution(solution=solutions[0])
+    solutions[0].justification = justification
     return OptimalCardsAllocationResponse(
         timeframe=rmatrix.timeframe,
         solutions=solutions

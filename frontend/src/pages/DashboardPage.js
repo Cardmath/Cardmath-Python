@@ -150,13 +150,13 @@ const DashboardPage = () => {
                                     <Ripple />
                                 </a>
                             </li>
-                            <li onClick={() => setPageView('preferences')}>
+                            {/* <li onClick={() => setPageView('preferences')}>
                                 <a className={`p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center ${pageView === 'preferences' ? 'text-cyan-600 border-left-2 border-cyan-600' : 'text-600 border-transparent hover:border-300'} transition-duration-150 transition-colors`}>
                                     <i className="pi pi-heart-fill mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>
                                     <span className="font-medium inline text-base lg:text-xs lg:block">Filters</span>
                                     <Ripple />
                                 </a>
-                            </li>
+                            </li> */}
                             <li onClick={() => setPageView('settings')}>
                                 <a className={`p-ripple flex flex-row lg:flex-column align-items-center cursor-pointer p-3 lg:justify-content-center ${pageView === 'settings' ? 'text-cyan-600 border-left-2 border-cyan-600' : 'text-600 border-transparent hover:border-300'} transition-duration-150 transition-colors`}>
                                     <i className="pi pi-cog mr-2 lg:mr-0 mb-0 lg:mb-2 text-base lg:text-2xl"></i>

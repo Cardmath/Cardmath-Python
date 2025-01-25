@@ -27,7 +27,6 @@ def extract_solution(model, request: OptimalCardsAllocationRequest, rmatrix: RMa
         z_val = model.getVal(z[i])
         if z_val > 0.5:
             selected_cards.append(i)
-            print(f"[INFO] Selected card {i}, z value: {z_val:.3f}")
 
     cards_added = []
     if request.return_cards_added:
@@ -36,7 +35,6 @@ def extract_solution(model, request: OptimalCardsAllocationRequest, rmatrix: RMa
             for idx in selected_cards
             if idx in eligible_indices
         ]
-        print(f"[INFO] {len(cards_added)} cards added of {len(eligible_indices)} eligible")
 
     cards_used = []
     if request.return_cards_used:
@@ -53,7 +51,6 @@ def extract_solution(model, request: OptimalCardsAllocationRequest, rmatrix: RMa
             for idx in wallet_indices
             if idx not in selected_cards
         ]
-        print(f"[INFO] {len(cards_dropped)} cards dropped of {len(wallet_indices)} in wallet")
 
     # Prepare summary and spending plan
     summary = []
@@ -121,7 +118,6 @@ def extract_solution(model, request: OptimalCardsAllocationRequest, rmatrix: RMa
             for l in levels:
                 s_value = model.getVal(s_il[idx][l])
                 if s_value > 0.5:
-                    print(f"Sign on bonus level {l}, prob {incremental_probs[l]} activated {sob_amount}")
                     est_sign_on_bonus += sob_amount * incremental_probs[l]
                     total_sob_likelihood += incremental_probs[l]
 
