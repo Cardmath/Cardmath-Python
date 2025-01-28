@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from 'primereact/button';
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
 import { InputTextarea } from 'primereact/inputtextarea';
@@ -16,9 +16,9 @@ const BankConnectionForm = ({
   accounts, 
   preferredAccount, 
   setPreferredAccount,
-  setUserBio // New prop for setting user bio
+  tellerConnectRef,
+  tellerConnectStatus
 }) => {
-  const [tellerConnectReady, setTellerConnectReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isEmailTaken, setIsEmailTaken] = useState(false);
   const [isEmailProcessed, setIsEmailProcessed] = useState(false);
@@ -33,7 +33,6 @@ const BankConnectionForm = ({
     paymentMethods: "",
     creditKnowledge: ""
   });
-  const tellerConnectRef = useRef(null);
 
   const handleError = (message) => {
     confirmDialog({
@@ -59,18 +58,13 @@ const BankConnectionForm = ({
   
 
   const openTellerConnect = () => {
-    if (tellerConnectRef.current) tellerConnectRef.current.open();
-  };
-
-  const handleSuccess = async (enrollment) => {
-    setIsProcessing(true);
-    try {
-      await handleEnrollment(enrollment);
-    } catch (error) {
-      console.error('Error in handleSuccess:', error);
-      handleError('Failed to process enrollment');
+    if (tellerConnectRef.current) {
+      tellerConnectRef.current.open();
+      setIsProcessing(true);
     }
   };
+
+  
 
   useEffect(() => {
     if (formData.paymentMethods.length > 0 && formData.creditKnowledge?.length > 0) {
@@ -79,31 +73,12 @@ const BankConnectionForm = ({
   }, [formData]);
 
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.teller.io/connect/connect.js';
-    script.onload = () => {
-      if (window.TellerConnect) {
-        const tellerConnect = window.TellerConnect.setup({
-          applicationId: 'app_p79ra9mqcims8r8gqa000',
-          selectAccount: 'disabled',
-          environment: 'sandbox',
-          products: ['transactions'],
-          onInit: () => setTellerConnectReady(true),
-          onSuccess: handleSuccess,
-          onExit: () => {}
-        });
-        tellerConnectRef.current = tellerConnect;
-      }
-    };
-    document.body.appendChild(script);
-    
-    return () => {
-      const scriptElement = document.querySelector('script[src="https://cdn.teller.io/connect/connect.js"]');
-      if (scriptElement) {
-        scriptElement.remove();
-      }
-    };
-  }, []);
+    if (tellerConnectStatus.exit) {
+      setIsProcessing(false);
+    }
+  }, [tellerConnectStatus]);
+
+
 
   const handleGenerateMock = () => {
     setShowBioInput(true);
@@ -179,7 +154,7 @@ const BankConnectionForm = ({
           label="Connect Bank Account"
           icon="pi pi-link"
           onClick={openTellerConnect}
-          disabled={!tellerConnectReady}
+          disabled={!tellerConnectStatus.ready}
           className="w-full"
         />
         <Button 

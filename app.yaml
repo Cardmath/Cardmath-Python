@@ -1,18 +1,24 @@
-runtime: python39
+runtime: python
+runtime_config:
+    operating_system: "ubuntu22"
+    runtime_version: "3.12"
+env: flex
 service: backend
-entrypoint: gunicorn -w 2 -k uvicorn.workers.UvicornWorker app:app
+entrypoint: gunicorn -w 4 -k uvicorn.workers.UvicornWorker --timeout 300 app:app
 
 env_variables:
   PYTHONPATH: "/workspace"
   GOOGLE_CLOUD_PROJECT: "cardmath-llc"
   SMTP_EMAIL: "support@cardmath.ai"
-  ENVIRONMENT: "prod"
+  ENVIRONMENT: "development"
 
-instance_class: F2
+beta_settings:
+  cloud_sql_instances: cardmath-llc:northamerica-northeast2:cardmathdb
+
+resources:
+  cpu: 6
+  memory_gb: 12
+
 automatic_scaling:
-  target_cpu_utilization: 0.65
-  target_throughput_utilization: 0.75
-  min_instances: 1
-  max_instances: 1
-
-service_account: cardmath-llc@appspot.gserviceaccount.com
+  min_num_instances: 1
+  max_num_instances: 2

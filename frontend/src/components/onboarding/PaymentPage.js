@@ -40,7 +40,7 @@ const PaymentForm = ({ preferredAccount }) => {
           applicationId: 'app_p79ra9mqcims8r8gqa000', // Replace with your app ID
           connectToken: tellerConnectToken,
           selectAccount: 'disabled',
-          environment: 'sandbox',
+          environment: 'development',
           products: ['payments'],  // Note: changed from 'transactions' to 'payments'
           onInit: () => setTellerConnectReady(true),
           onSuccess: handleSuccess,

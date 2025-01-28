@@ -118,7 +118,7 @@ const TellerConnectComponent = ({ onBack, onSuccess }) => {
                 const tellerConnect = window.TellerConnect.setup({
                     applicationId: 'app_p79ra9mqcims8r8gqa000',
                     selectAccount: 'disabled',
-                    environment: 'sandbox',
+                    environment: 'development',
                     products: ["verify", "verify.instant", "transactions", "identity", "payments"],
                     onInit: function () {
                         console.log('Teller Connect has initialized');

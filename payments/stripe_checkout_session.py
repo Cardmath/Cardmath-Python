@@ -55,8 +55,8 @@ def create_checkout_session(db: Session, current_user: User, request: CheckoutSe
             'quantity': 1,
         }],
         mode='payment',
-        success_url=f'http://localhost:3000/dashboard',
-        cancel_url='http://localhost:3000/',
+        success_url=f'https://cardmath.ai/dashboard',
+        cancel_url='https://cardmath.ai/',
         customer_email=current_user.email,  # Ensure you are using the email attribute
         allow_promotion_codes=True
     )

@@ -1,5 +1,4 @@
 import logging
-
 from insights.schemas import (
     MonthlyTimeframe,
     OptimalCardsAllocationSolution,
@@ -11,6 +10,7 @@ from typing import List, Optional, Tuple
 from database.teller.transactions import Transaction
 from pydantic import BaseModel, ConfigDict
 import datetime
+from sqlalchemy import desc
 
 def remove_duplicates_ordered(lst):
     seen = set()
@@ -27,7 +27,6 @@ def calculate_timeframe_months(timeframe: MonthlyTimeframe) -> int:
     return months_between(timeframe.start_month, timeframe.end_month)
 
 def hamming_distance(sol1: OptimalCardsAllocationSolution, sol2: OptimalCardsAllocationSolution) -> int:
-    # Compare total_reward_allocation fields or other relevant aspects
     return sum(1 for x, y in zip(sol1.total_reward_allocation, sol2.total_reward_allocation) if x != y)
 
 class CCEligibleTransactionsResponse(BaseModel):
@@ -45,21 +44,12 @@ def get_user_cc_eligible_transactions(
 ) -> CCEligibleTransactionsResponse:
     """
     Retrieve credit card eligible transactions for a user's accounts using the specified filter.
+    Limited to 500 transactions, ordered by date (desc) and amount (desc).
     """
     ineligible_types = [
-        "ach",
-        "transfer",
-        "withdrawal",
-        "atm",
-        "deposit",
-        "wire",
-        "interest",
-        "digital_payment",
+        "ach", "transfer", "withdrawal", "atm", "deposit",
+        "wire", "interest", "digital_payment",
     ]
-    all_transactions = []
-    categorized_cc_eligible_count = 0
-    uncategorized_cc_eligible_count = 0
-
     account_ids = [account.id for account in accounts]
 
     # Build the base query for all transactions
@@ -71,46 +61,51 @@ def get_user_cc_eligible_transactions(
             Transaction.date.between(start_date, end_date)
         )
 
-    # Fetch all transactions for the user
-    total_transactions = total_transactions_query.all()
-    total_transaction_count = len(total_transactions)
+    # Get total count before applying eligibility filter
+    total_transaction_count = total_transactions_query.count()
 
-    # Build the query for eligible transactions by excluding ineligible types
+    # Build and execute the query for eligible transactions
     eligible_transactions_query = total_transactions_query.filter(
         ~Transaction.type.in_(ineligible_types)
     )
+    
+    # Get eligible count before categorization filtering
+    eligible_transaction_count = eligible_transactions_query.count()
 
-    # Fetch eligible transactions
-    account_transactions = eligible_transactions_query.all()
-    eligible_transaction_count = len(account_transactions)
-
-    # Calculate the number of ineligible transactions
+    # Calculate ineligible count
     non_cc_eligible_count = total_transaction_count - eligible_transaction_count
 
-    # Add a logging warning if no ineligible transactions are found
     if non_cc_eligible_count == 0:
         logging.warning("No ineligible transactions found.")
 
-    # Process eligible transactions
-    for transaction in account_transactions:
+    # Initialize counters
+    categorized_cc_eligible_count = 0
+    uncategorized_cc_eligible_count = 0
+
+    # Get transactions ordered by date and amount, limited to 500
+    transactions = eligible_transactions_query.order_by(
+        desc(Transaction.date),
+        desc(Transaction.amount)
+    ).limit(400).all()
+
+    # Process categories for returned transactions
+    all_transactions = []
+    for transaction in transactions:
         transaction_category = (
             transaction.details.category if transaction.details else None
         )
         if transaction_category not in ["general", "unknown", None]:
             categorized_cc_eligible_count += 1
-            all_transactions.append(transaction)
         else:
             uncategorized_cc_eligible_count += 1
-            all_transactions.append(transaction)
+        all_transactions.append(transaction)
 
-    # Determine the oldest and newest transaction dates
+    # Determine date range from the ordered transactions
+    oldest_date = None
+    newest_date = None
     if all_transactions:
-        sorted_transactions = sorted(all_transactions, key=lambda t: t.date)
-        oldest_date = sorted_transactions[0].date
-        newest_date = sorted_transactions[-1].date
-    else:
-        oldest_date = None
-        newest_date = None
+        newest_date = all_transactions[0].date  # First transaction (most recent)
+        oldest_date = all_transactions[-1].date  # Last transaction (oldest)
 
     return CCEligibleTransactionsResponse(
         transactions=all_transactions,

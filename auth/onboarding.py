@@ -173,7 +173,7 @@ async def get_onboarding_recommendation(request: OnboardingSavingsRequest, db: S
         to_add=2,
         heavy_hitters_response_override=override,
         timeframe=None,
-        use_sign_on_bonus= not request.answers.use_mock,
+        use_sign_on_bonus=False,
         return_cards_added=False,
         return_cards_used=False,
         return_cards_dropped=False,

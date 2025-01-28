@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchWithAuth } from '../pages/AuthPage';
 import { getBackendUrl } from '../utils/urlResolver';
@@ -63,7 +63,36 @@ const OnboardingFlow = () => {
   const [preferredAccount, setPreferredAccount] = useState({preferred: null, confirmed: false}); 
   const [solution, setSolution] = useState(null);
   const [dateRange, setDateRange] = useState(null);
-  const [computationLoading, setComputationLoading] = useState(false);
+  const tellerConnectRef = useRef(null);
+  const [tellerConnectStatus, setTellerConnectStatus] = useState({ready: false, exit: false});
+
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.teller.io/connect/connect.js';
+    script.onload = () => {
+      if (window.TellerConnect) {
+        const tellerConnect = window.TellerConnect.setup({
+          applicationId: 'app_p79ra9mqcims8r8gqa000',
+          selectAccount: 'disabled',
+          environment: 'development',
+          products: ['transactions'],
+          onInit: () => setTellerConnectStatus({...tellerConnectStatus, ready: true}),
+          onSuccess: handleTellerEnrollment,
+          onExit: () => setTellerConnectStatus({...tellerConnectStatus, exit: true})
+        });
+        tellerConnectRef.current = tellerConnect;
+      }
+    };
+    document.body.appendChild(script);
+    
+    return () => {
+      const scriptElement = document.querySelector('script[src="https://cdn.teller.io/connect/connect.js"]');
+      if (scriptElement) {
+        scriptElement.remove();
+      }
+    };
+  }, [formData]); // Add formData as dependency
 
   useEffect(() => {
     const checkMobile = () => {
@@ -122,7 +151,6 @@ const OnboardingFlow = () => {
   };
 
   const computeOptimalAllocation = async (use_mock) => {
-    setComputationLoading(true);
     try {
       const response = await fetchWithAuth(
         `${getBackendUrl()}/compute-onboarding-savings`,
@@ -150,8 +178,6 @@ const OnboardingFlow = () => {
     } catch (error) {
       console.error('Error computing optimal allocation:', error);
       throw error;
-    } finally {
-      setComputationLoading(false);
     }
   };
 
@@ -196,7 +222,12 @@ const OnboardingFlow = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             teller_connect_response: enrollment,
-            answers: formData,
+            answers: {
+              ...formData,
+              use_mock: false,
+              wallet_size: parseInt(formData.wallet_size, 10), // Ensure integer type,
+              user_bio: ''
+            }
           }),
         }
       );
@@ -296,7 +327,6 @@ const OnboardingFlow = () => {
       ...BankConnectionPage,
       additionalContent: <BankConnectionPage.additionalContent 
         onSelect={(contactInfo) => handleFormSubmit('contactInfo', contactInfo, 7)}
-        handleEnrollment={handleTellerEnrollment}
         handleBioSubmit={handleBioSubmit}
         handlePrimaryEmail={handlePrimaryEmail}
         solution={solution}
@@ -305,6 +335,8 @@ const OnboardingFlow = () => {
         accounts={accounts}
         preferredAccount={preferredAccount}
         setPreferredAccount={setPreferredAccount}
+        tellerConnectRef={tellerConnectRef}
+        tellerConnectStatus={tellerConnectStatus}
       />
     },
     {
