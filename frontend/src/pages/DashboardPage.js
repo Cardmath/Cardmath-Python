@@ -18,6 +18,8 @@ const DashboardPage = () => {
     const [wallets, setWallets] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [availableCards, setAvailableCards] = useState([]);
+    const [requestComputation, setRequestComputation] = useState(false);
 
     const [dates, setDates] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -32,6 +34,7 @@ const DashboardPage = () => {
         non_cc_eligible_count: 0
     });
 
+    const [solutions, setSolutions] = useState([]); // Added solutions state
     const [selectedWallet, setSelectedWallet] = useState(null);
 
     const [alert, setAlert] = useState({visible: false, message: '', heading : '', type: 'error'});
@@ -66,6 +69,7 @@ const DashboardPage = () => {
 
     const handleComputeOptimalAllocation = (wallet) => {
         setSelectedWallet(wallet);
+
         setPageView('home');
     };
 
@@ -174,8 +178,12 @@ const DashboardPage = () => {
                 {pageView === 'home' && (
                     <div className="grid bg-gray-800">
                         <OptimalAllocationSavingsCard 
+                            requestComputation={requestComputation}
+                            setRequestComputation={setRequestComputation}
                             className="h-12rem w-full" 
                             selectedWallet={selectedWallet} 
+                            solutions={solutions}
+                            setSolutions={setSolutions}
                             wallets={wallets} 
                             redirectToWallets={redirectToWallets}
                         />
@@ -200,6 +208,8 @@ const DashboardPage = () => {
                         <WalletDisplay 
                             wallets={wallets} 
                             loading={loading} 
+                            availableCards={availableCards}
+                            setAvailableCards={setAvailableCards}
                             error={error} 
                             onWalletUpdate={onWalletUpdate}
                             onComputeOptimalAllocation={handleComputeOptimalAllocation}

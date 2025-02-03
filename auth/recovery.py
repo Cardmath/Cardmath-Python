@@ -166,7 +166,7 @@ async def reset_password(token: str, new_password: str, db: Session):
     if not email:
         raise HTTPException(status_code=400, detail="Invalid or expired token")
 
-    user: UserInDB = db.query(UserInDB).filter(UserInDB.username == email).first()
+    user: UserInDB = db.query(UserInDB).filter(UserInDB.email == email).first()
     if not user:
         logger.warning("User not found for email: %s during password reset", email)
         raise HTTPException(status_code=404, detail="User not found")

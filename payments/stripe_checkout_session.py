@@ -49,17 +49,21 @@ def create_checkout_session(db: Session, current_user: User, request: CheckoutSe
         logger.error(f"No active price found for product {product_id}")
         raise HTTPException(status_code=400, detail="No active price found for the selected product.")
 
+    BASE_URL = "cardmath.ai" if os.getenv("ENVIRONMENT", "development") == "development" else "localhost:3000"
+    PREFIX = "https" if os.getenv("ENVIRONMENT", "development") == "development" else "http"
+
     session = stripe.checkout.Session.create(
         line_items=[{
             'price': price_id,
             'quantity': 1,
         }],
         mode='payment',
-        success_url=f'https://cardmath.ai/dashboard',
-        cancel_url='https://cardmath.ai/',
+        success_url=f'{PREFIX}://{BASE_URL}/dashboard',
+        cancel_url=f'{PREFIX}://{BASE_URL}/',
         customer_email=current_user.email,  # Ensure you are using the email attribute
         allow_promotion_codes=True
     )
+
 
     return CheckoutSessionResponse(url=session.url)
 

@@ -229,7 +229,7 @@ const BankConnectionForm = ({
               <i className="pi pi-check text-xl " />
             )}
             <span className="ml-2">
-              {solution ? 'Analysis Complete!' : 'Analyzing your transactions...'}
+              {solution ? 'Analysis Complete!' : 'Analyzing your transactions. This could take up to ten minutes.'}
             </span>
         </div>
 

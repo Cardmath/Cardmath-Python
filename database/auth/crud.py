@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 def get_user(db: Session, user_id: int) -> Optional[User]:
     return db.query(User).filter(User.id == user_id).first()
 
-def get_user_by_email(db: Session, email: str) -> Optional[User]:
-    return db.query(User).filter(User.email == email).first()
+def get_user_by_email(db: Session, email: str) -> Optional[UserInDB]:
+    return db.query(UserInDB).filter(UserInDB.email == email).first()
 
 def get_users(db: Session, skip: int = 0, limit: int = 10) -> List[User]:
     return db.query(User).offset(skip).limit(limit).all()

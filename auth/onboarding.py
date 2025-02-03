@@ -170,6 +170,7 @@ async def get_onboarding_recommendation(request: OnboardingSavingsRequest, db: S
 
     optimization_request = OptimalCardsAllocationRequest(
         to_use=request.answers.num_cards,
+        with_justification=False,
         to_add=2,
         heavy_hitters_response_override=override,
         timeframe=None,

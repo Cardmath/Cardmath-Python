@@ -172,6 +172,7 @@ class OptimalCardsAllocationRequest(BaseModel):
     wallet_override: Optional[OptimalCardsAllocationRequestWalletOverride] = None
     heavy_hitters_response_override: Optional[HeavyHittersResponse] = None 
     use_mock: bool = False
+    with_justification: bool = False
 
     to_use: Optional[int] = 4
     to_add: Optional[int] = 0

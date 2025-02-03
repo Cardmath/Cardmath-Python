@@ -10,15 +10,19 @@ import moment from 'moment';
 import { fetchWithAuth } from '../pages/AuthPage';
 import { getBackendUrl } from '../utils/urlResolver';
 
-const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptimalAllocation }) => {
+const WalletDisplay = ({ wallets, loading, error, onWalletUpdate, onComputeOptimalAllocation,
+    availableCards, setAvailableCards
+ }) => {
     const [showDialog, setShowDialog] = useState(false);
-    const [availableCards, setAvailableCards] = useState([]);
     const [newWalletCards, setNewWalletCards] = useState([]);
     const [walletName, setWalletName] = useState("");
     const [editingWallet, setEditingWallet] = useState(null);
 
     // Fetch available credit cards when the component mounts
     useEffect(() => {
+        if (availableCards.length > 0) {
+            return;
+        } 
         fetch(`${getBackendUrl()}/read_credit_cards_database`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

@@ -43,9 +43,10 @@ async def optimize_credit_card_selection_milp(db: Session, user: Union[User, Onb
         
         if len(solutions) >= request.num_solutions:
             break
-
-    justification = generate_justification_from_solution(solution=solutions[0])
-    solutions[0].justification = justification
+    if request.with_justification:
+        justification = generate_justification_from_solution(solution=solutions[0])
+        solutions[0].justification = justification
+    
     return OptimalCardsAllocationResponse(
         timeframe=rmatrix.timeframe,
         solutions=solutions

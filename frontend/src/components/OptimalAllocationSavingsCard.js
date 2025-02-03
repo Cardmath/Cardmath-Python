@@ -10,15 +10,16 @@ import { Calendar } from 'primereact/calendar';
 import { Tooltip } from 'primereact/tooltip';
 import { Dropdown } from 'primereact/dropdown';
 import { getBackendUrl } from '../utils/urlResolver';
+import { ProgressSpinner } from 'primereact/progressspinner';
 import moment from 'moment';
 
 import CreditCardItemTemplate from './CreditCardItemTemplate';
 import SpendingPlanTable from './SpendingPlanTable';
 import SignOnBonusTable from './SignOnBonusTable';
 import PreferencesDisplay from './PreferencesDisplay';
+import { Skeleton } from 'primereact/skeleton';
 
-const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWallets }) => {
-  const [solutions, setSolutions] = useState([]);
+const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWallets, solutions, setSolutions, compute: requestComputation, setCompute: setRequestComputation}) => {
   const [solutionIndex, setSolutionIndex] = useState(0);
   const [archetype, setArchetype] = useState(null);
   const [archetypes, setArchetypes] = useState([]);
@@ -99,8 +100,13 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
       );
     });
   };
-  
 
+  const initiateCompute = () => {
+    setSolutions([])
+    fetchOptimalAllocation();
+    fetchCurrentCardsOptimalAllocation();  
+  }
+  
   useEffect(() => {
     fetch(`${getBackendUrl()}/api/archetypes`)
         .then(response => response.json())
@@ -178,6 +184,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
           end_month: moment(selectedDate[1]).startOf('month').format('YYYY-MM-DD')
         } : null,          
         return_cards_added: true,
+        with_justification: true,
         return_cards_used: true,
         return_cards_dropped: true,
         save_to_db: false
@@ -236,15 +243,19 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
 
   // Fetch user's optimal allocation on component mount
   useEffect(() => {
+    if (solutions != null && !requestComputation) {
+      return
+    }
+
     fetchOptimalAllocation();
     fetchUserPreferences();
     fetchCurrentCardsOptimalAllocation();
-  }, []);
-
-  useEffect(() => {
-    fetchCurrentCardsOptimalAllocation();
-  }, [selectedWalletState]);
-
+    
+    if (requestComputation) {
+      setRequestComputation(false);
+    }
+  }, [requestComputation]);
+  
   return (
     <Card className="w-full h-full justify-content-center align-items-stretch flex-wrap border-round shadow-2 mt-2 bg-gray-900 text-white">
       {/* Display net rewards difference */}
@@ -451,8 +462,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
             </div>
           </div>
           <Button onClick={() => {
-            fetchOptimalAllocation();
-            fetchCurrentCardsOptimalAllocation();
+            initiateCompute()
           }} className='w-full mt-5' label="Compute" loading={computationLoading} />
 
 
@@ -469,13 +479,17 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
         {/* Display carousels and spending plan */}
         <div className="col-8 grid">
           {/* Carousels */}
-          <div className="col-12 grid flex justify-content-center align-items-start">
+          {computationLoading ? 
+          (
+          <div className='grid w-full h-30rem'>
+          <div className="text-4xl col-12 text-center" >Your Recommendation is Loading</div>
+          <ProgressSpinner className='h-15rem col-12'/></div>) : (<div className="col-12 grid flex justify-content-center align-items-start">
             {/* Your Cards Carousel */}
             <div className="col-6">
               <div className="text-3xl pb-2 text-center">Your Held Cards</div>
               {cardsHeld.length === 0 && cardsDrop.length === 0 ? (
-                <Card onClick={() => redirectToWallets()} title="No Wallet Detected. Click Here to Create a new Wallet." className="w-10 cursor-pointer py-3 mx-7 bg-pink-200 border-3 shadow-2 surface-border border-round">
-                  <p className="m-0"> The wallet feature allows users to experiment with different credit card combinations. 
+                <Card onClick={() => redirectToWallets()} title="Click Here to Create a new Wallet." className="w-10 cursor-pointer py-3 mx-7 bg-pink-200 border-3 shadow-2 surface-border border-round">
+                  <p className="m-0"> No held cards were found in this wallet. The wallet feature allows users to experiment with different credit card combinations. 
                     For example if you chose to register with mock transactions only, you can use this feature to create a wallet that reflects the cards you personally own.  
                   </p>
                 </Card>
@@ -496,8 +510,10 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
             <div className="col-6">
               <div className="text-3xl pb-2 text-center">Recommended New Cards</div>
               {recommendedCards.length === 0 ? (
-                <Card title="No Recommended Cards" className="w-9 py-3 bg-yellow-200 border-3 shadow-2 surface-border border-round">
-                  <p className="m-0">No recommended cards based on your preferences.</p>
+                <Card title="Click here to initiate a Computation" className="w-9 py-3 bg-yellow-200 border-3 shadow-2 surface-border border-round cursor-pointer"
+                onClick={() => initiateCompute()}
+                >
+                  <p className="m-0">Please initiate a computation by clicking here or on the 'Submit' Button on the bottom left.</p>
                 </Card>
               ) : (
                 <Carousel
@@ -512,7 +528,7 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
               )}
             </div>
           </div>
-
+          )}
           <div className="flex pt-4 gap-2 justify-content-center">
             <Tooltip
               className="w-3"
@@ -525,12 +541,13 @@ const OptimalAllocationSavingsCard = ({ selectedWallet, wallets, redirectToWalle
             >
               <div className="grid align-items-center justify-content-center py-2">
                 Recommendation Justification:
-              </div>
               <div className="text-xl p-4">
                 {solutions.solutions?.[solutionIndex]?.justification
                   ? parseAndRenderText(solutions.solutions[solutionIndex].justification)
-                  : "No justification available"}
+                  : "Please use the blue 'Compute' button on the left to initiate a computation."}
               </div>
+              </div>
+
             </div>
           </div>
 

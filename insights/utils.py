@@ -86,7 +86,7 @@ def get_user_cc_eligible_transactions(
     transactions = eligible_transactions_query.order_by(
         desc(Transaction.date),
         desc(Transaction.amount)
-    ).limit(400).all()
+    ).limit(500).all()
 
     # Process categories for returned transactions
     all_transactions = []
